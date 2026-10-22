@@ -1,8 +1,9 @@
 /**
  * Unit tests for the offline extractor — the fallback that keeps the app working
- * with zero setup. Run with:  npm test
+ * with zero setup. Plus backup parser tests (restore path). Run with:  npm test
  */
 import { extractLocal } from '../src/lib/extract.js'
+import { parseBackup } from '../src/lib/store.js'
 
 const today = new Date()
 const key = (d) =>
@@ -52,6 +53,40 @@ check('high marks -> high priority', t6.priority, 'high')
 
 const t7 = extractLocal('October 30 deadline for the final write-up')
 check('Month DD format', t7.dueDate, `${today.getFullYear()}-10-30`)
+
+// --- backup restore (export/import round-trip safety) ---
+const sample = {
+  app: 'deadline-radar',
+  version: 1,
+  tasks: [
+    {
+      id: 'task-1',
+      title: 'DBMS assignment',
+      subject: 'DBMS',
+      dueDate: '2026-10-30',
+      marks: 20,
+      priority: 'high',
+      done: false,
+      createdAt: 1792600000000,
+      source: 'due Friday, 20 marks',
+    },
+    { id: 'task-2', title: 'Lab record', dueDate: null, marks: null },
+    { notATask: true },
+    { id: 'task-3', title: '   ' },
+  ],
+}
+const b1 = parseBackup(JSON.stringify(sample))
+check('backup: valid tasks restored, junk dropped', [b1.length, b1[0].id, b1[1].subject], [2, 'task-1', null])
+check('backup: fields preserved', { m: b1[0].marks, d: b1[0].dueDate, p: b1[0].priority }, { m: 20, d: '2026-10-30', p: 'high' })
+
+const b2 = parseBackup(JSON.stringify([{ title: 'bare array task' }]))
+check('backup: bare array accepted, id auto-added', [b2.length, typeof b2[0].id], [1, 'string'])
+
+let threw = 0
+try { parseBackup('not json at all') } catch { threw += 1 }
+try { parseBackup('{"hello": 1}') } catch { threw += 1 }
+try { parseBackup('{"tasks": []}') } catch { threw += 1 }
+check('backup: invalid inputs all throw', threw, 3)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

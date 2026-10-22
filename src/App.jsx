@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractTask } from './lib/extract'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
-import { loadSettings, loadTasks, saveSettings, saveTasks } from './lib/store'
+import {
+  exportTasks,
+  loadSettings,
+  loadTasks,
+  parseBackup,
+  saveSettings,
+  saveTasks,
+} from './lib/store'
 import { getPermission, notifyDaily, notifyTest, requestPermission } from './lib/notify'
 import { extractFromImage, fileToDataUrl } from './lib/vision'
 import AddBar from './components/AddBar'
@@ -260,6 +267,26 @@ export default function App() {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)))
     setEditingId(null)
     setFlash({ msg: 'Task updated ✓' })
+  }
+
+  // Restores tasks from a JSON backup, skipping ones already captured (same id).
+  async function importBackup(file) {
+    try {
+      const imported = parseBackup(await file.text())
+      const existing = new Set(tasks.map((t) => t.id))
+      const fresh = imported.filter((t) => !existing.has(t.id))
+      if (!fresh.length) {
+        setFlash({ msg: 'Nothing new in that backup — all tasks already here.' })
+        return
+      }
+      setTasks((prev) => [...fresh, ...prev])
+      setSettingsOpen(false)
+      setFlash({
+        msg: `Restored ${fresh.length} task${fresh.length > 1 ? 's' : ''} from backup ✓`,
+      })
+    } catch (err) {
+      setFlash({ msg: `Import failed — ${err.message}` })
+    }
   }
 
   const changeDate = (id, date) =>
@@ -552,6 +579,11 @@ export default function App() {
             setTasks([])
             setSettingsOpen(false)
           }}
+          onExport={() => {
+            exportTasks(tasks)
+            setFlash({ msg: `Backup downloaded — ${tasks.length} task${tasks.length === 1 ? '' : 's'} inside.` })
+          }}
+          onImport={importBackup}
         />
       )}
     </div>

@@ -41,3 +41,52 @@ export function saveSettings(settings) {
     /* ignore */
   }
 }
+
+/** Downloads all tasks as a JSON file (backup before clearing browser data). */
+export function exportTasks(tasks) {
+  const payload = {
+    app: 'deadline-radar',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    tasks,
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  const date = new Date().toISOString().slice(0, 10)
+  a.href = url
+  a.download = `deadline-radar-backup-${date}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Parses a backup file (our export format or a bare task array).
+ * Throws with a friendly message on anything that is not a valid backup.
+ */
+export function parseBackup(text) {
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    throw new Error('that file is not valid JSON')
+  }
+  const list = Array.isArray(data) ? data : data?.tasks
+  if (!Array.isArray(list)) throw new Error('that file is not a Deadline Radar backup')
+  const cleaned = list
+    .filter((t) => t && typeof t === 'object' && typeof t.title === 'string' && t.title.trim())
+    .map((t) => ({
+      id: typeof t.id === 'string' && t.id ? t.id : crypto.randomUUID(),
+      title: String(t.title).slice(0, 300),
+      subject: typeof t.subject === 'string' && t.subject ? t.subject.slice(0, 80) : null,
+      dueDate: typeof t.dueDate === 'string' && t.dueDate ? t.dueDate : null,
+      marks: Number.isFinite(t.marks) && t.marks > 0 ? t.marks : null,
+      priority: t.priority === 'high' ? 'high' : 'normal',
+      done: Boolean(t.done),
+      completedAt: Number.isFinite(t.completedAt) ? t.completedAt : null,
+      createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
+      source: typeof t.source === 'string' ? t.source.slice(0, 600) : '',
+    }))
+  if (!cleaned.length) throw new Error('no tasks found inside that file')
+  return cleaned
+}

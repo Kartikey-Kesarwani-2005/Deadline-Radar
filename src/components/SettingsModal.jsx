@@ -13,7 +13,7 @@ function Field({ label, hint, children }) {
 const inputCls =
   'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/60 focus:outline-none'
 
-export default function SettingsModal({ settings, onSave, onClose, onClearAll }) {
+export default function SettingsModal({ settings, onSave, onClose, onClearAll, onExport, onImport }) {
   const [draft, setDraft] = useState(settings)
   const [confirmClear, setConfirmClear] = useState(false)
 
@@ -25,7 +25,7 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll })
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1424] p-5 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1424] p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -119,6 +119,36 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll })
               </div>
             </>
           )}
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <p className="text-sm font-semibold text-slate-200">Backup &amp; restore</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+              Your tasks live only in this browser. Export a JSON backup before clearing site data
+              or moving to another device.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={onExport}
+                className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+              >
+                ⬇ Export tasks (.json)
+              </button>
+              <label className="cursor-pointer rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-white/30 hover:text-slate-100">
+                ⬆ Import backup
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) onImport(file)
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            </div>
+          </div>
 
           <div className="rounded-xl border border-red-500/20 bg-red-500/[0.05] p-3">
             <p className="text-sm font-semibold text-red-300">Danger zone</p>
