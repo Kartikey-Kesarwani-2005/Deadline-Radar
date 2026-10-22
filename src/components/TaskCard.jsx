@@ -108,6 +108,18 @@ export default function TaskCard({
               🧠 {advice.text}
             </span>
           )}
+          {task.link && (
+            <a
+              href={task.link}
+              target="_blank"
+              rel="noreferrer noopener"
+              title={`Open submission portal — ${task.link}`}
+              onClick={(e) => e.stopPropagation()}
+              className={`${chipBase} border-indigo-500/30 bg-indigo-500/10 text-indigo-300 transition hover:border-indigo-400/60 hover:text-indigo-200`}
+            >
+              🔗 Portal
+            </a>
+          )}
 
           <label className="ml-auto flex items-center gap-1.5 text-[11px] text-slate-600">
             <input

@@ -129,6 +129,22 @@ check('backup: fields preserved', { m: b1[0].marks, d: b1[0].dueDate, p: b1[0].p
 const b2 = parseBackup(JSON.stringify([{ title: 'bare array task' }]))
 check('backup: bare array accepted, id auto-added', [b2.length, typeof b2[0].id], [1, 'string'])
 
+// --- Link capture (submission portal) ---
+const tLink = extractLocal(
+  'DBMS quiz due Friday, 20 marks, submit on https://moodle.example.com/mod/quiz/attempt.php?id=9',
+)
+check(
+  'link: portal URL captured',
+  tLink.link,
+  'https://moodle.example.com/mod/quiz/attempt.php?id=9',
+)
+check('link: URL stripped from the title', tLink.title.toLowerCase().includes('http'), false)
+check('link: no URL -> null', extractLocal('OS lab record by tomorrow').link, null)
+const bLink = parseBackup(
+  JSON.stringify([{ id: 'task-link', title: 'Quiz', dueDate: null, link: 'https://moodle.example.com/q1' }]),
+)
+check('link: survives backup restore', bLink[0].link, 'https://moodle.example.com/q1')
+
 let threw = 0
 try { parseBackup('not json at all') } catch { threw += 1 }
 try { parseBackup('{"hello": 1}') } catch { threw += 1 }
@@ -242,7 +258,7 @@ check(
 // --- Week share text (group chat) ---
 const wtext = weekShareText(
   [
-    { id: 'q1', title: 'DBMS quiz', dueDate: '2026-10-21', marks: 20, done: false },
+    { id: 'q1', title: 'DBMS quiz', dueDate: '2026-10-21', marks: 20, done: false, link: 'https://moodle.example.com/q1' },
     { id: 'q2', title: 'Group viva', dueDate: '2026-10-25', done: false },
     { id: 'q3', title: 'Far away', dueDate: '2026-11-05', done: false },
     { id: 'q4', title: 'Done thing', dueDate: '2026-10-23', done: true },
@@ -259,6 +275,7 @@ check(
   wtext.includes('(20 marks)') && wtext.includes('Deadline Radar'),
   true,
 )
+check('week share: portal link included per line', wtext.includes('🔗 https://moodle.example.com/q1'), true)
 
 // --- Pending load by subject ---
 const load = subjectLoad([
@@ -285,6 +302,11 @@ const ics = buildICS(icsTasks, new Date('2026-10-22T10:00:00Z'))
 check('ics: one event per pending dated task', ics.split('BEGIN:VEVENT').length - 1, 1)
 check('ics: date + escaped summary present', ics.includes('DTSTART;VALUE=DATE:20261023') && ics.includes('SUMMARY:DBMS quiz\\, Q1-Q5'), true)
 check('ics: calendar shell + day-before alarm', ics.startsWith('BEGIN:VCALENDAR') && ics.endsWith('END:VCALENDAR') && ics.includes('TRIGGER:-P1D'), true)
+const icsLink = buildICS(
+  [{ id: 'e4', title: 'Portal quiz', dueDate: '2026-10-24', done: false, link: 'https://moodle.example.com/quiz' }],
+  new Date('2026-10-22T10:00:00Z'),
+)
+check('ics: portal link exported as URL property', icsLink.includes('URL:https://moodle.example.com/quiz'), true)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

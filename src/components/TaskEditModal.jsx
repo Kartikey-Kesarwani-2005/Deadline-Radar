@@ -19,6 +19,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
     dueDate: task.dueDate || '',
     marks: task.marks ?? '',
     priority: task.priority || 'normal',
+    link: task.link || '',
   })
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
       dueDate: draft.dueDate || null,
       marks: Number.isFinite(marks) ? marks : null,
       priority: draft.priority,
+      link: draft.link.trim() || null,
     })
   }
 
@@ -124,6 +126,16 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
               </div>
             </Field>
           </div>
+
+          <Field label="Submission link (optional)">
+            <input
+              type="url"
+              value={draft.link}
+              placeholder="https://moodle.example.com/mod/quiz/…"
+              onChange={(e) => set({ link: e.target.value })}
+              className={inputCls}
+            />
+          </Field>
 
           {task.source && (
             <div>

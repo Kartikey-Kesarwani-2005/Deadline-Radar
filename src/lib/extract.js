@@ -198,6 +198,13 @@ function cleanTitle(text, dateMatch, marksMatch) {
   return t
 }
 
+function findLink(text) {
+  const m = text.match(/\bhttps?:\/\/[^\s<>"']+/i)
+  if (!m) return null
+  // Trim trailing sentence punctuation: "...attempt.php?id=9. thanks"
+  return m[0].replace(/[.,;:!?'")\]}]+$/g, '')
+}
+
 function priorityFor(dueDate, marks) {
   if (dueDate) {
     const [y, m, d] = dueDate.split('-').map(Number)
@@ -209,7 +216,11 @@ function priorityFor(dueDate, marks) {
 }
 
 export function extractLocal(raw) {
-  const text = raw.trim().replace(/\s+/g, ' ')
+  const full = raw.trim().replace(/\s+/g, ' ')
+  // Pull the submission link out FIRST — it must not leak into the title
+  // or fake a date ("…/2026-10-25/…"), and students always lose these links.
+  const link = findLink(full)
+  const text = link ? full.replace(link, ' ').replace(/\s+/g, ' ').trim() : full
   const date = findDate(text)
   const marks = findMarks(text)
   const subject = findSubject(text)
@@ -220,6 +231,7 @@ export function extractLocal(raw) {
     dueDate,
     marks: marks ? marks.value : null,
     priority: priorityFor(dueDate, marks?.value),
+    link,
   }
 }
 
@@ -295,6 +307,11 @@ function normEntry(parsed, raw) {
         : null,
     marks: Number.isFinite(parsed.marks) && parsed.marks > 0 ? parsed.marks : null,
     priority: parsed.priority === 'high' ? 'high' : 'normal',
+    // Link: prefer a valid one the AI read, else the one in the raw message.
+    link:
+      (typeof parsed.link === 'string' && /^https?:\/\//i.test(parsed.link)
+        ? parsed.link.slice(0, 500)
+        : null) || fallback.link,
   }
 }
 

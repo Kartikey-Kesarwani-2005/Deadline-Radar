@@ -22,6 +22,7 @@ function vEvent(t, stamp) {
   ]
   const detail = [t.subject, t.marks ? `${t.marks} marks` : null].filter(Boolean).join(' · ')
   if (detail) lines.push(`DESCRIPTION:${esc(detail)}`)
+  if (t.link) lines.push(`URL:${t.link}`)
   // All-day event + a day-before reminder, matching how students actually work.
   lines.push('BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:Deadline tomorrow', 'END:VALARM')
   lines.push('END:VEVENT')

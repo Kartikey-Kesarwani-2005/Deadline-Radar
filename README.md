@@ -46,6 +46,10 @@ replacing anything you captured).
 - **Share** — 📤 on any card copies a ready-to-paste line + app link, for the study group chat.
   **📤 Share this week** in the rail sends the whole week's deadlines (late first) via the
   native share sheet on phone, clipboard on desktop.
+- **🔗 Portal link capture** — assignment messages carry the Moodle/Classroom submit link;
+  the parser extracts it (URL never leaks into the title or fakes a date), the card shows a
+  one-tap **🔗 Portal** button, share text and the `.ics` calendar export carry it too. Can
+  also be set/edited per task.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
 - **Radar dial** — the signature widget: concentric rings for Late / Due today / This week / Later

@@ -562,7 +562,8 @@ export default function App() {
     const when = task.dueDate ? `due ${formatDue(task.dueDate)}` : 'no date set'
     const line =
       `📡 ${task.title}${task.subject ? ` (${task.subject})` : ''} — ${when}` +
-      `${task.marks ? `, ${task.marks} marks` : ''}\n` +
+      `${task.marks ? `, ${task.marks} marks` : ''}` +
+      `${task.link ? `\n🔗 ${task.link}` : ''}\n` +
       'https://kartikey-kesarwani-2005.github.io/Deadline-Radar/'
     try {
       await navigator.clipboard.writeText(line)

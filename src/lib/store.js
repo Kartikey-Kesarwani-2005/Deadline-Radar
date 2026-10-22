@@ -87,6 +87,8 @@ export function parseBackup(text) {
       completedAt: Number.isFinite(t.completedAt) ? t.completedAt : null,
       createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
       source: typeof t.source === 'string' ? t.source.slice(0, 600) : '',
+      link:
+        typeof t.link === 'string' && /^https?:\/\//i.test(t.link) ? t.link.slice(0, 500) : null,
     }))
   if (!cleaned.length) throw new Error('no tasks found inside that file')
   return cleaned

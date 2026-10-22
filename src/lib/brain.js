@@ -286,7 +286,7 @@ export function weekShareText(tasks, today = todayKey()) {
   const lines = pending.map((t) => {
     const d = dayDiff(today, t.dueDate)
     const when = d < 0 ? `${-d}d LATE` : d === 0 ? 'TODAY' : WEEKDAY(t.dueDate)
-    return `• ${t.title} — ${when}${t.marks ? ` (${t.marks} marks)` : ''}`
+    return `• ${t.title} — ${when}${t.marks ? ` (${t.marks} marks)` : ''}${t.link ? `\n  🔗 ${t.link}` : ''}`
   })
   return [
     'Deadline radar 📡 this week:',

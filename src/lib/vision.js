@@ -11,8 +11,8 @@ const PROMPT = [
   'Read all visible text carefully, including dates written as "25 Oct", "Friday", "25/10", "tomorrow".',
   `Today is ${todayKey()}.`,
   'Reply with ONLY minified JSON, no prose, exactly this shape:',
-  '{"title":string,"subject":string|null,"dueDate":"YYYY-MM-DD"|null,"marks":number|null,"priority":"high"|"normal"}',
-  'title = short task name (max 90 chars). dueDate = a real calendar date derived from the image text, or null if none is mentioned. priority = "high" if due within 1 day or marks >= 15, else "normal".',
+  '{"title":string,"subject":string|null,"dueDate":"YYYY-MM-DD"|null,"marks":number|null,"priority":"high"|"normal","link":"https://..."|null}',
+  'title = short task name (max 90 chars). dueDate = a real calendar date derived from the image text, or null if none is mentioned. link = the submission/portal URL if one is visible, else null. priority = "high" if due within 1 day or marks >= 15, else "normal".',
 ].join('\n')
 
 /**
@@ -113,5 +113,9 @@ export async function extractFromImage(dataUrl, settings) {
         : null,
     marks: Number.isFinite(parsed.marks) ? parsed.marks : null,
     priority: parsed.priority === 'high' ? 'high' : 'normal',
+    link:
+      typeof parsed.link === 'string' && /^https?:\/\//i.test(parsed.link)
+        ? parsed.link.slice(0, 500)
+        : null,
   }
 }
