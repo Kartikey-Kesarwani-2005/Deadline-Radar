@@ -3,7 +3,7 @@ import { dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
 const chipBase =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium'
 
-export default function TaskCard({ task, onToggle, onDelete, onEdit, onDateChange }) {
+export default function TaskCard({ task, onToggle, onDelete, onEdit, onDateChange, onShare }) {
   const diff = task.dueDate ? dayDiff(todayKey(), task.dueDate) : null
   const isLate = !task.done && diff !== null && diff < 0
 

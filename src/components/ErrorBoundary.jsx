@@ -29,6 +29,9 @@ export default class ErrorBoundary extends Component {
               Something went wrong, but your tasks are safe in this browser. Reload to get back
               on track.
             </p>
+            <p className="mt-2 break-words font-mono text-[10px] text-slate-600">
+              {String(this.state.error?.message || this.state.error)}
+            </p>
             <button
               type="button"
               onClick={() => window.location.reload()}
