@@ -7,7 +7,7 @@
  * No network, no accounts — the app gets smarter the more deadlines it sees.
  */
 
-import { dayDiff, toDateKey, todayKey } from './dates'
+import { addDays, dayDiff, toDateKey, todayKey } from './dates'
 
 /** Days early (+) or late (−) a finished task was relative to its due date. */
 function bufferDays(task) {
@@ -58,6 +58,43 @@ export function marksAtRisk(tasks) {
   return { late, week, total: late + week }
 }
 
+const WEEKDAY = (key) =>
+  new Date(`${key}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'short' })
+
+/**
+ * 🌦️ Deadline Weather — the next 7 days as a weather forecast.
+ * Each day gets a level from the marks/count landing on it:
+ *   ☀️ free · ⛅ light · 🌧️ heavy · ⛈️ storm (3+ submissions or 25+ marks).
+ */
+export function forecastWeather(tasks) {
+  const today = todayKey()
+  const days = []
+  for (let i = 0; i < 7; i++) {
+    const key = addDays(today, i)
+    let marks = 0
+    let count = 0
+    for (const t of tasks) {
+      if (t.done || !t.dueDate || t.dueDate !== key) continue
+      count++
+      marks += t.marks || 0
+    }
+    let icon = '☀️'
+    let level = 'free'
+    if (count >= 3 || marks > 25) {
+      icon = '⛈️'
+      level = 'storm'
+    } else if (marks > 10 || count >= 2) {
+      icon = '🌧️'
+      level = 'heavy'
+    } else if (count > 0) {
+      icon = '⛅'
+      level = 'light'
+    }
+    days.push({ key, label: WEEKDAY(key), isToday: i === 0, icon, level, marks, count })
+  }
+  return days
+}
+
 /**
  * One-line personal chip for a pending card — null until the brain has
  * enough history (≥2 finished tasks in that subject).
@@ -68,7 +105,15 @@ export function adviceFor(brain, task) {
   if (!s || s.n < 2) return null
   const where = task.subject || 'overall'
   if (s.avgBuffer <= -0.5) {
-    return { tone: 'warn', text: `Usually ${Math.abs(s.avgBuffer).toFixed(1)}d late in ${where}` }
+    const lateDays = Math.max(1, Math.ceil(Math.abs(s.avgBuffer)))
+    const startKey = addDays(task.dueDate, -lateDays)
+    const urgent = dayDiff(todayKey(), startKey) < 0
+    return {
+      tone: 'warn',
+      text: urgent
+        ? `Usually ${Math.abs(s.avgBuffer).toFixed(1)}d late — start NOW`
+        : `Usually ${Math.abs(s.avgBuffer).toFixed(1)}d late — start by ${WEEKDAY(startKey)}`,
+    }
   }
   if (s.onTimeRate < 75) {
     return { tone: 'warn', text: `Only ${s.onTimeRate}% on time in ${where}` }
@@ -117,6 +162,14 @@ export function answerQuery(query, { tasks, stats }) {
   }
   if (/(week|upcoming|agle)/.test(s)) {
     return { text: week.length ? `This week: ${top(week)}.` : 'Nothing due this week.' }
+  }
+  if (/(weather|mausam|forecast)/.test(s)) {
+    const busy = forecastWeather(tasks).filter((d) => d.level === 'heavy' || d.level === 'storm')
+    return {
+      text: busy.length
+        ? `Heaviest day coming up: ${WEEKDAY(busy[0].key)} — ${busy[0].marks} marks, ${busy[0].count} submissions.`
+        : 'Clear week ahead — no submission storms.',
+    }
   }
   const m = marksAtRisk(tasks)
   return {

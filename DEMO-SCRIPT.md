@@ -37,8 +37,9 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 
 ### 1:10–1:40 — What it gives back
 - Screen: the **radar dial** (rings fill by urgency, sweep rotating, on-time % in the centre),
-  the **🎯 marks-at-risk** line, and a card's **🧠 prediction chip** ("Usually 1.0d late in
-  DBMS"). Tick a task done — **confetti bursts** — open **Weekly report**.
+  the **🎯 marks-at-risk** line, and the **🌦️ 7-day weather forecast** — tap the ⛈️ storm day
+  to filter to it. A card shows its **🧠 prediction chip** ("Usually 2.0d late — start NOW").
+  Tick a task done — **confetti bursts** — open **Weekly report**.
 - **Voice query beat:** press **🎙️ Ask** and say *"kitne marks risk me hain?"* → the radar
   **answers out loud** + on-screen card. **(10s)**
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is

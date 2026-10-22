@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, extractManyLocal } from './lib/extract'
-import { adviceFor, answerQuery, computeBrain, marksAtRisk } from './lib/brain'
+import { adviceFor, answerQuery, computeBrain, forecastWeather, marksAtRisk } from './lib/brain'
 import { canListen, listenOnce, speak } from './lib/voice'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
@@ -17,6 +17,7 @@ import { extractFromImage, fileToDataUrl } from './lib/vision'
 import AddBar from './components/AddBar'
 import StatsBar from './components/StatsBar'
 import RadarDial from './components/RadarDial'
+import WeatherStrip from './components/WeatherStrip'
 import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
@@ -205,6 +206,7 @@ export default function App() {
   const [editingId, setEditingId] = useState(null)
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
+  const [dateFilter, setDateFilter] = useState(null)
   const [clipSuggest, setClipSuggest] = useState(null)
   const [askCard, setAskCard] = useState(null)
   const [listening, setListening] = useState(false)
@@ -511,10 +513,11 @@ export default function App() {
     const q = query.trim().toLowerCase()
     return tasks.filter((t) => {
       if (subjectFilter && t.subject !== subjectFilter) return false
+      if (dateFilter && t.dueDate !== dateFilter) return false
       if (!q) return true
       return `${t.title} ${t.subject || ''} ${t.source || ''}`.toLowerCase().includes(q)
     })
-  }, [tasks, query, subjectFilter])
+  }, [tasks, query, subjectFilter, dateFilter])
 
   const sections = useMemo(() => {
     const today = todayKey()
@@ -557,6 +560,7 @@ export default function App() {
   // Radar Brain: personal rhythm from finished work + marks riding on pending work.
   const brain = useMemo(() => computeBrain(tasks), [tasks])
   const risk = useMemo(() => marksAtRisk(tasks), [tasks])
+  const forecast = useMemo(() => forecastWeather(tasks), [tasks])
   const canAsk = canListen()
 
   // 🎙️ "Ask the radar" — one spoken question, spoken answer.
@@ -792,6 +796,11 @@ export default function App() {
                   )}
                 </p>
               )}
+              <WeatherStrip
+                days={forecast}
+                active={dateFilter}
+                onPick={(key) => setDateFilter((cur) => (cur === key ? null : key))}
+              />
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
@@ -817,15 +826,17 @@ export default function App() {
                   className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pr-3 pl-9 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none"
                 />
               </div>
-              {subjects.length > 0 && (
+              {(subjects.length > 0 || dateFilter) && (
                 <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setSubjectFilter(null)}
-                    className={chipCls(!subjectFilter)}
-                  >
-                    All
-                  </button>
+                  {subjects.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSubjectFilter(null)}
+                      className={chipCls(!subjectFilter)}
+                    >
+                      All
+                    </button>
+                  )}
                   {subjects.map((s) => (
                     <button
                       key={s}
@@ -836,6 +847,22 @@ export default function App() {
                       {s}
                     </button>
                   ))}
+                  {dateFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setDateFilter(null)}
+                      className={chipCls(true)}
+                      title="Clear the day filter"
+                    >
+                      📅{' '}
+                      {new Date(`${dateFilter}T00:00:00`).toLocaleDateString('en-IN', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                      })}{' '}
+                      ✕
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -885,6 +912,7 @@ export default function App() {
                     onClick={() => {
                       setQuery('')
                       setSubjectFilter(null)
+                      setDateFilter(null)
                     }}
                     className="font-semibold text-emerald-300 underline hover:text-emerald-200"
                   >

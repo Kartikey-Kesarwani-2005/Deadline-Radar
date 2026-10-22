@@ -58,9 +58,12 @@ replacing anything you captured).
 - **🎯 Marks at risk** — the radar counts *marks*, not just tasks: how many marks are already
   late and how many ride on this week's submissions. Shown in the rail, the weekly report and
   the voice answers.
+- **🌦️ Deadline Weather** — the week as a weather forecast: ☀️ clear day, ⛅ light,
+  🌧️ heavy (10+ marks), ⛈️ storm (3+ submissions or 25+ marks). Tap a day to filter the
+  radar to it. Nobody else forecasts deadlines like weather.
 - **🧠 Radar Brain (personal prediction)** — from your own finished work it learns per-subject
   rhythm — how often you're on time and how early/late you usually submit — and every card gets
-  an honest chip like *"🧠 Usually 1.0d late in DBMS — start now"*.
+  an honest chip like *"🧠 Usually 2.0d late — start by Wed"*.
 - **🎙️ Ask the radar** — press 🎙️ Ask and speak: *"aaj kya hai"*, *"kitne marks risk me"*,
   *"what's late"* — it answers **out loud** (Chrome/Edge).
 - **Offline banner** — lose the connection and the radar says so: capture, parsing and data
