@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakdevs.com/)
-[![Tests](https://img.shields.io/badge/tests-11%2F11%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-23%2F23%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -34,6 +34,11 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
   - Built-in **offline parser** (dates like `Friday`, `25 Oct`, `25/10`, `tomorrow`, `2026-10-30`,
     weekdays, marks, subjects) — works with **zero setup**.
   - Optional **AI extract** (any OpenAI-compatible API) for messier messages — toggle in ⚙️ Settings.
+- **Hinglish dates** — `agle somvar`, `25 tarikh`, `parso`, `kal`, `pichhle somvar` — the offline
+  parser understands how students actually speak, not just textbook English.
+- **Bulk capture** — paste a whole notice/syllabus (one deadline per line or sentence) → every
+  task is extracted in a single go: *"Captured 3 deadlines from one paste ✓"*.
+- **Share** — 📤 on any card copies a ready-to-paste line + app link, for the study group chat.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
 - **Stats bar** — Captured / Due today / Late / Done / **On time** counts at a glance.
@@ -106,6 +111,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # offline extractor + backup parser (11 checks)
+npm test       # offline extractor + bulk + backup parser (23 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

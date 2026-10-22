@@ -22,12 +22,14 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 - Caption: **Deadline Radar — link in description**
 
 ### 0:35–1:05 — Capture demo (the core)
-1. Paste a messy message (`dbms ka assignment friday tak, 20 marks…`) → Enter →
-   structured task appears with date + marks. **(10s)**
+1. Paste a **multi-line notice** (3 deadlines) → Enter → *"Captured 3 deadlines from one
+   paste ✓"* — all three cards land in the radar. **(10s)**
 2. Click 📷 → pick a notice screenshot → "Reading…" → task extracted from the image.
    **(15s)**
 3. Hold Wispr key, speak a third one hands-free → text lands → Enter. **(15s)**
-- **VO:** *"Text, screenshot, or straight from my mouth — same radar."*
+- **VO:** *"Text, a whole notice, or straight from my mouth — same radar."*
+- *(Alt if a take goes wrong: paste a single messy message `dbms ka assignment friday
+  tak, 20 marks…` → one structured card with date + marks.)*
 
 ### 1:05–1:30 — What it gives back
 - Screen: sections (Late / Due today / This week), tick a task done, open **Weekly report**.

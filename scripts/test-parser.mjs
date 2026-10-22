@@ -2,7 +2,7 @@
  * Unit tests for the offline extractor — the fallback that keeps the app working
  * with zero setup. Plus backup parser tests (restore path). Run with:  npm test
  */
-import { extractLocal } from '../src/lib/extract.js'
+import { extractLocal, extractManyLocal } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
 
 const today = new Date()
@@ -18,6 +18,13 @@ const nextWeekday = (target) => {
   let delta = (target - d.getDay() + 7) % 7
   if (delta === 0) delta = 7
   d.setDate(d.getDate() + delta)
+  return key(d)
+}
+const prevWeekday = (target) => {
+  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  let delta = (d.getDay() - target + 7) % 7
+  if (delta === 0) delta = 7
+  d.setDate(d.getDate() - delta)
   return key(d)
 }
 
@@ -53,6 +60,44 @@ check('high marks -> high priority', t6.priority, 'high')
 
 const t7 = extractLocal('October 30 deadline for the final write-up')
 check('Month DD format', t7.dueDate, `${today.getFullYear()}-10-30`)
+
+// --- Hinglish dates ---
+const t8 = extractLocal('OS viva agle somvar, 10 marks')
+check('agle somvar -> next Monday', t8.dueDate, nextWeekday(1))
+
+const t9 = extractLocal('DBMS quiz 25 tarikh tak submit karna hai')
+check('25 tarikh -> Oct 25', t9.dueDate, `${today.getFullYear()}-10-25`)
+
+const t10 = extractLocal('lab record parso tak dena')
+check('parso -> day after tomorrow', t10.dueDate, shift(2))
+
+const t11 = extractLocal('assignment kal submit karna hai, 10 marks')
+check('kal -> tomorrow', t11.dueDate, shift(1))
+
+const t12 = extractLocal('viva pichhle somvar ho chuka tha')
+check('pichhla somvar -> past Monday', t12.dueDate, prevWeekday(1))
+
+const t13 = extractLocal('aaj kal bahut assignments aa rahe hain')
+check('aaj kal (nowadays) -> no date', t13.dueDate, null)
+
+// --- bulk capture (one paste → many tasks) ---
+const notice =
+  'DBMS assignment - 25 Oct, 20 marks\nOS lab record - 28 Oct, 10 marks\nSE presentation - 30 Oct, 15 marks'
+const many = extractManyLocal(notice)
+check('bulk: 3-line notice -> 3 tasks', many.length, 3)
+check('bulk: per-task fields', { d: many[1].dueDate, s: many[1].subject }, { d: `${today.getFullYear()}-10-28`, s: 'OS' })
+
+const one = extractManyLocal('dbms ka assignment friday tak, 20 marks')
+check('bulk: single line stays single', one.length, 1)
+
+const noDate = extractManyLocal('bas yahi message, koi date nahi hai isme')
+check('bulk: no-date text falls back to one task', noDate.length, 1)
+
+const two = extractManyLocal('DBMS assignment due Friday and OS lab due Monday')
+check('bulk: "and" split finds two', two.length, 2)
+
+const chatter = extractManyLocal('DBMS unit 3 - 25 Oct\nAssignment 1 - 26 Oct, 10 marks')
+check('bulk: syllabus chatter line ignored', chatter.length, 1)
 
 // --- backup restore (export/import round-trip safety) ---
 const sample = {

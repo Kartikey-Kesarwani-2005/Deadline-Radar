@@ -72,6 +72,16 @@ export default function TaskCard({ task, onToggle, onDelete, onEdit, onDateChang
 
       <button
         type="button"
+        onClick={onShare}
+        aria-label="Copy share text"
+        title="Copy for WhatsApp / group"
+        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
+      >
+        📤
+      </button>
+
+      <button
+        type="button"
         onClick={onEdit}
         aria-label="Edit task"
         className="mt-0.5 shrink-0 rounded p-1 text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"

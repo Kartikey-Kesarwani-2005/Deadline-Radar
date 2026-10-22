@@ -20,6 +20,15 @@ const WEEKDAYS = {
   fri: 5, friday: 5, sat: 6, saturday: 6,
 }
 
+// Hinglish weekday spellings (common romanised forms).
+const HI_WEEKDAYS = {
+  ravivar: 0, ravivaar: 0, somvar: 1, somvaar: 1, somavar: 1,
+  mangalvar: 2, mangalvaar: 2, mangalwaar: 2,
+  budhvar: 3, budhvaar: 3, budhwaar: 3,
+  guruvar: 4, guruvaar: 4, guruwaar: 4, brhaspativar: 4,
+  shukravar: 5, shukravaar: 5, shanivar: 6, shanivaar: 6,
+}
+
 const KNOWN_SUBJECTS = [
   'Operating Systems', 'Computer Networks', 'Software Engineering', 'Machine Learning',
   'Deep Learning', 'Cyber Security', 'Compiler Design', 'Data Structures', 'DBMS',
@@ -40,6 +49,14 @@ function nextWeekday(target, from = new Date()) {
   let delta = (target - d.getDay() + 7) % 7
   if (delta === 0) delta = 7 // "Friday" said on Friday means next Friday
   d.setDate(d.getDate() + delta)
+  return d
+}
+
+function prevWeekday(target, from = new Date()) {
+  const d = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+  let delta = (d.getDay() - target + 7) % 7
+  if (delta === 0) delta = 7 // "pichhla somvar" said on Monday = a week ago
+  d.setDate(d.getDate() - delta)
   return d
 }
 
@@ -106,6 +123,40 @@ function findDate(text) {
     }
   }
 
+  // 7. Hinglish dates: "25 tarikh", "agle somvar", "parso", "kal", "aaj"
+  m = text.match(/\b(\d{1,2})(?:st|nd|rd|th)?\s*(?:tarikh|tarik|tareekh|tareek)\b/i)
+  if (m) {
+    const now = new Date()
+    const d = validDate(now.getFullYear(), now.getMonth(), Number(m[1]))
+    if (d) return { key: keyOf(d), matchText: m[0] }
+  }
+
+  m = text.match(
+    /\b(pichhla|pichhle|pichle|pichla|agle|agla|agli)?\s*(ravivar|ravivaar|somvar|somvaar|somavar|mangalvar|mangalvaar|mangalwaar|budhvar|budhvaar|budhwaar|guruvar|guruvaar|guruwaar|brhaspativar|shukravar|shukravaar|shanivar|shanivaar)\b/i,
+  )
+  if (m) {
+    const target = HI_WEEKDAYS[m[2].toLowerCase()]
+    if (target !== undefined) {
+      const d = /^pichh/i.test(m[1] || '') ? prevWeekday(target) : nextWeekday(target)
+      return { key: keyOf(d), matchText: m[0] }
+    }
+  }
+
+  if (/\bparso(?:n)?\b/i.test(text)) {
+    const d = new Date()
+    d.setDate(d.getDate() + 2)
+    return { key: keyOf(d), matchText: text.match(/\bparso(?:n)?\b/i)[0] }
+  }
+  // "kal" = tomorrow (unless it's the phrase "aaj kal" = nowadays)
+  if (/\bkal\b/i.test(text) && !/\baaj\s+kal\b/i.test(text)) {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    return { key: keyOf(d), matchText: text.match(/\bkal\b/i)[0] }
+  }
+  if (/\baaj\b/i.test(text) && !/\baaj\s+kal\b/i.test(text)) {
+    return { key: keyOf(new Date()), matchText: text.match(/\baaj\b/i)[0] }
+  }
+
   return null
 }
 
@@ -142,7 +193,7 @@ function cleanTitle(text, dateMatch, marksMatch) {
     .replace(/\s+([,.;])/g, '$1')
     .trim()
   if (!t) t = text.trim()
-  t = t.replace(/^[,;:\-\s]+/, '')
+  t = t.replace(/^[,;:\-•●▪\s]+/, '')
   if (t.length > 110) t = t.slice(0, 107) + '…'
   return t
 }
@@ -173,12 +224,78 @@ export function extractLocal(raw) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Bulk capture — paste a whole notice/syllabus (one deadline per
+ * line/sentence) and get every task back. Chunks that mention a date
+ * but look like chatter (no task noun, no marks) are ignored.
+ * ------------------------------------------------------------------ */
+
+const TASK_NOUN =
+  /assign|submit|submission|due|deadline|exam|viva|lab|report|quiz|slide|ppt|form|project|homework|practical|presentation|external|internal|synopsis|record|worksheet|paper|test|topic|seminar|workshop|registration|experiment|fee|activity/i
+
+function tasksFrom(chunk) {
+  const task = extractLocal(chunk)
+  if (!task.dueDate) return []
+  if (!task.title || task.title.length < 6) return []
+  if (!TASK_NOUN.test(chunk) && task.marks == null) return []
+  return [task]
+}
+
+function splitSubs(line) {
+  return line
+    .split(/\s*[•●▪]\s+|\s+[.!?;]\s+|\s+(?:and|aur)\s+(?:bhi\s+)?/i)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 5)
+}
+
+export function extractManyLocal(raw) {
+  const text = raw.trim()
+  const lines = text.split(/\n+/).map((s) => s.trim()).filter(Boolean)
+  const pools = []
+  for (const line of lines) {
+    const direct = tasksFrom(line)
+    const subs = splitSubs(line)
+    const fromSubs = subs.length > 1 ? subs.flatMap(tasksFrom) : []
+    pools.push(...(fromSubs.length > direct.length ? fromSubs : direct))
+  }
+  // Nothing date-shaped at all → behave exactly like the single extractor.
+  if (!pools.length) return [extractLocal(text)]
+
+  const seen = new Set()
+  const uniq = []
+  for (const t of pools) {
+    const sig = `${t.dueDate}|${t.title.toLowerCase()}`
+    if (seen.has(sig)) continue
+    seen.add(sig)
+    uniq.push(t)
+  }
+  return uniq
+}
+
+/* ------------------------------------------------------------------ *
  * AI extractor — optional, OpenAI-compatible. Used when the user
  * pastes an API key in Settings. Falls back to extractLocal() on error.
  * ------------------------------------------------------------------ */
 
 function stripFences(s) {
   return s.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+}
+
+function normEntry(parsed, raw) {
+  const fallback = extractLocal(raw)
+  return {
+    title:
+      (typeof parsed.title === 'string' && parsed.title.trim().slice(0, 110)) || fallback.title,
+    subject:
+      typeof parsed.subject === 'string' && parsed.subject.trim()
+        ? parsed.subject.trim().slice(0, 80)
+        : null,
+    dueDate:
+      typeof parsed.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dueDate)
+        ? parsed.dueDate
+        : null,
+    marks: Number.isFinite(parsed.marks) && parsed.marks > 0 ? parsed.marks : null,
+    priority: parsed.priority === 'high' ? 'high' : 'normal',
+  }
 }
 
 async function extractWithAI(raw, settings) {
@@ -215,15 +332,7 @@ async function extractWithAI(raw, settings) {
   const parsed = JSON.parse(stripFences(content))
   if (!parsed || typeof parsed.title !== 'string') throw new Error('Bad AI JSON')
 
-  return {
-    title: parsed.title.trim().slice(0, 110) || extractLocal(raw).title,
-    subject: typeof parsed.subject === 'string' && parsed.subject.trim() ? parsed.subject.trim() : null,
-    dueDate: typeof parsed.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dueDate)
-      ? parsed.dueDate
-      : null,
-    marks: Number.isFinite(parsed.marks) ? parsed.marks : null,
-    priority: parsed.priority === 'high' ? 'high' : 'normal',
-  }
+  return normEntry(parsed, raw)
 }
 
 /**
@@ -238,4 +347,69 @@ export async function extractTask(raw, settings) {
     }
   }
   return extractLocal(raw)
+}
+
+/* --- bulk AI path: every deadline in a whole notice/syllabus --- */
+
+async function extractWithAIMany(raw, settings) {
+  const today = todayKey()
+  const system = [
+    'You extract assignment/deadline entries from messy text (a single message or a whole notice/syllabus).',
+    `Today is ${today}.`,
+    'Reply with ONLY minified JSON, no prose: {"tasks":[{"title":string,"subject":string|null,"dueDate":"YYYY-MM-DD"|null,"marks":number|null,"priority":"high"|"normal"}]}',
+    'Return EVERY distinct assignment/deadline mentioned, one entry per task (max 20). dueDate = a real calendar date derived from the text, or null when no date is given. priority = "high" if due within 1 day or marks >= 15, else "normal". A single task → a one-element array. Ignore chatter with no task.',
+  ].join('\n')
+
+  const res = await fetch(`${settings.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${settings.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: settings.model || 'gpt-4o-mini',
+      temperature: 0,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: raw },
+      ],
+    }),
+  })
+
+  if (!res.ok) throw new Error(`AI request failed: ${res.status}`)
+  const data = await res.json()
+  const content = data?.choices?.[0]?.message?.content
+  if (!content) throw new Error('Empty AI response')
+
+  const parsed = JSON.parse(stripFences(content))
+  const list = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.tasks)
+      ? parsed.tasks
+      : parsed && typeof parsed.title === 'string'
+        ? [parsed]
+        : null
+  if (!list || !list.length) throw new Error('Bad AI JSON')
+
+  const out = list
+    .filter((e) => e && typeof e.title === 'string' && e.title.trim())
+    .slice(0, 20)
+    .map((e) => normEntry(e, raw))
+  if (!out.length) throw new Error('Bad AI JSON')
+  return out
+}
+
+/**
+ * Bulk entry point: array of tasks. AI (array-aware) when enabled,
+ * line/sentence splitting offline otherwise.
+ */
+export async function extractMany(raw, settings) {
+  if (settings?.aiEnabled && settings.apiKey) {
+    try {
+      return await extractWithAIMany(raw, settings)
+    } catch (err) {
+      console.warn('[Deadline Radar] AI bulk extract failed, using local parser:', err)
+    }
+  }
+  return extractManyLocal(raw)
 }

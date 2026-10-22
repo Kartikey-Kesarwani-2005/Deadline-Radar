@@ -8,7 +8,7 @@
  * IMAGE: screenshot/photo -> task, using the same request vision.js sends.
  */
 import { readFileSync } from 'node:fs'
-import { extractTask } from '../src/lib/extract.js'
+import { extractMany, extractTask } from '../src/lib/extract.js'
 import { extractFromImage } from '../src/lib/vision.js'
 
 const settings = {
@@ -26,6 +26,23 @@ if (!settings.apiKey) {
 const messy = 'dbms ka assignment friday tak dena hai, 20 marks, q1 se q5 submit karne hain portal pe'
 const textResult = await extractTask(messy, settings)
 console.log('TEXT  ->', JSON.stringify(textResult, null, 2))
+
+// BULK: one notice pasted → every deadline inside it, as an array.
+const bulkNotice = [
+  'Notice: internal assessment 2 ke liye sab submit kar dena',
+  'DBMS assignment - 25 Oct, 20 marks',
+  'OS lab record - 28 Oct, 10 marks',
+  'SE presentation - 30 Oct, 15 marks',
+].join('\n')
+const bulkResult = await extractMany(bulkNotice, settings)
+console.log(`BULK -> ${bulkResult.length} task(s)`)
+for (const t of bulkResult) {
+  console.log(`   * ${t.dueDate || 'no date'} | ${t.title} | ${t.subject || '-'} | ${t.marks ?? '-'} marks`)
+}
+if (bulkResult.length < 2) {
+  console.error('BULK FAILED: expected multiple tasks from a multi-line notice')
+  process.exit(1)
+}
 
 const image = process.argv[2]
 if (image) {

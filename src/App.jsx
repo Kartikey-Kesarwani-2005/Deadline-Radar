@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { extractTask } from './lib/extract'
+import { extractMany } from './lib/extract'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
   exportTasks,
@@ -60,7 +60,7 @@ function byUrgency(a, b) {
   return b.createdAt - a.createdAt
 }
 
-function Section({ title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateChange }) {
+function Section({ title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateChange, onShare }) {
   if (!tasks.length) return null
   return (
     <section className="mb-6">
@@ -79,6 +79,7 @@ function Section({ title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateC
             onDelete={() => onDelete(task.id)}
             onEdit={() => onEdit(task.id)}
             onDateChange={(date) => onDateChange(task.id, date)}
+            onShare={() => onShare(task.id)}
           />
         ))}
       </div>
@@ -199,16 +200,20 @@ export default function App() {
   async function addTask(text) {
     setBusy(true)
     try {
-      const parsed = await extractTask(text, settings)
-      const task = {
+      const parsed = await extractMany(text, settings)
+      const created = parsed.map((p) => ({
         id: crypto.randomUUID(),
-        ...parsed,
+        ...p,
         source: text,
         done: false,
         createdAt: Date.now(),
-      }
-      setTasks((prev) => [task, ...prev])
-      setFlash({ msg: `Captured: ${task.title} · ${formatDue(task.dueDate)}` })
+      }))
+      setTasks((prev) => [...created, ...prev])
+      setFlash(
+        created.length > 1
+          ? { msg: `Captured ${created.length} deadlines from one paste ✓` }
+          : { msg: `Captured: ${created[0].title} · ${formatDue(created[0].dueDate)}` },
+      )
     } finally {
       setBusy(false)
     }
@@ -298,6 +303,31 @@ export default function App() {
 
   const changeDate = (id, date) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, dueDate: date } : t)))
+
+  // 📤 copies a ready-to-paste line (plus the app link) for study groups.
+  async function shareTask(id) {
+    const task = tasks.find((t) => t.id === id)
+    if (!task) return
+    const when = task.dueDate ? `due ${formatDue(task.dueDate)}` : 'no date set'
+    const line =
+      `📡 ${task.title}${task.subject ? ` (${task.subject})` : ''} — ${when}` +
+      `${task.marks ? `, ${task.marks} marks` : ''}\n` +
+      'https://kartikey-kesarwani-2005.github.io/Deadline-Radar/'
+    try {
+      await navigator.clipboard.writeText(line)
+      setFlash({ msg: 'Share text copied — paste it in your group ✓' })
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = line
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand('copy')
+      ta.remove()
+      setFlash({
+        msg: ok ? 'Share text copied — paste it in your group ✓' : 'Copy failed — try again.',
+      })
+    }
+  }
 
   const subjects = useMemo(() => {
     const set = new Set()
@@ -532,6 +562,7 @@ export default function App() {
               onDelete={deleteTask}
               onEdit={setEditingId}
               onDateChange={changeDate}
+              onShare={shareTask}
             />
           ))}
           {visible.length === 0 && (
