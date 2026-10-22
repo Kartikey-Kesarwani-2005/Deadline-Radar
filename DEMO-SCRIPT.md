@@ -32,10 +32,14 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   tak, 20 marks…` → one structured card with date + marks.)*
 
 ### 1:05–1:30 — What it gives back
-- Screen: sections (Late / Due today / This week), tick a task done, open **Weekly report**.
-- **VO:** *"It sorts by urgency and marks, nags me once a day, and keeps the receipt —
-  deadlines captured, finished, and finished on time."*
-- Show the **On time** counter and Weekly report numbers — this is the "one real result".
+- Screen: the **radar dial** (rings fill by urgency, sweep rotating, on-time % in the centre),
+  then sections (Late / Due today / This week), tick a task done — **confetti bursts** —
+  open **Weekly report**.
+- **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
+  your on-time score. It sorts by urgency and marks, nags me once a day, and keeps the
+  receipt — deadlines captured, finished, and finished on time."*
+- Tap a dial ring → it jumps to that section. Show the **On time** ring and Weekly report
+  numbers — this is the "one real result".
 
 ### 1:30–1:50 — The voice story (challenge twist)
 - Screen: Wispr Insights usage card glimpse + a clip of coding with voice (terminal/AI
