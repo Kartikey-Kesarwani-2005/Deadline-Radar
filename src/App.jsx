@@ -970,7 +970,13 @@ export default function App() {
         className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-6 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
-        <div className="rail flex min-w-0 flex-col gap-4">
+        <div
+          className={`rail flex min-w-0 flex-col gap-4 ${
+            isWide
+              ? 'rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto'
+              : ''
+          }`}
+        >
           {/* Stats + radar dial */}
           <div
             className={`stats-row flex items-stretch gap-3 ${isWide ? 'lg:flex-col lg:items-stretch' : ''}`}

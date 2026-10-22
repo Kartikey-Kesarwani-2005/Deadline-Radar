@@ -54,7 +54,7 @@ replacing anything you captured).
   every animation respects the OS reduced-motion setting.
 - **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
   phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1280px),
-  a 360px side rail and hover-reveal card actions.
+  a glass side rail that sticks to the viewport while you scroll, and hover-reveal card actions.
 - **⌨️ Desktop keyboard shortcuts** — `/` search · `n` new deadline · `b` spoken briefing ·
   `w` weekly report · `?` shortcuts card · `Esc` close. A ⌨️ chip in the header opens the card;
   shortcuts never fire while you're typing in a field.
