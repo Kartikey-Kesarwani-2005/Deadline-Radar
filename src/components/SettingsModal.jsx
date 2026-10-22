@@ -121,6 +121,34 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
           )}
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <p className="text-sm font-semibold text-slate-200">🖥️ Display mode</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+              Auto picks the layout from your screen size. Phone mode: compact, big tap targets,
+              card buttons always visible. Desktop: a wider radar dashboard.
+            </p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {[
+                ['auto', '✨ Auto'],
+                ['desktop', '🖥️ Desktop'],
+                ['phone', '📱 Phone'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => set({ displayMode: value })}
+                  className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition ${
+                    (draft.displayMode || 'auto') === value
+                      ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
+                      : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:text-slate-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
             <p className="text-sm font-semibold text-slate-200">Backup &amp; restore</p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
               Your tasks live only in this browser. Export a JSON backup before clearing site data

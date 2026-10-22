@@ -155,6 +155,27 @@ export default function App() {
   const [subjectFilter, setSubjectFilter] = useState(null)
   const inputRef = useRef(null)
   const [installEvt, setInstallEvt] = useState(null)
+  // Connectivity + screen size drive the offline banner and desktop / phone modes.
+  const [online, setOnline] = useState(() => navigator.onLine)
+  const [vw, setVw] = useState(() => window.innerWidth)
+
+  useEffect(() => {
+    const on = () => setOnline(true)
+    const off = () => setOnline(false)
+    const resize = () => setVw(window.innerWidth)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    window.addEventListener('resize', resize)
+    return () => {
+      window.removeEventListener('online', on)
+      window.removeEventListener('offline', off)
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
+
+  const displayMode = settings.displayMode || 'auto'
+  const isPhone = displayMode === 'phone' || (displayMode === 'auto' && vw < 640)
+  const isWide = !isPhone && vw >= 1024
 
   useEffect(() => saveTasks(tasks), [tasks])
 
@@ -255,7 +276,11 @@ export default function App() {
       setFlash({ msg: `Read from image: ${task.title} · ${formatDue(task.dueDate)}` })
     } catch (err) {
       console.error('[Deadline Radar] image extract failed:', err)
-      setFlash({ msg: `Could not read that image — ${err.message || 'try again'}` })
+      setFlash({
+        msg: navigator.onLine
+          ? `Could not read that image — ${err.message || 'try again'}`
+          : '📵 Screenshot reading needs internet — type or paste the notice instead; the offline parser handles it.',
+      })
     } finally {
       setBusy(false)
     }
@@ -427,7 +452,11 @@ export default function App() {
   const editingTask = tasks.find((t) => t.id === editingId) || null
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-16 pt-8 sm:pt-12">
+    <div
+      className={`mx-auto w-full px-4 pb-16 pt-8 sm:pt-12 ${
+        isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-5xl' : 'max-w-2xl'
+      }`}
+    >
       {/* Header */}
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
@@ -437,7 +466,7 @@ export default function App() {
               <span className="relative">📡</span>
             </span>
             <div>
-              <h1 className="text-lg font-extrabold tracking-tight text-slate-50">
+              <h1 className="app-title text-lg font-extrabold tracking-tight text-slate-50">
                 Deadline Radar
               </h1>
               <p className="text-xs text-slate-500">{formatLongToday()}</p>
@@ -486,6 +515,17 @@ export default function App() {
         </div>
       </header>
 
+      {/* Offline mode — everything below keeps working without a connection */}
+      {!online && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-200">
+          <span aria-hidden="true">📴</span>
+          <p>
+            <b>You are offline — the radar keeps working.</b> Capture, parsing, reminders and your
+            data all live in this browser. AI extract falls back to the built-in offline parser.
+          </p>
+        </div>
+      )}
+
       {/* Input */}
       <AddBar onAdd={addTask} busy={busy} inputRef={inputRef} onImage={addFromImage} />
 
@@ -504,117 +544,129 @@ export default function App() {
         </div>
       )}
 
-      {/* Stats + radar dial */}
-      <div className="mt-4 mb-6 flex items-stretch gap-3">
-        <RadarDial
-          late={stats.late}
-          today={stats.dueToday}
-          week={stats.week}
-          later={stats.later}
-          onTime={stats.onTime}
-          done={stats.done}
-        />
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} />
-          <button
-            type="button"
-            onClick={() => setReportOpen(true)}
-            className="mt-auto rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+      {/* Dashboard grid — on wide screens the radar sections sit beside the stat rail */}
+      <div
+        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start' : ''}`}
+      >
+        {/* Left rail: stats + search (stacked above the sections on phones) */}
+        <div className="rail flex flex-col gap-4">
+          {/* Stats + radar dial */}
+          <div
+            className={`stats-row flex items-stretch gap-3 ${isWide ? 'lg:flex-col lg:items-stretch' : ''}`}
           >
-            📊 Weekly report — real result + copy check-in post
-          </button>
+            <RadarDial
+              late={stats.late}
+              today={stats.dueToday}
+              week={stats.week}
+              later={stats.later}
+              onTime={stats.onTime}
+              done={stats.done}
+            />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} />
+              <button
+                type="button"
+                onClick={() => setReportOpen(true)}
+                className="weekly-btn mt-auto rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+              >
+                📊 Weekly report — real result + copy check-in post
+              </button>
+            </div>
+          </div>
+
+          {/* Search + subject filters */}
+          {tasks.length > 0 && (
+            <div className="space-y-2">
+              <div className="relative">
+                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-500">
+                  🔍
+                </span>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search tasks — or press / to jump here"
+                  aria-label="Search tasks"
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pr-3 pl-9 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none"
+                />
+              </div>
+              {subjects.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSubjectFilter(null)}
+                    className={chipCls(!subjectFilter)}
+                  >
+                    All
+                  </button>
+                  {subjects.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSubjectFilter(subjectFilter === s ? null : s)}
+                      className={chipCls(subjectFilter === s)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right column: the radar sections */}
+        <div className="flex flex-col gap-4">
+          {tasks.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
+              <p className="text-3xl">📡</p>
+              <p className="mt-2 text-sm font-semibold text-slate-200">No deadlines captured yet</p>
+              <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
+                Paste your most recent assignment WhatsApp message above — or hold your Wispr key and
+                describe it. The radar fills itself.
+              </p>
+              <button
+                type="button"
+                onClick={() => setTasks(buildSampleTasks())}
+                className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+              >
+                Load sample data (see how it looks)
+              </button>
+            </div>
+          ) : (
+            <>
+              {SECTION_DEFS.map(({ key, title, tone, hint }) => (
+                <Section
+                  key={key}
+                  title={title}
+                  tone={tone}
+                  hint={key === 'done' ? `${onTime} finished on time` : hint}
+                  tasks={sections[key]}
+                  onToggle={toggleTask}
+                  onDelete={deleteTask}
+                  onEdit={setEditingId}
+                  onDateChange={changeDate}
+                  onShare={shareTask}
+                />
+              ))}
+              {visible.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
+                  No tasks match this filter.{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery('')
+                      setSubjectFilter(null)
+                    }}
+                    className="font-semibold text-emerald-300 underline hover:text-emerald-200"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-
-      {/* Search + subject filters */}
-      {tasks.length > 0 && (
-        <div className="mb-5 space-y-2">
-          <div className="relative">
-            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-500">
-              🔍
-            </span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search tasks — or press / to jump here"
-              aria-label="Search tasks"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pr-3 pl-9 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none"
-            />
-          </div>
-          {subjects.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => setSubjectFilter(null)}
-                className={chipCls(!subjectFilter)}
-              >
-                All
-              </button>
-              {subjects.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSubjectFilter(subjectFilter === s ? null : s)}
-                  className={chipCls(subjectFilter === s)}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Dashboard */}
-      {tasks.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
-          <p className="text-3xl">📡</p>
-          <p className="mt-2 text-sm font-semibold text-slate-200">No deadlines captured yet</p>
-          <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
-            Paste your most recent assignment WhatsApp message above — or hold your Wispr key and
-            describe it. The radar fills itself.
-          </p>
-          <button
-            type="button"
-            onClick={() => setTasks(buildSampleTasks())}
-            className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
-          >
-            Load sample data (see how it looks)
-          </button>
-        </div>
-      ) : (
-        <>
-          {SECTION_DEFS.map(({ key, title, tone, hint }) => (
-            <Section
-              key={key}
-              title={title}
-              tone={tone}
-              hint={key === 'done' ? `${onTime} finished on time` : hint}
-              tasks={sections[key]}
-              onToggle={toggleTask}
-              onDelete={deleteTask}
-              onEdit={setEditingId}
-              onDateChange={changeDate}
-              onShare={shareTask}
-            />
-          ))}
-          {visible.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
-              No tasks match this filter.{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery('')
-                  setSubjectFilter(null)
-                }}
-                className="font-semibold text-emerald-300 underline hover:text-emerald-200"
-              >
-                Clear filters
-              </button>
-            </div>
-          )}
-        </>
-      )}
 
       {/* Footer */}
       <footer className="mt-10 border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-slate-600">

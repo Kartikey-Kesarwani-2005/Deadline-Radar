@@ -28,7 +28,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage }) {
         className="w-full resize-none bg-transparent px-2 py-1.5 text-[15px] leading-relaxed text-slate-100 placeholder:text-slate-500 focus:outline-none"
       />
       <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-1">
-        <span className="text-xs text-slate-500">
+        <span className="wispr-hint text-xs text-slate-500">
           🎙️ Hold your Wispr key and speak — the text lands right here
         </span>
         <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage }) {
             type="button"
             onClick={submit}
             disabled={!text.trim() || busy}
-            className="rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="add-submit rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? 'Reading…' : 'Add to radar →'}
           </button>

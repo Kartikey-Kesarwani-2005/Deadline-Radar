@@ -84,7 +84,7 @@ export default function TaskCard({
         onClick={onShare}
         aria-label="Copy share text"
         title="Copy for WhatsApp / group"
-        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
+        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
       >
         📤
       </button>
@@ -93,7 +93,7 @@ export default function TaskCard({
         type="button"
         onClick={onEdit}
         aria-label="Edit task"
-        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
+        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
       >
         ✏️
       </button>
@@ -102,7 +102,7 @@ export default function TaskCard({
         type="button"
         onClick={onDelete}
         aria-label="Delete task"
-        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus:opacity-100"
+        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus:opacity-100"
       >
         ✕
       </button>

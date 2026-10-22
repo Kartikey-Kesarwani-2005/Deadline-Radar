@@ -48,6 +48,11 @@ replacing anything you captured).
 - **Celebration confetti** — ticking a task done bursts colourful confetti right from the click.
 - **Premium feel** — cards glide in with a stagger, lift on hover, and the header logo glows;
   every animation respects the OS reduced-motion setting.
+- **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
+  desktop gets a wider radar dashboard with a stat rail; phone gets a compact layout with
+  big tap targets and always-visible card buttons.
+- **Offline banner** — lose the connection and the radar says so: capture, parsing and data
+  all keep working on-device; AI extract silently falls back to the offline parser.
 - **Stats bar** — Captured / Due today / Late / Done pills next to the dial.
 - **Daily reminder** — one browser notification a day when something is late or due today
   (enable it with the 🔔 button in the header).

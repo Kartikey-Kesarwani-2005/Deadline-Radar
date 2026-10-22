@@ -80,3 +80,32 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     animation: none !important;
   }
 }
+
+/* ---------- Display modes ---------- */
+/* Phone mode — compact, thumb-friendly, no hover-only affordances. */
+.phone-mode .task-actions {
+  opacity: 1;
+}
+.phone-mode .radar-dial {
+  width: 150px;
+  height: 150px;
+}
+.phone-mode .stats-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+.phone-mode .stats-pills {
+  width: 100%;
+}
+.phone-mode .weekly-btn {
+  width: 100%;
+}
+.phone-mode .add-submit {
+  flex: 1;
+}
+.phone-mode .wispr-hint {
+  display: none;
+}
+.phone-mode .app-title {
+  font-size: 1.05rem;
+}

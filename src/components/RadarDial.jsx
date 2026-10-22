@@ -27,7 +27,7 @@ export default function RadarDial({ late, today, week, later, onTime, done }) {
     <div
       role="img"
       aria-label={`Deadline radar: ${late} late, ${today} due today, ${week} this week, ${later} later. ${pct ?? 0} percent finished on time.`}
-      className="rise relative h-[168px] w-[168px] shrink-0 overflow-hidden rounded-full bg-[#0a1122] ring-1 ring-white/10"
+      className="rise radar-dial relative h-[168px] w-[168px] shrink-0 self-center overflow-hidden rounded-full bg-[#0a1122] ring-1 ring-white/10"
     >
       <span aria-hidden="true" className="radar-sweep" />
 

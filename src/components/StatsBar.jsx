@@ -10,7 +10,7 @@ function Pill({ label, value, className }) {
 /** 2×2 stat pills — the on-time percentage lives in the radar dial's center. */
 export default function StatsBar({ total, dueToday, late, done }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="stats-pills grid grid-cols-2 gap-2">
       <Pill label="Captured" value={total} className="text-slate-100" />
       <Pill label="Due today" value={dueToday} className="text-amber-300" />
       <Pill
