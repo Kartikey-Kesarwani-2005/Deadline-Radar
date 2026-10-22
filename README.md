@@ -42,8 +42,11 @@ npm run build    # output in dist/
 npm run preview  # test the production build locally
 ```
 
-Deploy to Vercel: import the repo, framework = **Vite**, build command = `npm run build`,
-output directory = `dist`. (Netlify works the same way.)
+**Auto-deploy:** every push to `main` builds and publishes this repo to **GitHub Pages** —
+the live demo link is `https://kartikey-kesarwani-2005.github.io/Deadline-Radar/`.
+
+Manual alternatives: Vercel (import repo, framework = **Vite**, build = `npm run build`,
+output = `dist`) or Netlify (same settings).
 
 ## 🎙️ Wispr Flow workflow (the challenge rule)
 
