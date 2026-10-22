@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, extractManyLocal } from './lib/extract'
-import { adviceFor, answerQuery, briefingText, computeBrain, doNow, forecastWeather, marksAtRisk, startAlerts, weeklyTrend } from './lib/brain'
+import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
 import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
@@ -67,7 +67,7 @@ function byUrgency(a, b) {
   return b.createdAt - a.createdAt
 }
 
-function Section({ sectionKey, title, tone, hint, tasks, getAdvice, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, focusId }) {
+function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, focusId }) {
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-6 scroll-mt-4">
@@ -83,6 +83,7 @@ function Section({ sectionKey, title, tone, hint, tasks, getAdvice, onToggle, on
             key={task.id}
             task={task}
             advice={getAdvice ? getAdvice(task) : null}
+            estimate={getEst ? getEst(task) : null}
             style={{ animationDelay: `${Math.min(index * 45, 320)}ms` }}
             onToggle={(e) => onToggle(task.id, e)}
             onDelete={() => onDelete(task.id)}
@@ -618,6 +619,7 @@ export default function App() {
   const onTime = tasks.filter(
     (t) => t.done && t.dueDate && t.completedAt && toDateKey(new Date(t.completedAt)) <= t.dueDate,
   ).length
+  const streak = onTimeStreak(tasks)
 
   const stats = {
     total: tasks.length,
@@ -640,6 +642,7 @@ export default function App() {
   const plan = useMemo(() => doNow(tasks), [tasks])
   const startSoon = useMemo(() => startAlerts(tasks), [tasks])
   const trend = useMemo(() => weeklyTrend(tasks), [tasks])
+  const pace = useMemo(() => paceModel(tasks), [tasks])
   const canAsk = canListen()
 
   // 🎙️ "Ask the radar" — one spoken question, spoken answer.
@@ -668,6 +671,25 @@ export default function App() {
     if (busy) return
     speak(briefingText(tasks))
     setFlash({ msg: '🔊 Radar Samachaar — sun raha hoon…' })
+  }
+
+  // 📤 One-tap week plan for the study group — native share sheet, clipboard fallback.
+  async function shareWeek() {
+    const text = weekShareText(tasks)
+    if (navigator.share) {
+      try {
+        await navigator.share({ text })
+        return
+      } catch (err) {
+        if (err?.name === 'AbortError') return
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      setFlash({ msg: '📤 Week plan copied — paste it in your group chat.' })
+    } catch {
+      setFlash({ msg: 'Sharing blocked by the browser — copy it from the weekly report instead.' })
+    }
   }
 
   async function toggleReminders() {
@@ -1022,6 +1044,14 @@ export default function App() {
               >
                 📅 Export deadlines to phone calendar (.ics)
               </button>
+              <button
+                type="button"
+                onClick={shareWeek}
+                title="Native share sheet (phone) or clipboard copy — this week's deadlines for the group chat"
+                className="share-week-btn rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-violet-500/40 hover:text-violet-300"
+              >
+                📤 Share this week to the group
+              </button>
             </div>
           </div>
 
@@ -1112,9 +1142,10 @@ export default function App() {
                   key={key}
                   title={title}
                   tone={tone}
-                  hint={key === 'done' ? `${onTime} finished on time` : hint}
+                  hint={key === 'done' ? `${onTime} finished on time${streak > 1 ? ` · 🔥 ${streak} in a row` : ''}` : hint}
                   tasks={sections[key]}
                   getAdvice={(task) => adviceFor(brain, task)}
+                  getEst={(task) => estimateEffort(task, pace)}
                   onToggle={toggleTask}
                   onDelete={deleteTask}
                   onEdit={setEditingId}

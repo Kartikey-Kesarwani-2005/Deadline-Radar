@@ -1,4 +1,5 @@
 import { dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
+import { fmtHours } from '../lib/brain'
 
 const chipBase =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium'
@@ -73,6 +74,19 @@ export default function TaskCard({
           {task.marks != null && (
             <span className={`${chipBase} border-violet-500/30 bg-violet-500/10 text-violet-300`}>
               {task.marks} marks
+            </span>
+          )}
+          {estimate && !task.done && (
+            <span
+              title={
+                estimate.learned
+                  ? 'Learned from your own focus-timer sessions'
+                  : 'Estimate until you track it with the focus timer'
+              }
+              className={`${chipBase} border-teal-500/30 bg-teal-500/10 text-teal-300`}
+            >
+              ⏱ ≈{fmtHours(estimate.minutes)}
+              {estimate.learned ? ' 🧠' : ''}
             </span>
           )}
           <span className={`${chipBase} ${dueTone(task)}`}>📅 {formatDue(task.dueDate)}</span>

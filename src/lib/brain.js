@@ -259,6 +259,66 @@ export function weeklyTrend(tasks, now = Date.now()) {
   }
 }
 
+/**
+ * 🏆 On-time streak — newest finished work walked backwards; stops at the
+ * first late finish. The "N in a row" dopamine line for the weekly report.
+ */
+export function onTimeStreak(tasks) {
+  const done = tasks
+    .filter((t) => t.done && t.dueDate && t.completedAt)
+    .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0))
+  let n = 0
+  for (const t of done) {
+    if (toDateKey(new Date(t.completedAt)) > t.dueDate) break
+    n++
+  }
+  return n
+}
+
+/**
+ * 📤 Week share text — one tap → the group chat: this week's pending
+ * deadlines (late first), with marks and the app link footer.
+ */
+export function weekShareText(tasks, today = todayKey()) {
+  const pending = tasks
+    .filter((t) => !t.done && t.dueDate && dayDiff(today, t.dueDate) <= 7)
+    .sort((a, b) => dayDiff(today, a.dueDate) - dayDiff(today, b.dueDate))
+  const lines = pending.map((t) => {
+    const d = dayDiff(today, t.dueDate)
+    const when = d < 0 ? `${-d}d LATE` : d === 0 ? 'TODAY' : WEEKDAY(t.dueDate)
+    return `• ${t.title} — ${when}${t.marks ? ` (${t.marks} marks)` : ''}`
+  })
+  return [
+    'Deadline radar 📡 this week:',
+    ...(lines.length ? lines : ['— clear week, kuch due nahi — 🎉']),
+    '',
+    'Captured hands-free with Deadline Radar + Wispr Flow',
+    'https://kartikey-kesarwani-2005.github.io/Deadline-Radar/',
+  ].join('\n')
+}
+
+/**
+ * 📊 Pending load by subject — what each subject is currently costing you:
+ * total marks + task count, heaviest subject first (feeds the report bars).
+ */
+export function subjectLoad(tasks) {
+  const acc = {}
+  for (const t of tasks) {
+    if (t.done || !t.subject) continue
+    const key = String(t.subject).trim()
+    if (!key) continue
+    ;(acc[key] ||= { label: key, marks: 0, count: 0 })
+    acc[key].marks += t.marks || 0
+    acc[key].count++
+  }
+  return Object.values(acc).sort((a, b) => b.marks - a.marks || b.count - a.count)
+}
+
+/** Public handle for the learned minutes-per-mark model (feeds per-card estimates). */
+export function paceModel(tasks) {
+  return pacePerMark(tasks)
+}
+
 /** One-line reason for a ranked item — spoken by the voice query too. */
 export function doNowReason(item) {
   if (item.daysLeft < 0) return `already late — about ${Math.round(item.roi)} marks/hr, finish it first`

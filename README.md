@@ -44,6 +44,8 @@ replacing anything you captured).
 - **Share to the radar (Android PWA)** — install the app, then any app → *Share → Deadline Radar*
   and the shared text is captured automatically (PWA Share Target).
 - **Share** — 📤 on any card copies a ready-to-paste line + app link, for the study group chat.
+  **📤 Share this week** in the rail sends the whole week's deadlines (late first) via the
+  native share sheet on phone, clipboard on desktop.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
 - **Radar dial** — the signature widget: concentric rings for Late / Due today / This week / Later
@@ -64,7 +66,8 @@ replacing anything you captured).
 - **🎯 "Ab kya karun?" (do-now engine)** — lists show what exists; this names the ONE
   task to start right now: marks-per-hour ROI weighted by urgency, so overdue and
   latest-start tasks jump the queue. A **⏱ focus timer** on every card tracks real
-  minutes, so each subject's effort estimate comes from YOUR pace, not a guess.
+  minutes, so each subject's effort estimate comes from YOUR pace, not a guess —
+  every pending card shows that **⏱ ≈ estimate** (🧠 = learned from your sessions).
 - **🌦️ Deadline Weather** — the week as a weather forecast: ☀️ clear day, ⛅ light,
   🌧️ heavy (10+ marks), ⛈️ storm (3+ submissions or 25+ marks). Tap a day to filter the
   radar to it. Nobody else forecasts deadlines like weather.
@@ -89,12 +92,15 @@ replacing anything you captured).
 - **Daily reminder** — one browser notification a day when something is late or due today
   (enable it with the 🔔 button in the header).
 - **On-time metric** — every tick records when you finished it, so the app shows *"N finished
-  on time"* — the real result for your demo video.
+  on time"* — the real result for your demo video — plus a **🏆 on-time streak** ("N in a row",
+  stops at the first late finish), on the dashboard and in the weekly report.
 - **Urgency sorting** — each section orders itself: priority → nearest deadline → highest marks.
 - **Weekly report** — one tap shows your real result (captured / finished / on time) and copies a
   ready-made check-in text for your #NoHandsChallenge post. It now includes a **🧠 per-subject
   pace table** — on-time %, your usual buffer (days early/late) and learned minutes-per-mark,
   worst subject first: the "which subject is actually eating my marks" answer no tracker gives.
+  It also shows the **🏆 on-time streak** and **📊 pending-load bars** (marks still riding on
+  each subject, heaviest first).
 - **Undo delete** — deleting shows an instant Undo button, nothing is lost by a mis-tap.
 - **Live radar sweep** — the header logo scans continuously; the **Late** counter pulses while
   something is overdue. The dashboard feels alive at a glance.

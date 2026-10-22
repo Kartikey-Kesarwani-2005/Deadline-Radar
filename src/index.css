@@ -179,6 +179,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .phone-mode .export-btn {
   width: 100%;
 }
+.phone-mode .share-week-btn {
+  width: 100%;
+}
 .phone-mode .add-submit {
   flex: 1;
 }

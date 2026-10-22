@@ -4,7 +4,7 @@
  */
 import { extractLocal, extractManyLocal } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
-import { answerQuery, briefingText, doNow, estimateEffort, paceRows, startAlerts, weeklyTrend } from '../src/lib/brain.js'
+import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
 
 const today = new Date()
@@ -221,6 +221,59 @@ check(
   tr.thisWeek.focusMin === 120 && tr.lastWeek.focusMin === 60,
   true,
 )
+
+// --- On-time streak ---
+const streakTasks = [
+  { id: 'k1', done: true, dueDate: '2099-01-05', completedAt: new Date('2099-01-04T12:00:00Z').getTime() },
+  { id: 'k2', done: true, dueDate: '2099-01-02', completedAt: new Date('2099-01-03T12:00:00Z').getTime() },
+  { id: 'k3', done: true, dueDate: '2099-01-10', completedAt: new Date('2099-01-09T12:00:00Z').getTime() },
+]
+check('streak: stops at the first late finish (newest first)', onTimeStreak(streakTasks), 2)
+check(
+  'streak: counts consecutive on-time finishes',
+  onTimeStreak([
+    { id: 'm1', done: true, dueDate: '2099-02-03', completedAt: new Date('2099-02-02T12:00:00Z').getTime() },
+    { id: 'm2', done: true, dueDate: '2099-02-01', completedAt: new Date('2099-01-31T12:00:00Z').getTime() },
+    { id: 'm3', done: true, dueDate: '2099-01-28', completedAt: new Date('2099-01-27T12:00:00Z').getTime() },
+  ]),
+  3,
+)
+
+// --- Week share text (group chat) ---
+const wtext = weekShareText(
+  [
+    { id: 'q1', title: 'DBMS quiz', dueDate: '2026-10-21', marks: 20, done: false },
+    { id: 'q2', title: 'Group viva', dueDate: '2026-10-25', done: false },
+    { id: 'q3', title: 'Far away', dueDate: '2026-11-05', done: false },
+    { id: 'q4', title: 'Done thing', dueDate: '2026-10-23', done: true },
+  ],
+  '2026-10-22',
+)
+check(
+  'week share: late first, 7-day window, done skipped',
+  wtext.indexOf('DBMS quiz') < wtext.indexOf('Group viva') && !wtext.includes('Far away') && !wtext.includes('Done thing'),
+  true,
+)
+check(
+  'week share: marks + app footer',
+  wtext.includes('(20 marks)') && wtext.includes('Deadline Radar'),
+  true,
+)
+
+// --- Pending load by subject ---
+const load = subjectLoad([
+  { id: 'l1', subject: 'DBMS', marks: 20, done: false },
+  { id: 'l2', subject: 'DBMS', marks: 10, done: false },
+  { id: 'l3', subject: 'OS', marks: 10, done: false },
+  { id: 'l4', subject: 'SE', marks: 5, done: true },
+  { id: 'l5', title: 'no subject', done: false },
+])
+check(
+  'subject load: pending only, marks summed, heaviest first',
+  load.length === 2 && load[0].label === 'DBMS' && load[0].marks === 30,
+  true,
+)
+check('subject load: task counts', load[0].count === 2 && load[1].marks === 10, true)
 
 // --- Calendar export (.ics) ---
 const icsTasks = [

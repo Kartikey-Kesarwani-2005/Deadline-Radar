@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
-import { marksAtRisk, paceRows, weeklyTrend } from '../lib/brain'
+import { marksAtRisk, onTimeStreak, paceRows, subjectLoad, weeklyTrend } from '../lib/brain'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -28,6 +28,8 @@ export default function WeeklyReport({ tasks, onClose }) {
   const risk = marksAtRisk(tasks)
   const pace = paceRows(tasks)
   const trend = weeklyTrend(tasks)
+  const streak = onTimeStreak(tasks)
+  const load = subjectLoad(tasks)
   const delta = (now, before) =>
     now > before ? 'text-emerald-300' : now < before ? 'text-red-400' : 'text-slate-100'
 
@@ -38,6 +40,7 @@ export default function WeeklyReport({ tasks, onClose }) {
     `📌 Pending with a deadline: ${pending}${late ? ` · late: ${late}` : ''}`,
     `🎯 Marks at risk: ${risk.total}${risk.late ? ` (${risk.late} already late)` : ''}`,
     `🏁 Total finished so far: ${doneEver}`,
+    `🏆 On-time streak: ${streak} in a row`,
     `📈 Trend: finished ${trend.lastWeek.finished}→${trend.thisWeek.finished} · on time ${trend.lastWeek.onTime}→${trend.thisWeek.onTime} · focused ${(trend.thisWeek.focusMin / 60).toFixed(1)}h`,
     pace.length
       ? `🧠 Weakest subject: ${pace[0].label} (${pace[0].onTimeRate}% on time)`
@@ -83,6 +86,11 @@ export default function WeeklyReport({ tasks, onClose }) {
         <Row label="Captured" value={captured} />
         <Row label="Finished" value={finished.length} className="text-emerald-300" />
         <Row label="… of those finished on time" value={onTime} className="text-teal-300" />
+        <Row
+          label="🏆 On-time streak"
+          value={streak > 0 ? `${streak} in a row` : 'start it today'}
+          className={streak > 1 ? 'text-orange-300' : streak === 1 ? 'text-emerald-300' : 'text-slate-500'}
+        />
 
         <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">
           📈 Trend vs last week
@@ -108,6 +116,39 @@ export default function WeeklyReport({ tasks, onClose }) {
         <Row label="Late right now" value={late} className="text-red-400" />
         <Row label="🎯 Marks at risk (late + this week)" value={risk.total} className="text-amber-300" />
         <Row label="Total finished" value={doneEver} className="text-emerald-300" />
+
+        {load.length > 0 && (
+          <>
+            <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">
+              📊 Pending load by subject (marks)
+            </p>
+            <div className="space-y-1.5">
+              {load.map((s) => {
+                const max = Math.max(1, load[0].marks)
+                const pct = Math.max(4, Math.round((s.marks / max) * 100))
+                return (
+                  <div key={s.label} className="flex items-center gap-2 text-[11px]">
+                    <span className="w-24 shrink-0 truncate text-slate-400" title={s.label}>
+                      {s.label}
+                    </span>
+                    <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-sky-500/70 to-violet-500/70"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="w-16 shrink-0 text-right font-medium tabular-nums text-slate-300">
+                      {s.marks}m · {s.count}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="mt-1.5 text-[10px] text-slate-600">
+              Marks still pending per subject — heaviest first.
+            </p>
+          </>
+        )}
 
         {pace.length > 0 && (
           <>
