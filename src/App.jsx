@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractTask } from './lib/extract'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import { loadSettings, loadTasks, saveSettings, saveTasks } from './lib/store'
@@ -8,6 +8,7 @@ import StatsBar from './components/StatsBar'
 import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
+import TaskEditModal from './components/TaskEditModal'
 
 const SECTION_TONES = {
   red: 'bg-red-500',
@@ -17,6 +18,28 @@ const SECTION_TONES = {
   slate: 'bg-slate-500',
   green: 'bg-emerald-400',
 }
+
+function chipCls(active) {
+  return `rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+    active
+      ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300'
+      : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:text-slate-200'
+  }`
+}
+
+const SECTION_DEFS = [
+  { key: 'late', title: 'Late — handle now', tone: 'red' },
+  { key: 'today', title: 'Due today', tone: 'amber' },
+  { key: 'week', title: 'This week', tone: 'yellow' },
+  { key: 'later', title: 'Later', tone: 'sky' },
+  {
+    key: 'noDate',
+    title: 'No date yet — pick one',
+    tone: 'slate',
+    hint: 'use the date box on the card',
+  },
+  { key: 'done', title: 'Done', tone: 'green' },
+]
 
 /** Priority first, then nearest deadline, then higher marks, then newest. */
 function byUrgency(a, b) {
@@ -29,7 +52,7 @@ function byUrgency(a, b) {
   return b.createdAt - a.createdAt
 }
 
-function Section({ title, tone, hint, tasks, onToggle, onDelete, onDateChange }) {
+function Section({ title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateChange }) {
   if (!tasks.length) return null
   return (
     <section className="mb-6">
@@ -46,6 +69,7 @@ function Section({ title, tone, hint, tasks, onToggle, onDelete, onDateChange })
             task={task}
             onToggle={() => onToggle(task.id)}
             onDelete={() => onDelete(task.id)}
+            onEdit={() => onEdit(task.id)}
             onDateChange={(date) => onDateChange(task.id, date)}
           />
         ))}
@@ -114,6 +138,10 @@ export default function App() {
   const [flash, setFlash] = useState(null)
   const [perm, setPerm] = useState(() => getPermission())
   const [reportOpen, setReportOpen] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [query, setQuery] = useState('')
+  const [subjectFilter, setSubjectFilter] = useState(null)
+  const inputRef = useRef(null)
 
   useEffect(() => saveTasks(tasks), [tasks])
 
@@ -128,6 +156,20 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [flash])
 
+  // "/" jumps to the capture box (unless already typing somewhere).
+  useEffect(() => {
+    function onKey(e) {
+      const tag = e.target?.tagName
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable
+      if (e.key === '/' && !typing) {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   async function addTask(text) {
     setBusy(true)
     try {
@@ -140,7 +182,7 @@ export default function App() {
         createdAt: Date.now(),
       }
       setTasks((prev) => [task, ...prev])
-      setFlash(`Captured: ${task.title} · ${formatDue(task.dueDate)}`)
+      setFlash({ msg: `Captured: ${task.title} · ${formatDue(task.dueDate)}` })
     } finally {
       setBusy(false)
     }
@@ -154,9 +196,48 @@ export default function App() {
           : t,
       ),
     )
-  const deleteTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id))
+  const deleteTask = (id) => {
+    const index = tasks.findIndex((t) => t.id === id)
+    if (index === -1) return
+    const removed = tasks[index]
+    setTasks((prev) => prev.filter((t) => t.id !== id))
+    setFlash({
+      msg: `Deleted: ${removed.title}`,
+      action: {
+        label: 'Undo',
+        run: () =>
+          setTasks((prev) => {
+            const next = [...prev]
+            next.splice(Math.min(index, next.length), 0, removed)
+            return next
+          }),
+      },
+    })
+  }
+
+  const updateTask = (id, patch) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)))
+    setEditingId(null)
+    setFlash({ msg: 'Task updated ✓' })
+  }
+
   const changeDate = (id, date) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, dueDate: date } : t)))
+
+  const subjects = useMemo(() => {
+    const set = new Set()
+    tasks.forEach((t) => t.subject && set.add(t.subject))
+    return [...set].sort()
+  }, [tasks])
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return tasks.filter((t) => {
+      if (subjectFilter && t.subject !== subjectFilter) return false
+      if (!q) return true
+      return `${t.title} ${t.subject || ''} ${t.source || ''}`.toLowerCase().includes(q)
+    })
+  }, [tasks, query, subjectFilter])
 
   const sections = useMemo(() => {
     const today = todayKey()
@@ -164,18 +245,18 @@ export default function App() {
     const diffOf = (t) => (t.dueDate ? dayDiff(today, t.dueDate) : null)
 
     return {
-      late: tasks.filter((t) => !isDone(t) && t.dueDate && diffOf(t) < 0).sort(byUrgency),
-      today: tasks.filter((t) => !isDone(t) && diffOf(t) === 0).sort(byUrgency),
-      week: tasks
+      late: visible.filter((t) => !isDone(t) && t.dueDate && diffOf(t) < 0).sort(byUrgency),
+      today: visible.filter((t) => !isDone(t) && diffOf(t) === 0).sort(byUrgency),
+      week: visible
         .filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 0 && diffOf(t) <= 7)
         .sort(byUrgency),
-      later: tasks
+      later: visible
         .filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 7)
         .sort(byUrgency),
-      noDate: tasks.filter((t) => !isDone(t) && !t.dueDate).sort(byUrgency),
-      done: tasks.filter(isDone).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)),
+      noDate: visible.filter((t) => !isDone(t) && !t.dueDate).sort(byUrgency),
+      done: visible.filter(isDone).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)),
     }
-  }, [tasks])
+  }, [visible])
 
   // "Real result" metric: tasks finished before their deadline.
   const onTime = tasks.filter(
@@ -184,28 +265,31 @@ export default function App() {
 
   const stats = {
     total: tasks.length,
-    dueToday: sections.today.length,
-    late: sections.late.length,
-    done: sections.done.length,
+    dueToday: tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) === 0)
+      .length,
+    late: tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) < 0).length,
+    done: tasks.filter((t) => t.done).length,
     onTime,
   }
 
   async function toggleReminders() {
     const current = getPermission()
     if (current === 'unsupported') {
-      setFlash('This browser does not support notifications.')
+      setFlash({ msg: 'This browser does not support notifications.' })
       return
     }
     let permission = current
     if (permission === 'default') permission = await requestPermission()
     setPerm(permission)
     if (permission === 'granted') {
-      notifyTest(sections.late.length, sections.today.length)
-      setFlash('Reminders on — one alert a day when something is late or due today.')
+      notifyTest(stats.late, stats.dueToday)
+      setFlash({ msg: 'Reminders on — one alert a day when something is late or due today.' })
     } else {
-      setFlash('Notifications blocked — allow them from the 🔒 icon in your address bar.')
+      setFlash({ msg: 'Notifications blocked — allow them from the 🔒 icon in your address bar.' })
     }
   }
+
+  const editingTask = tasks.find((t) => t.id === editingId) || null
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pb-16 pt-8 sm:pt-12">
@@ -256,11 +340,20 @@ export default function App() {
       </header>
 
       {/* Input */}
-      <AddBar onAdd={addTask} busy={busy} />
+      <AddBar onAdd={addTask} busy={busy} inputRef={inputRef} />
 
       {flash && (
-        <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
-          ✓ {flash}
+        <div className="mt-2 flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
+          <span className="min-w-0 flex-1 break-words">✓ {flash.msg}</span>
+          {flash.action && (
+            <button
+              type="button"
+              onClick={flash.action.run}
+              className="shrink-0 rounded border border-emerald-400/40 px-2 py-0.5 text-[11px] font-bold text-emerald-200 transition hover:bg-emerald-500/20"
+            >
+              {flash.action.label}
+            </button>
+          )}
         </div>
       )}
 
@@ -275,6 +368,45 @@ export default function App() {
           📊 Weekly report — real result + copy check-in post
         </button>
       </div>
+
+      {/* Search + subject filters */}
+      {tasks.length > 0 && (
+        <div className="mb-5 space-y-2">
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-500">
+              🔍
+            </span>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search tasks — or press / to jump here"
+              aria-label="Search tasks"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pr-3 pl-9 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none"
+            />
+          </div>
+          {subjects.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSubjectFilter(null)}
+                className={chipCls(!subjectFilter)}
+              >
+                All
+              </button>
+              {subjects.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSubjectFilter(subjectFilter === s ? null : s)}
+                  className={chipCls(subjectFilter === s)}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Dashboard */}
       {tasks.length === 0 ? (
@@ -295,56 +427,34 @@ export default function App() {
         </div>
       ) : (
         <>
-          <Section
-            title="Late — handle now"
-            tone="red"
-            tasks={sections.late}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            onDateChange={changeDate}
-          />
-          <Section
-            title="Due today"
-            tone="amber"
-            tasks={sections.today}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            onDateChange={changeDate}
-          />
-          <Section
-            title="This week"
-            tone="yellow"
-            tasks={sections.week}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            onDateChange={changeDate}
-          />
-          <Section
-            title="Later"
-            tone="sky"
-            tasks={sections.later}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            onDateChange={changeDate}
-          />
-          <Section
-            title="No date yet — pick one"
-            tone="slate"
-            hint="use the date box on the card"
-            tasks={sections.noDate}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            onDateChange={changeDate}
-          />
-          <Section
-            title="Done"
-            tone="green"
-            hint={`${onTime} finished on time`}
-            tasks={sections.done}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            onDateChange={changeDate}
-          />
+          {SECTION_DEFS.map(({ key, title, tone, hint }) => (
+            <Section
+              key={key}
+              title={title}
+              tone={tone}
+              hint={key === 'done' ? `${onTime} finished on time` : hint}
+              tasks={sections[key]}
+              onToggle={toggleTask}
+              onDelete={deleteTask}
+              onEdit={setEditingId}
+              onDateChange={changeDate}
+            />
+          ))}
+          {visible.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
+              No tasks match this filter.{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('')
+                  setSubjectFilter(null)
+                }}
+                className="font-semibold text-emerald-300 underline hover:text-emerald-200"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
         </>
       )}
 
@@ -355,6 +465,18 @@ export default function App() {
         <br />
         All data stays in this browser (localStorage).
       </footer>
+
+      {editingTask && (
+        <TaskEditModal
+          task={editingTask}
+          onClose={() => setEditingId(null)}
+          onSave={(patch) => updateTask(editingTask.id, patch)}
+          onDelete={() => {
+            deleteTask(editingTask.id)
+            setEditingId(null)
+          }}
+        />
+      )}
 
       {reportOpen && <WeeklyReport tasks={tasks} onClose={() => setReportOpen(false)} />}
 

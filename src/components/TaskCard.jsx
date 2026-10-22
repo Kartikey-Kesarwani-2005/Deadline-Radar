@@ -3,7 +3,7 @@ import { dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
 const chipBase =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium'
 
-export default function TaskCard({ task, onToggle, onDelete, onDateChange }) {
+export default function TaskCard({ task, onToggle, onDelete, onEdit, onDateChange }) {
   const diff = task.dueDate ? dayDiff(todayKey(), task.dueDate) : null
   const isLate = !task.done && diff !== null && diff < 0
 
@@ -69,6 +69,15 @@ export default function TaskCard({ task, onToggle, onDelete, onDateChange }) {
           </label>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label="Edit task"
+        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
+      >
+        ✏️
+      </button>
 
       <button
         type="button"

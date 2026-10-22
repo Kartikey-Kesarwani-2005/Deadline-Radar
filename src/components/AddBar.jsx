@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function AddBar({ onAdd, busy }) {
+export default function AddBar({ onAdd, busy, inputRef }) {
   const [text, setText] = useState('')
 
   async function submit() {
@@ -14,6 +14,7 @@ export default function AddBar({ onAdd, busy }) {
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_10px_40px_-16px_rgba(16,185,129,0.5)] backdrop-blur">
       <textarea
         rows={2}
+        ref={inputRef}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {

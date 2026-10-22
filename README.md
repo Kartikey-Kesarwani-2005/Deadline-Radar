@@ -9,7 +9,10 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 ## ✨ Features (MVP)
 
 - **Capture anything** — paste a messy assignment message, or hold your Wispr key and speak it
-  straight into the input box.
+  straight into the input box. Press <kbd>/</kbd> anywhere to jump back to it.
+- **Full editing** — ✏️ on any card fixes title, subject, marks, date and priority; original
+  captured text stays visible for reference.
+- **Search + subject filter** — find any task instantly; subject chips filter the radar.
 - **Auto-extract** — task title, subject, deadline, marks and priority are pulled out of the text.
   - Built-in **offline parser** (dates like `Friday`, `25 Oct`, `25/10`, `tomorrow`, `2026-10-30`,
     weekdays, marks, subjects) — works with **zero setup**.
@@ -24,6 +27,8 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 - **Urgency sorting** — each section orders itself: priority → nearest deadline → highest marks.
 - **Weekly report** — one tap shows your real result (captured / finished / on time) and copies a
   ready-made check-in text for your #NoHandsChallenge post.
+- **Undo delete** — deleting shows an instant Undo button, nothing is lost by a mis-tap.
+- **PWA-ready** — favicon, web manifest and share preview (OG) tags; installable from the browser.
 - **Daily check-in** — open the app, tick things off.
 - **Everything in localStorage** — no account, no backend, data never leaves your browser
   (except the optional AI call you configure yourself).
