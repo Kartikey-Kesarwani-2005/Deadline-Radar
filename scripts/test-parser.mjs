@@ -6,6 +6,7 @@ import { extractLocal, extractManyLocal, reconcile } from '../src/lib/extract.js
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
+import { dueTone } from '../src/lib/dates.js'
 
 const today = new Date()
 const key = (d) =>
@@ -342,6 +343,38 @@ const icsLink = buildICS(
   new Date('2026-10-22T10:00:00Z'),
 )
 check('ics: portal link exported as URL property', icsLink.includes('URL:https://moodle.example.com/quiz'), true)
+
+// --- Audit round: ambiguous dates must never fake a deadline ---
+check('day after tomorrow beats the "tomorrow" match', extractLocal('viva day after tomorrow hai').dueDate, shift(2))
+check(
+  'range "chapter 3-6" is not a date (hyphen, day ≤ 12, no year)',
+  extractLocal('chapter 3-6 tak padhna hai').dueDate,
+  null,
+)
+check(
+  'decimal "unit 10.5" is not a date (dot, day ≤ 12, no year)',
+  extractLocal('unit 10.5 discuss karna hai').dueDate,
+  null,
+)
+check(
+  'unambiguous "25-10" (day > 12) still parses',
+  extractLocal('DBMS assignment 25-10 tak submit').dueDate,
+  `${today.getFullYear()}-10-25`,
+)
+
+// --- Audit round: backup restore keeps effort + rejects junk dates ---
+const bEff = parseBackup(
+  JSON.stringify([
+    { id: 'f1', title: 'Quiz', dueDate: '2026-10-30', effortMin: 55, done: true, completedAt: 1792600000000 },
+    { id: 'f2', title: 'Weird date', dueDate: 'soon', effortMin: -5 },
+  ]),
+)
+check('backup: effortMin (pace data) survives restore', bEff[0].effortMin, 55)
+check('backup: malformed dueDate downgraded to null', bEff[1].dueDate, null)
+
+// --- Audit round: due-date pill tone ---
+check('dueTone: undefined dueDate stays calm slate', dueTone({ done: false, dueDate: undefined }).includes('slate-400'), true)
+check('dueTone: missing dueDate key also slate (was falsely yellow)', dueTone({ done: false }).includes('slate-400'), true)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

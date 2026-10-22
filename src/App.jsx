@@ -471,6 +471,9 @@ export default function App() {
           ? { msg: `Captured ${created.length} deadlines${where} ✓` }
           : { msg: `Captured: ${created[0].title} · ${formatDue(created[0].dueDate)}` },
       )
+    } catch (err) {
+      console.error('[Deadline Radar] capture failed:', err)
+      setFlash({ msg: `Could not read that text — ${err?.message || 'try again'}` })
     } finally {
       setBusy(false)
     }
@@ -674,6 +677,9 @@ export default function App() {
     later: tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) > 7).length,
     done: tasks.filter((t) => t.done).length,
     onTime,
+    // Scoreable finishes: only dated + timestamped completions count toward
+    // the on-time percentage (undated work has no deadline to miss).
+    rated: tasks.filter((t) => t.done && t.dueDate && t.completedAt).length,
   }
 
   // Radar Brain: personal rhythm from finished work + marks riding on pending work.
@@ -1050,7 +1056,7 @@ export default function App() {
               week={stats.week}
               later={stats.later}
               onTime={stats.onTime}
-              done={stats.done}
+              rated={stats.rated}
             />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} focusH={(trend.thisWeek.focusMin / 60).toFixed(1)} />

@@ -91,25 +91,34 @@ function findDate(text) {
     if (d) return { key: keyOf(d), matchText: m[0] }
   }
 
-  // 4. 25/10 or 25-10-2026 (dd/mm, India default)
-  m = text.match(/\b(\d{1,2})[/.\-](\d{1,2})(?:[/.\-](\d{2,4}))?\b/)
+  // 4. 25/10 (slash = always dd/mm in India), 25-10-2026, or "25-10" / "25.10".
+  // Dot/hyphen WITHOUT a year only counts when the day > 12, so ranges
+  // ("ch 3-6") and decimals ("unit 10.5") can never fake a date.
+  m = text.match(/\b(\d{1,2})([/.\-])(\d{1,2})(?:[/.\-](\d{2,4}))?\b/)
   if (m) {
-    let y = m[3] ? Number(m[3]) : year
-    if (y < 100) y += 2000
-    const d = validDate(y, Number(m[2]) - 1, Number(m[1]))
-    if (d) return { key: keyOf(d), matchText: m[0] }
+    const dayNum = Number(m[1])
+    const monthNum = Number(m[3])
+    const yearPart = m[4] ? Number(m[4]) : null
+    const ambiguous = m[2] !== '/' && yearPart == null && dayNum <= 12
+    if (!ambiguous) {
+      let y = yearPart ?? year
+      if (y < 100) y += 2000
+      const d = validDate(y, monthNum - 1, dayNum)
+      if (d) return { key: keyOf(d), matchText: m[0] }
+    }
   }
 
-  // 5. tomorrow / day after tomorrow / today
+  // 5. day after tomorrow / tomorrow / today
+  // (longer phrase first — "day after tomorrow" also contains "tomorrow")
+  if (/day after tomorrow/i.test(text)) {
+    const d = new Date()
+    d.setDate(d.getDate() + 2)
+    return { key: keyOf(d), matchText: text.match(/day after tomorrow/i)[0] }
+  }
   if (/\btomorrow\b/i.test(text)) {
     const d = new Date()
     d.setDate(d.getDate() + 1)
     return { key: keyOf(d), matchText: text.match(/\btomorrow\b/i)[0] }
-  }
-  if (/day after tomorrow/i.test(text)) {
-    const d = new Date()
-    d.setDate(d.getDate() + 2)
-    return { key: keyOf(d), matchText: 'day after tomorrow' }
   }
 
   // 6. weekday names: "Friday", "next Monday"

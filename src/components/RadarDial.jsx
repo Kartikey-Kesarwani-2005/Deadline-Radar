@@ -12,9 +12,11 @@ const ZONES = [
 ]
 const RADII = [92, 76, 60, 46]
 
-export default function RadarDial({ late, today, week, later, onTime, done }) {
+export default function RadarDial({ late, today, week, later, onTime, rated = 0 }) {
   const counts = { late, today, week, later }
-  const pct = done > 0 ? Math.round((onTime / done) * 100) : null
+  // Only dated, timestamped finishes are scoreable — undated work has no
+  // deadline to miss, so it must not drag the percentage down.
+  const pct = rated > 0 ? Math.round((onTime / rated) * 100) : null
   const ringDeg = (c) => (c > 0 ? (Math.min(c, 8) / 8) * 360 : 0)
 
   function jump(zoneKey) {

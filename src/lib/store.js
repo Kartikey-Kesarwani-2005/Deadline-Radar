@@ -80,11 +80,14 @@ export function parseBackup(text) {
       id: typeof t.id === 'string' && t.id ? t.id : crypto.randomUUID(),
       title: String(t.title).slice(0, 300),
       subject: typeof t.subject === 'string' && t.subject ? t.subject.slice(0, 80) : null,
-      dueDate: typeof t.dueDate === 'string' && t.dueDate ? t.dueDate : null,
+      dueDate:
+        typeof t.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) ? t.dueDate : null,
       marks: Number.isFinite(t.marks) && t.marks > 0 ? t.marks : null,
       priority: t.priority === 'high' ? 'high' : 'normal',
       done: Boolean(t.done),
       completedAt: Number.isFinite(t.completedAt) ? t.completedAt : null,
+      // Focus-timer minutes — without this the pace model reset on every restore.
+      effortMin: Number.isFinite(t.effortMin) && t.effortMin > 0 ? t.effortMin : null,
       createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
       source: typeof t.source === 'string' ? t.source.slice(0, 600) : '',
       link:

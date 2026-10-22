@@ -378,9 +378,11 @@ export function answerQuery(query, { tasks, stats }) {
         : 'No marks at risk right now. The radar is clear.',
     }
   }
-  if (/(on ?time|score|percentage|result)/.test(s) && stats.done) {
+  if (/(on ?time|score|percentage|result)/.test(s) && (stats.rated ?? stats.done)) {
+    // Denominator = only scoreable finishes (dated + timestamped), matching the dial.
+    const denom = stats.rated || stats.done
     return {
-      text: `${stats.onTime} of ${stats.done} finished tasks were on time — ${Math.round((stats.onTime / stats.done) * 100)} percent.`,
+      text: `${stats.onTime} of ${denom} finished tasks were on time — ${Math.round((stats.onTime / denom) * 100)} percent.`,
     }
   }
   if (/late|overdue|pichhle/.test(s)) {

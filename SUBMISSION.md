@@ -68,7 +68,7 @@ live link. Upload the Wispr usage card. Paste-ready post template:
 Schedule:
 - **Mon 19 Oct** — week-1 check-in (if missed, post catch-up immediately, don't skip)
 - **Mon 26 Oct** — week-2 check-in with fresh usage card
-- **Mon 30 Oct** — submission day: submit in the MORNING, not at 11:59 pm
+- **Fri 30 Oct** — submission day: submit in the MORNING, not at 11:59 pm
 
 ---
 

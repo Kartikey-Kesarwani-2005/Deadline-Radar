@@ -46,7 +46,7 @@ export function notifyDaily(tasks) {
   if (late.length) parts.push(`${late.length} late`)
   if (dueToday.length) parts.push(`${dueToday.length} due today`)
   if (startSoon.length) parts.push(`${startSoon.length} start window closing`)
-  const first = (late[0] || dueToday[0] || startSoon[0]).title
+  const first = (late[0] || dueToday[0] || startSoon[0]?.task)?.title || 'a deadline'
   const bodyLead = late.length || dueToday.length ? '' : 'Start window closing: '
   const total = late.length + dueToday.length + startSoon.length
 

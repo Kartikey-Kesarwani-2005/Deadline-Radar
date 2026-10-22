@@ -58,8 +58,10 @@ export function formatLongToday() {
  */
 export function dueTone(task) {
   if (task.done) return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+  // `!task.dueDate` (not `=== null`) so an undefined dueDate can never slip
+  // into the `diff <= 3` branch below and show as falsely urgent.
+  if (!task.dueDate) return 'border-slate-500/30 bg-slate-500/10 text-slate-400'
   const diff = dayDiff(todayKey(), task.dueDate)
-  if (task.dueDate === null) return 'border-slate-500/30 bg-slate-500/10 text-slate-400'
   if (diff < 0) return 'border-red-500/40 bg-red-500/15 text-red-300'
   if (diff === 0) return 'border-amber-400/40 bg-amber-400/15 text-amber-300'
   if (diff <= 3) return 'border-yellow-500/30 bg-yellow-500/10 text-yellow-200'

@@ -4,8 +4,8 @@
 
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
-[![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakdevs.com/)
-[![Tests](https://img.shields.io/badge/tests-23%2F23%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
+[![Tests](https://img.shields.io/badge/tests-72%2F72%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -21,7 +21,7 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 — `?demo=1` adds the sample deadlines to the radar (merged with your own, deduped, never
 replacing anything you captured).
 
-## ✨ Features (MVP)
+## ✨ Features
 
 - **Capture anything** — paste a messy assignment message, or hold your Wispr key and speak it
   straight into the input box. Press <kbd>/</kbd> anywhere to jump back to it.
@@ -62,7 +62,7 @@ replacing anything you captured).
 - **Premium feel** — cards glide in with a stagger, lift on hover, and the header logo glows;
   every animation respects the OS reduced-motion setting.
 - **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
-  phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1280px),
+  phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1536px),
   a glass side rail that sticks to the viewport while you scroll, and hover-reveal card actions.
 - **⌨️ Desktop keyboard shortcuts** — `/` search · `n` new deadline · `b` spoken briefing ·
   `w` weekly report · `?` shortcuts card · `Esc` close. A ⌨️ chip in the header opens the card;
@@ -170,6 +170,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # offline extractor + bulk + backup parser (23 checks)
+npm test       # offline extractor + bulk + backup parser (72 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```
