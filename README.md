@@ -50,6 +50,9 @@ replacing anything you captured).
   the parser extracts it (URL never leaks into the title or fakes a date), the card shows a
   one-tap **🔗 Portal** button, share text and the `.ics` calendar export carry it too. Can
   also be set/edited per task.
+- **🔁 Re-capture updates** — teacher moved the deadline? Paste the same message again and
+  the pending task updates **in place** (date/marks/link) with a *"📅 Fri → Mon updated"*
+  flash — not dropped as a duplicate. Finished tasks are never reopened.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
 - **Radar dial** — the signature widget: concentric rings for Late / Due today / This week / Later

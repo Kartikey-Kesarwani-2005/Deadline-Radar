@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { extractMany, extractManyLocal } from './lib/extract'
+import { extractMany, extractManyLocal, reconcile } from './lib/extract'
 import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
 import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
@@ -410,26 +410,66 @@ export default function App() {
     setBusy(true)
     try {
       const parsed = await extractMany(text, settings)
-      const created = parsed.map((p) => ({
+      // 🔁 Re-capture: a re-pasted message that matches a pending task
+      // UPDATES it (teacher moved the deadline) instead of being dropped.
+      const { fresh: freshParsed, updates } = reconcile(tasks, parsed)
+      const created = freshParsed.map((p) => ({
         id: crypto.randomUUID(),
         ...p,
         source: text,
         done: false,
         createdAt: Date.now(),
       }))
-      // Dedupe by exact title so share/clipboard re-runs never double-capture.
-      const have = new Set(tasks.map((t) => t.title.toLowerCase().trim()))
-      const fresh = created.filter((c) => !have.has(c.title.toLowerCase().trim()))
-      if (!fresh.length) {
-        setFlash({ msg: 'Already on the radar — nothing new in that text.' })
+      if (!created.length && !updates.length) {
+        const doneHit = parsed.some((p) =>
+          tasks.some((t) => t.done && t.title.toLowerCase().trim() === String(p.title).toLowerCase().trim()),
+        )
+        setFlash({
+          msg: doneHit
+            ? 'That one is already done ✓ — tick it off again if it came back to life.'
+            : 'Already on the radar — nothing new in that text.',
+        })
         return
       }
-      setTasks((prev) => [...fresh, ...prev])
+      if (updates.length) {
+        const byId = new Map(tasks.map((t) => [t.id, t]))
+        setTasks((prev) => {
+          let next = prev
+          if (created.length) next = [...created, ...next]
+          const map = new Map(updates.map((u) => [u.id, u]))
+          next = next.map((t) => {
+            const u = map.get(t.id)
+            if (!u) return t
+            const { from, ...patch } = u
+            return { ...t, ...patch, source: text }
+          })
+          return next
+        })
+        const msgs = []
+        const u0 = updates[0]
+        const prior = byId.get(u0.id)
+        const changes = []
+        if (u0.dueDate && prior?.dueDate && u0.dueDate !== prior.dueDate) {
+          changes.push(`📅 ${formatDue(prior.dueDate)} → ${formatDue(u0.dueDate)}`)
+        } else if (u0.dueDate) {
+          changes.push(`📅 ${formatDue(u0.dueDate)}`)
+        }
+        if (u0.marks != null && u0.marks !== prior?.marks) {
+          changes.push(`${prior?.marks ?? '—'} → ${u0.marks} marks`)
+        }
+        if (u0.link && u0.link !== prior?.link) changes.push(prior?.link ? '🔗 link swapped' : '🔗 link added')
+        const extra = updates.length > 1 ? ` (+${updates.length - 1} more)` : ''
+        msgs.push(`🔄 ${prior?.title ?? 'Task'} updated: ${changes.join(', ')}${extra}`)
+        if (created.length) msgs.push(`+ ${created.length} new ✓`)
+        setFlash({ msg: msgs.join('  ·  ') })
+        return
+      }
+      setTasks((prev) => [...created, ...prev])
       const where = via ? ` ${via}` : created.length > 1 ? ' from one paste' : ''
       setFlash(
-        fresh.length > 1
-          ? { msg: `Captured ${fresh.length} deadlines${where} ✓` }
-          : { msg: `Captured: ${fresh[0].title} · ${formatDue(fresh[0].dueDate)}` },
+        created.length > 1
+          ? { msg: `Captured ${created.length} deadlines${where} ✓` }
+          : { msg: `Captured: ${created[0].title} · ${formatDue(created[0].dueDate)}` },
       )
     } finally {
       setBusy(false)

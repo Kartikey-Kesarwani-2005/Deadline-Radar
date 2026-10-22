@@ -2,7 +2,7 @@
  * Unit tests for the offline extractor — the fallback that keeps the app working
  * with zero setup. Plus backup parser tests (restore path). Run with:  npm test
  */
-import { extractLocal, extractManyLocal } from '../src/lib/extract.js'
+import { extractLocal, extractManyLocal, reconcile } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
@@ -144,6 +144,41 @@ const bLink = parseBackup(
   JSON.stringify([{ id: 'task-link', title: 'Quiz', dueDate: null, link: 'https://moodle.example.com/q1' }]),
 )
 check('link: survives backup restore', bLink[0].link, 'https://moodle.example.com/q1')
+
+// --- Re-capture reconcile (deadline moved → smart update, not a dupe) ---
+const rcExisting = [
+  { id: 'r1', title: 'DBMS quiz', dueDate: '2026-10-23', marks: 20, done: false },
+  { id: 'r2', title: 'SE slides', dueDate: '2026-10-21', marks: 15, done: true },
+]
+const rc = reconcile(rcExisting, [
+  { title: 'DBMS quiz', dueDate: '2026-10-27', marks: 25, link: null },
+  { title: 'SE slides', dueDate: '2026-10-28', marks: null, link: null },
+  { title: 'OS viva', dueDate: '2026-11-02', marks: null, link: null },
+])
+check(
+  'reconcile: pending match with new date -> update, not duplicate',
+  rc.updates.length === 1 && rc.fresh.length === 1,
+  true,
+)
+check(
+  'reconcile: patch carries new values + old ones for the flash',
+  { id: rc.updates[0].id, d: rc.updates[0].dueDate, m: rc.updates[0].marks, from: rc.updates[0].from.dueDate },
+  { id: 'r1', d: '2026-10-27', m: 25, from: '2026-10-23' },
+)
+check('reconcile: done task is never reopened', rc.updates.some((u) => u.id === 'r2'), false)
+check('reconcile: genuinely new title still captured', rc.fresh[0]?.title, 'OS viva')
+const rcSame = reconcile(rcExisting, [{ title: 'DBMS quiz', dueDate: '2026-10-23', marks: 20, link: null }])
+check(
+  'reconcile: identical re-paste -> nothing to do',
+  rcSame.updates.length === 0 && rcSame.fresh.length === 0,
+  true,
+)
+const e2eFirst = extractLocal('DBMS quiz due Friday, 20 marks')
+const { updates: rcE2e } = reconcile(
+  [{ id: 'r9', title: e2eFirst.title, dueDate: '2026-10-23', marks: 20, done: false }],
+  [extractLocal('DBMS quiz due 27 Oct, 25 marks')],
+)
+check('reconcile e2e: re-pasted message moves the deadline', rcE2e[0]?.dueDate, '2026-10-27')
 
 let threw = 0
 try { parseBackup('not json at all') } catch { threw += 1 }

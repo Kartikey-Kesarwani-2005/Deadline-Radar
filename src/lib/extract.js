@@ -430,3 +430,36 @@ export async function extractMany(raw, settings) {
   }
   return extractManyLocal(raw)
 }
+
+/**
+ * 🔁 Re-capture reconcile — teachers extend deadlines, portals re-open.
+ * A re-pasted message that matches an existing PENDING task UPDATES it
+ * (date / marks / link) instead of being silently dropped as a duplicate;
+ * done tasks are never reopened. Returns fresh tasks to create and patches
+ * to apply, so the UI can flash exactly what changed ("Fri → Mon").
+ */
+export function reconcile(existing, parsed) {
+  const byTitle = new Map(existing.map((t) => [String(t.title).toLowerCase().trim(), t]))
+  const fresh = []
+  const updates = []
+  for (const p of parsed) {
+    const prior = byTitle.get(String(p.title).toLowerCase().trim())
+    if (!prior) {
+      fresh.push(p)
+      continue
+    }
+    if (prior.done) continue
+    const patch = {}
+    if (p.dueDate && p.dueDate !== prior.dueDate) patch.dueDate = p.dueDate
+    if (p.marks != null && p.marks !== prior.marks) patch.marks = p.marks
+    if (p.link && p.link !== prior.link) patch.link = p.link
+    if (Object.keys(patch).length) {
+      updates.push({
+        id: prior.id,
+        from: { dueDate: prior.dueDate, marks: prior.marks },
+        ...patch,
+      })
+    }
+  }
+  return { fresh, updates }
+}
