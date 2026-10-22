@@ -143,6 +143,7 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
   const inputRef = useRef(null)
+  const [installEvt, setInstallEvt] = useState(null)
 
   useEffect(() => saveTasks(tasks), [tasks])
 
@@ -169,6 +170,16 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Chrome/Edge "install app" prompt (satisfied by the manifest + service worker).
+  useEffect(() => {
+    function onPrompt(e) {
+      e.preventDefault()
+      setInstallEvt(e)
+    }
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
   }, [])
 
   async function addTask(text) {
@@ -319,6 +330,13 @@ export default function App() {
     }
   }
 
+  async function installApp() {
+    if (!installEvt) return
+    installEvt.prompt()
+    await installEvt.userChoice
+    setInstallEvt(null)
+  }
+
   const editingTask = tasks.find((t) => t.id === editingId) || null
 
   return (
@@ -345,6 +363,17 @@ export default function App() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {installEvt && (
+            <button
+              type="button"
+              onClick={installApp}
+              title="Install Deadline Radar on this device"
+              aria-label="Install app"
+              className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-2 text-sky-300 transition hover:bg-sky-500/20"
+            >
+              ⬇️
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleReminders}

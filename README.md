@@ -1,5 +1,10 @@
 # 📡 Deadline Radar
 
+[![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
+[![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wispr.flow/)
+[![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakdevs.com/)
+[![Tests](https://img.shields.io/badge/tests-7%2F7%20pass-brightgreen)](./scripts/test-parser.mjs)
+
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
 > **what is due today, this week, and what is getting late.**
@@ -73,7 +78,17 @@ output = `dist`) or Netlify (same settings).
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
-- [ ] Deployed link
+Everything prepped in this repo: **[SUBMISSION.md](./SUBMISSION.md)** (paste-ready write-up)
+and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
+
+- [ ] Deployed link ✅ (GitHub Pages, auto-deploys on push)
 - [ ] Demo video (≤ 2 minutes)
 - [ ] Wispr usage card screenshot (desktop app → Insights)
-- [ ] Few lines: problem, who it's for, how Wispr was used
+- [ ] Few lines: problem, who it's for, how Wispr was used (draft in SUBMISSION.md)
+
+## 🧪 Tests
+
+```bash
+npm test       # offline extractor: dates, marks, subjects (7 checks)
+npm run test:ai # end-to-end AI paths (needs AI_KEY env)
+```
