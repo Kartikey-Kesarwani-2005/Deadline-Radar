@@ -216,6 +216,7 @@ export default function App() {
   const [subjectFilter, setSubjectFilter] = useState(null)
   const [dateFilter, setDateFilter] = useState(null)
   const [hintsClosed, setHintsClosed] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const isDemo = useMemo(() => new URLSearchParams(window.location.search).has('demo'), [])
   const [clipSuggest, setClipSuggest] = useState(null)
   const [askCard, setAskCard] = useState(null)
@@ -232,6 +233,7 @@ export default function App() {
   const lastClipRef = useRef('')
   const armedRef = useRef(false)
   const inputRef = useRef(null)
+  const searchRef = useRef(null)
   const [installEvt, setInstallEvt] = useState(null)
   // Connectivity + screen size drive the offline banner and desktop / phone modes.
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -365,19 +367,33 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [flash])
 
-  // "/" jumps to the capture box (unless already typing somewhere).
+  // Desktop-first keyboard shortcuts: / search · n new · b briefing · w report
+  // · ? help · Esc close. Never fires while typing in a field.
   useEffect(() => {
     function onKey(e) {
       const tag = e.target?.tagName
       const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable
-      if (e.key === '/' && !typing) {
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === '/') {
+        e.preventDefault()
+        ;(searchRef.current || inputRef.current)?.focus()
+      } else if (e.key === 'n') {
         e.preventDefault()
         inputRef.current?.focus()
+      } else if (e.key === 'b') {
+        playBriefing()
+      } else if (e.key === 'w') {
+        setReportOpen(true)
+      } else if (e.key === '?') {
+        setShortcutsOpen((v) => !v)
+      } else if (e.key === 'Escape') {
+        setShortcutsOpen(false)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm when tasks/busy change (briefing closure)
+  }, [tasks, busy])
 
   // Chrome/Edge "install app" prompt (satisfied by the manifest + service worker).
   useEffect(() => {
@@ -683,7 +699,7 @@ export default function App() {
   return (
     <div
       className={`mx-auto w-full px-4 pb-16 pt-8 sm:pt-12 ${
-        isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-5xl' : 'max-w-2xl'
+        isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl 2xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
       {/* Header */}
@@ -701,7 +717,7 @@ export default function App() {
               <p className="text-xs text-slate-500">{formatLongToday()}</p>
             </div>
           </div>
-          <p className="mt-3 max-w-md text-[13px] leading-relaxed text-slate-400">
+          <p className="mt-3 max-w-md text-[13px] leading-relaxed text-slate-400 lg:max-w-lg">
             Assignments arrive in WhatsApp groups and notes — nothing stays in one place.
             <span className="text-slate-300"> Paste or speak them here</span>, and always know
             what is due <span className="text-amber-300">today</span> and what is getting{' '}
@@ -723,6 +739,20 @@ export default function App() {
                 {fmtElapsed(Date.now() - focus.startedAt)}
               </span>
               <span aria-hidden="true">⏹</span>
+            </button>
+          )}
+          {isWide && (
+            <button
+              type="button"
+              onClick={() => setShortcutsOpen(true)}
+              title="Keyboard shortcuts — / search · n new · b briefing · w report"
+              aria-label="Show keyboard shortcuts"
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-slate-400 transition hover:border-violet-400/40 hover:text-violet-300"
+            >
+              <span aria-hidden="true">⌨️</span>
+              <kbd className="rounded border border-white/15 bg-white/[0.06] px-1 font-mono text-[11px] leading-relaxed">
+                ?
+              </kbd>
             </button>
           )}
           {installEvt && (
@@ -833,6 +863,54 @@ export default function App() {
         </div>
       )}
 
+      {/* ⌨️ Shortcuts card (desktop) */}
+      {shortcutsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setShortcutsOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0d1424] p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-100">⌨️ Keyboard shortcuts</h2>
+              <button
+                type="button"
+                onClick={() => setShortcutsOpen(false)}
+                className="rounded p-1 text-slate-500 hover:bg-white/10 hover:text-slate-200"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div>
+              {[
+                ['/', 'Search the radar'],
+                ['n', 'Capture a new deadline'],
+                ['b', '🔊 Briefing — Radar Samachaar'],
+                ['w', '📊 Weekly report'],
+                ['?', 'This card'],
+                ['Esc', 'Close anything'],
+              ].map(([key, label]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between gap-3 border-b border-white/5 py-2 last:border-0"
+                >
+                  <kbd className="min-w-[3rem] rounded-md border border-white/15 bg-white/[0.06] px-2 py-0.5 text-center font-mono text-xs text-slate-200">
+                    {key}
+                  </kbd>
+                  <span className="flex-1 text-right text-[13px] text-slate-300">{label}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-500">
+              Desktop mode — hands stay on the keyboard, voice still runs the app.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Clipboard auto-detect suggestion */}
       {clipSuggest && (
         <div className="mt-2 flex items-center gap-3 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs text-slate-200">
@@ -889,7 +967,7 @@ export default function App() {
 
       {/* Dashboard grid — on wide screens the radar sections sit beside the stat rail */}
       <div
-        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start' : ''}`}
+        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-6 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div className="rail flex min-w-0 flex-col gap-4">
@@ -949,6 +1027,7 @@ export default function App() {
                   🔍
                 </span>
                 <input
+                  ref={searchRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search tasks — or press / to jump here"

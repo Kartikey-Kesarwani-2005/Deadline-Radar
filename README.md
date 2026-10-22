@@ -53,8 +53,11 @@ replacing anything you captured).
 - **Premium feel** — cards glide in with a stagger, lift on hover, and the header logo glows;
   every animation respects the OS reduced-motion setting.
 - **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
-  desktop gets a wider radar dashboard with a stat rail; phone gets a compact layout with
-  big tap targets and always-visible card buttons.
+  phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1280px),
+  a 360px side rail and hover-reveal card actions.
+- **⌨️ Desktop keyboard shortcuts** — `/` search · `n` new deadline · `b` spoken briefing ·
+  `w` weekly report · `?` shortcuts card · `Esc` close. A ⌨️ chip in the header opens the card;
+  shortcuts never fire while you're typing in a field.
 - **🎯 Marks at risk** — the radar counts *marks*, not just tasks: how many marks are already
   late and how many ride on this week's submissions. Shown in the rail, the weekly report and
   the voice answers.
