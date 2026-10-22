@@ -13,6 +13,9 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 - **Full editing** — ✏️ on any card fixes title, subject, marks, date and priority; original
   captured text stays visible for reference.
 - **Search + subject filter** — find any task instantly; subject chips filter the radar.
+- **Screenshot capture** — 📷 button → pick a photo of a notice/syllabus/message → the task is
+  read out of the image (needs any OpenAI-compatible vision key: Groq or Gemini free tiers work;
+  presets are built into Settings).
 - **Auto-extract** — task title, subject, deadline, marks and priority are pulled out of the text.
   - Built-in **offline parser** (dates like `Friday`, `25 Oct`, `25/10`, `tomorrow`, `2026-10-30`,
     weekdays, marks, subjects) — works with **zero setup**.
@@ -66,7 +69,7 @@ output = `dist`) or Netlify (same settings).
 - [x] Browser notification reminders for "Due today"
 - [x] Marks-weighted priority sorting (high marks = top of the list)
 - [x] Weekly report card ("saved N submissions from going late")
-- [ ] Screenshot → deadline (photo/notice extraction)
+- [x] Screenshot → deadline (photo/notice extraction)
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 

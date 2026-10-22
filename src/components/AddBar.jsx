@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function AddBar({ onAdd, busy, inputRef }) {
+export default function AddBar({ onAdd, busy, inputRef, onImage }) {
   const [text, setText] = useState('')
 
   async function submit() {
@@ -31,14 +31,33 @@ export default function AddBar({ onAdd, busy, inputRef }) {
         <span className="text-xs text-slate-500">
           🎙️ Hold your Wispr key and speak — the text lands right here
         </span>
-        <button
-          type="button"
-          onClick={submit}
-          disabled={!text.trim() || busy}
-          className="rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {busy ? 'Reading…' : 'Add to radar →'}
-        </button>
+        <div className="flex items-center gap-2">
+          <label
+            title="Extract a task from a screenshot or photo"
+            className="cursor-pointer rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-slate-400 transition hover:border-sky-500/40 hover:text-sky-300"
+          >
+            📷
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={busy}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                e.target.value = ''
+                if (file) onImage(file)
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!text.trim() || busy}
+            className="rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {busy ? 'Reading…' : 'Add to radar →'}
+          </button>
+        </div>
       </div>
     </div>
   )

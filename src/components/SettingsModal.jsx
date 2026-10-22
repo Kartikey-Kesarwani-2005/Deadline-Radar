@@ -68,6 +68,30 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll })
 
           {draft.aiEnabled && (
             <>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] text-slate-500">Quick fill:</span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    set({ baseUrl: 'https://api.groq.com/openai/v1', model: 'qwen/qwen3.8-27b' })
+                  }
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+                >
+                  Groq (free)
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    set({
+                      baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+                      model: 'gemini-2.5-flash',
+                    })
+                  }
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+                >
+                  Gemini (free)
+                </button>
+              </div>
               <Field label="API key" hint="Stored only in this browser's localStorage. Never shared anywhere else.">
                 <input
                   type="password"

@@ -3,6 +3,7 @@ import { extractTask } from './lib/extract'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import { loadSettings, loadTasks, saveSettings, saveTasks } from './lib/store'
 import { getPermission, notifyDaily, notifyTest, requestPermission } from './lib/notify'
+import { extractFromImage, fileToDataUrl } from './lib/vision'
 import AddBar from './components/AddBar'
 import StatsBar from './components/StatsBar'
 import TaskCard from './components/TaskCard'
@@ -188,6 +189,35 @@ export default function App() {
     }
   }
 
+  async function addFromImage(file) {
+    if (!settings.apiKey) {
+      setSettingsOpen(true)
+      setFlash({
+        msg: 'AI not set up yet — turn on Smart extract, click a quick-fill preset, paste your key, Save.',
+      })
+      return
+    }
+    setBusy(true)
+    try {
+      const dataUrl = await fileToDataUrl(file)
+      const parsed = await extractFromImage(dataUrl, settings)
+      const task = {
+        id: crypto.randomUUID(),
+        ...parsed,
+        source: `📷 ${file.name}`,
+        done: false,
+        createdAt: Date.now(),
+      }
+      setTasks((prev) => [task, ...prev])
+      setFlash({ msg: `Read from image: ${task.title} · ${formatDue(task.dueDate)}` })
+    } catch (err) {
+      console.error('[Deadline Radar] image extract failed:', err)
+      setFlash({ msg: `Could not read that image — ${err.message || 'try again'}` })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const toggleTask = (id) =>
     setTasks((prev) =>
       prev.map((t) =>
@@ -340,7 +370,7 @@ export default function App() {
       </header>
 
       {/* Input */}
-      <AddBar onAdd={addTask} busy={busy} inputRef={inputRef} />
+      <AddBar onAdd={addTask} busy={busy} inputRef={inputRef} onImage={addFromImage} />
 
       {flash && (
         <div className="mt-2 flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
