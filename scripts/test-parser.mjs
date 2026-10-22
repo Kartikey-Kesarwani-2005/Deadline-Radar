@@ -5,6 +5,7 @@
 import { extractLocal, extractManyLocal } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, doNow, estimateEffort } from '../src/lib/brain.js'
+import { buildICS } from '../src/lib/calendar.js'
 
 const today = new Date()
 const key = (d) =>
@@ -163,6 +164,17 @@ check('doNow: nothing pending -> null', doNow([{ id: 'x', done: true, dueDate: s
 
 const dq = answerQuery('ab kya karun', { tasks: dnTasks, stats: {} })
 check('voice: "ab kya karun" answers the pick', dq.text.includes('Start now: DBMS quiz'), true)
+
+// --- Calendar export (.ics) ---
+const icsTasks = [
+  { id: 'e1', title: 'DBMS quiz, Q1-Q5', subject: 'DBMS', dueDate: '2026-10-23', marks: 20, done: false },
+  { id: 'e2', title: 'Done task', dueDate: '2026-10-20', done: true },
+  { id: 'e3', title: 'No date task', dueDate: null, done: false },
+]
+const ics = buildICS(icsTasks, new Date('2026-10-22T10:00:00Z'))
+check('ics: one event per pending dated task', ics.split('BEGIN:VEVENT').length - 1, 1)
+check('ics: date + escaped summary present', ics.includes('DTSTART;VALUE=DATE:20261023') && ics.includes('SUMMARY:DBMS quiz\\, Q1-Q5'), true)
+check('ics: calendar shell + day-before alarm', ics.startsWith('BEGIN:VCALENDAR') && ics.endsWith('END:VCALENDAR') && ics.includes('TRIGGER:-P1D'), true)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

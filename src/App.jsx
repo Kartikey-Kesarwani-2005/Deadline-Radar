@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, extractManyLocal } from './lib/extract'
 import { adviceFor, answerQuery, computeBrain, doNow, forecastWeather, marksAtRisk } from './lib/brain'
+import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
@@ -214,6 +215,8 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
   const [dateFilter, setDateFilter] = useState(null)
+  const [hintsClosed, setHintsClosed] = useState(false)
+  const isDemo = useMemo(() => new URLSearchParams(window.location.search).has('demo'), [])
   const [clipSuggest, setClipSuggest] = useState(null)
   const [askCard, setAskCard] = useState(null)
   const [listening, setListening] = useState(false)
@@ -770,6 +773,24 @@ export default function App() {
         canAsk={canAsk}
       />
 
+      {/* Demo mode — a one-line tour for judges opening ?demo=1 cold */}
+      {isDemo && !hintsClosed && (
+        <div className="rise mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2 text-xs text-violet-200">
+          <span className="font-bold text-violet-100">✨ Demo mode — try:</span>
+          <span>🎙️ Ask → “ab kya karun?”</span>
+          <span>▶️ Start a focus timer on the hero card</span>
+          <span>⛈️ tap the storm day to filter</span>
+          <button
+            type="button"
+            onClick={() => setHintsClosed(true)}
+            aria-label="Dismiss tips"
+            className="ml-auto rounded p-0.5 text-violet-300/70 transition hover:text-violet-100"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {flash && (
         <div className="rise mt-2 flex items-center gap-3 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 shadow-[0_10px_30px_-18px_rgba(16,185,129,0.8)]">
           <span className="min-w-0 flex-1 break-words">✓ {flash.msg}</span>
@@ -881,6 +902,14 @@ export default function App() {
                 className="weekly-btn mt-auto rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
               >
                 📊 Weekly report — real result + copy check-in post
+              </button>
+              <button
+                type="button"
+                onClick={() => downloadICS(tasks)}
+                title="Download an .ics file — opens in Google / Apple / Outlook calendar"
+                className="export-btn rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-sky-500/40 hover:text-sky-300"
+              >
+                📅 Export deadlines to phone calendar (.ics)
               </button>
             </div>
           </div>
