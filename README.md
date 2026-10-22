@@ -3,7 +3,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakdevs.com/)
-[![Tests](https://img.shields.io/badge/tests-7%2F7%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-11%2F11%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -36,6 +36,10 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 - **Weekly report** — one tap shows your real result (captured / finished / on time) and copies a
   ready-made check-in text for your #NoHandsChallenge post.
 - **Undo delete** — deleting shows an instant Undo button, nothing is lost by a mis-tap.
+- **Backup & restore** — ⚙️ Settings exports every task as a JSON file and imports it back
+  (merge-safe, deduped by id); localStorage-only apps deserve a backup button.
+- **Crash-safe** — an error boundary keeps the radar alive; a bad render shows a reload card,
+  never a blank white page.
 - **PWA-ready** — favicon, web manifest and share preview (OG) tags; installable from the browser.
 - **Daily check-in** — open the app, tick things off.
 - **Everything in localStorage** — no account, no backend, data never leaves your browser
@@ -75,6 +79,8 @@ output = `dist`) or Netlify (same settings).
 - [x] Marks-weighted priority sorting (high marks = top of the list)
 - [x] Weekly report card ("saved N submissions from going late")
 - [x] Screenshot → deadline (photo/notice extraction)
+- [x] Backup & restore (JSON export/import)
+- [x] Rich link preview (OG cover image)
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
@@ -89,6 +95,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # offline extractor: dates, marks, subjects (7 checks)
+npm test       # offline extractor + backup parser (11 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```
