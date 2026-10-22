@@ -785,9 +785,9 @@ export default function App() {
       {isDemo && !hintsClosed && (
         <div className="rise mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2 text-xs text-violet-200">
           <span className="font-bold text-violet-100">✨ Demo mode — try:</span>
+          <span>🔊 Briefing — the radar speaks your day</span>
           <span>🎙️ Ask → “ab kya karun?”</span>
-          <span>▶️ Start a focus timer on the hero card</span>
-          <span>⛈️ tap the storm day to filter</span>
+          <span>▶️ focus timer · ⛈️ storm day</span>
           <button
             type="button"
             onClick={() => setHintsClosed(true)}

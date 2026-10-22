@@ -70,6 +70,9 @@ replacing anything you captured).
   an honest chip like *"🧠 Usually 2.0d late — start by Wed"*.
 - **🎙️ Ask the radar** — press 🎙️ Ask and speak: *"aaj kya hai"*, *"kitne marks risk me"*,
   *"what's late"* — it answers **out loud** (Chrome/Edge).
+- **🔊 Radar Samachaar (spoken briefing)** — one tap and the radar *speaks your whole day*:
+  what's already late, what's due today and tomorrow, your on-time rate, and the single
+  best next move. A voice-first product for a voice-first workflow.
 - **Offline banner** — lose the connection and the radar says so: capture, parsing and data
   all keep working on-device; AI extract silently falls back to the offline parser.
 - **Stats bar** — Captured / Due today / Late / Done pills next to the dial.
@@ -79,7 +82,9 @@ replacing anything you captured).
   on time"* — the real result for your demo video.
 - **Urgency sorting** — each section orders itself: priority → nearest deadline → highest marks.
 - **Weekly report** — one tap shows your real result (captured / finished / on time) and copies a
-  ready-made check-in text for your #NoHandsChallenge post.
+  ready-made check-in text for your #NoHandsChallenge post. It now includes a **🧠 per-subject
+  pace table** — on-time %, your usual buffer (days early/late) and learned minutes-per-mark,
+  worst subject first: the "which subject is actually eating my marks" answer no tracker gives.
 - **Undo delete** — deleting shows an instant Undo button, nothing is lost by a mis-tap.
 - **Live radar sweep** — the header logo scans continuously; the **Late** counter pulses while
   something is overdue. The dashboard feels alive at a glance.
