@@ -13,6 +13,13 @@
 
 Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — Builders track.
 
+## 🖼️ Screenshot
+
+![Deadline Radar dashboard](./public/tour.png)
+
+**Open it with data:** [live demo (samples preloaded)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1)
+— the `?demo=1` param fills an empty radar with samples; your own captured tasks are never touched.
+
 ## ✨ Features (MVP)
 
 - **Capture anything** — paste a messy assignment message, or hold your Wispr key and speak it
@@ -38,6 +45,8 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 - **Weekly report** — one tap shows your real result (captured / finished / on time) and copies a
   ready-made check-in text for your #NoHandsChallenge post.
 - **Undo delete** — deleting shows an instant Undo button, nothing is lost by a mis-tap.
+- **Live radar sweep** — the header logo scans continuously; the **Late** counter pulses while
+  something is overdue. The dashboard feels alive at a glance.
 - **Backup & restore** — ⚙️ Settings exports every task as a JSON file and imports it back
   (merge-safe, deduped by id); localStorage-only apps deserve a backup button.
 - **Crash-safe** — an error boundary keeps the radar alive; a bad render shows a reload card,

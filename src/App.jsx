@@ -159,6 +159,13 @@ export default function App() {
     notifyDaily(tasks)
   }, [tasks])
 
+  // ?demo=1 prefills an empty radar with samples — README/screenshots/demo link.
+  // Never touches tasks someone already captured.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('demo')) return
+    setTasks((prev) => (prev.length === 0 ? buildSampleTasks() : prev))
+  }, [])
+
   useEffect(() => {
     if (!flash) return undefined
     const timer = setTimeout(() => setFlash(null), 5000)
@@ -372,8 +379,9 @@ export default function App() {
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-lg ring-1 ring-emerald-500/40">
-              📡
+            <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-emerald-500/15 text-lg ring-1 ring-emerald-500/40">
+              <span aria-hidden="true" className="radar-sweep" />
+              <span className="relative">📡</span>
             </span>
             <div>
               <h1 className="text-lg font-extrabold tracking-tight text-slate-50">

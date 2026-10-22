@@ -12,7 +12,11 @@ export default function StatsBar({ total, dueToday, late, done, onTime }) {
     <div className="flex flex-wrap gap-2">
       <Pill label="Captured" value={total} className="text-slate-100" />
       <Pill label="Due today" value={dueToday} className="text-amber-300" />
-      <Pill label="Late" value={late} className="text-red-400" />
+      <Pill
+        label="Late"
+        value={late}
+        className={late > 0 ? 'text-red-400 animate-pulse' : 'text-red-400'}
+      />
       <Pill label="Done" value={done} className="text-emerald-300" />
       <Pill label="On time" value={onTime} className="text-teal-300" />
     </div>

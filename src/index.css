@@ -38,3 +38,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 ::selection {
   background: rgba(16, 185, 129, 0.35);
 }
+
+/* Rotating scan line inside the header logo — the "radar is live" tell. */
+.radar-sweep {
+  position: absolute;
+  inset: -30%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(16, 185, 129, 0.45) 36deg,
+    transparent 66deg
+  );
+  animation: radar-spin 3.2s linear infinite;
+}
+
+@keyframes radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
