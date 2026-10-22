@@ -16,7 +16,12 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
   - Optional **AI extract** (any OpenAI-compatible API) for messier messages — toggle in ⚙️ Settings.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
-- **Stats bar** — Captured / Due today / Late / Done counts at a glance.
+- **Stats bar** — Captured / Due today / Late / Done / **On time** counts at a glance.
+- **Daily reminder** — one browser notification a day when something is late or due today
+  (enable it with the 🔔 button in the header).
+- **On-time metric** — every tick records when you finished it, so the app shows *"N finished
+  on time"* — the real result for your demo video.
+- **Urgency sorting** — each section orders itself: priority → nearest deadline → highest marks.
 - **Daily check-in** — open the app, tick things off.
 - **Everything in localStorage** — no account, no backend, data never leaves your browser
   (except the optional AI call you configure yourself).
@@ -48,10 +53,10 @@ output directory = `dist`. (Netlify works the same way.)
 
 ## 🗺️ Roadmap (remaining challenge days)
 
+- [x] Browser notification reminders for "Due today"
+- [x] Marks-weighted priority sorting (high marks = top of the list)
 - [ ] Screenshot → deadline (photo/notice extraction)
-- [ ] Browser notification reminders for "Due today"
 - [ ] Weekly report card ("saved N submissions from going late")
-- [ ] Marks-weighted priority sorting (high marks = top of the list)
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 

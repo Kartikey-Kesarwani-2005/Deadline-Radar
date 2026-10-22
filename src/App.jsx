@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { extractTask } from './lib/extract'
-import { addDays, dayDiff, formatDue, formatLongToday, todayKey } from './lib/dates'
+import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import { loadSettings, loadTasks, saveSettings, saveTasks } from './lib/store'
+import { getPermission, notifyDaily, notifyTest, requestPermission } from './lib/notify'
 import AddBar from './components/AddBar'
 import StatsBar from './components/StatsBar'
 import TaskCard from './components/TaskCard'
@@ -14,6 +15,17 @@ const SECTION_TONES = {
   sky: 'bg-sky-400',
   slate: 'bg-slate-500',
   green: 'bg-emerald-400',
+}
+
+/** Priority first, then nearest deadline, then higher marks, then newest. */
+function byUrgency(a, b) {
+  if (a.priority !== b.priority) return a.priority === 'high' ? -1 : 1
+  if (a.dueDate && b.dueDate && a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1
+  if (a.dueDate && !b.dueDate) return -1
+  if (!a.dueDate && b.dueDate) return 1
+  const marksDiff = (b.marks || 0) - (a.marks || 0)
+  if (marksDiff) return marksDiff
+  return b.createdAt - a.createdAt
 }
 
 function Section({ title, tone, hint, tasks, onToggle, onDelete, onDateChange }) {
@@ -86,6 +98,7 @@ function buildSampleTasks() {
       marks: null,
       priority: 'normal',
       done: true,
+      completedAt: now - 400,
       createdAt: now - 500,
       source: 'Fill the workshop registration form today',
     },
@@ -98,8 +111,14 @@ export default function App() {
   const [busy, setBusy] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [flash, setFlash] = useState(null)
+  const [perm, setPerm] = useState(() => getPermission())
 
   useEffect(() => saveTasks(tasks), [tasks])
+
+  // One browser alert a day when something is late or due today (once granted).
+  useEffect(() => {
+    notifyDaily(tasks)
+  }, [tasks])
 
   useEffect(() => {
     if (!flash) return undefined
@@ -119,14 +138,20 @@ export default function App() {
         createdAt: Date.now(),
       }
       setTasks((prev) => [task, ...prev])
-      setFlash({ title: task.title, due: formatDue(task.dueDate) })
+      setFlash(`Captured: ${task.title} · ${formatDue(task.dueDate)}`)
     } finally {
       setBusy(false)
     }
   }
 
   const toggleTask = (id) =>
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, done: !t.done, completedAt: !t.done ? Date.now() : null }
+          : t,
+      ),
+    )
   const deleteTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id))
   const changeDate = (id, date) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, dueDate: date } : t)))
@@ -137,20 +162,47 @@ export default function App() {
     const diffOf = (t) => (t.dueDate ? dayDiff(today, t.dueDate) : null)
 
     return {
-      late: tasks.filter((t) => !isDone(t) && t.dueDate && diffOf(t) < 0),
-      today: tasks.filter((t) => !isDone(t) && diffOf(t) === 0),
-      week: tasks.filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 0 && diffOf(t) <= 7),
-      later: tasks.filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 7),
-      noDate: tasks.filter((t) => !isDone(t) && !t.dueDate),
-      done: tasks.filter(isDone),
+      late: tasks.filter((t) => !isDone(t) && t.dueDate && diffOf(t) < 0).sort(byUrgency),
+      today: tasks.filter((t) => !isDone(t) && diffOf(t) === 0).sort(byUrgency),
+      week: tasks
+        .filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 0 && diffOf(t) <= 7)
+        .sort(byUrgency),
+      later: tasks
+        .filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 7)
+        .sort(byUrgency),
+      noDate: tasks.filter((t) => !isDone(t) && !t.dueDate).sort(byUrgency),
+      done: tasks.filter(isDone).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)),
     }
   }, [tasks])
+
+  // "Real result" metric: tasks finished before their deadline.
+  const onTime = tasks.filter(
+    (t) => t.done && t.dueDate && t.completedAt && toDateKey(new Date(t.completedAt)) <= t.dueDate,
+  ).length
 
   const stats = {
     total: tasks.length,
     dueToday: sections.today.length,
     late: sections.late.length,
     done: sections.done.length,
+    onTime,
+  }
+
+  async function toggleReminders() {
+    const current = getPermission()
+    if (current === 'unsupported') {
+      setFlash('This browser does not support notifications.')
+      return
+    }
+    let permission = current
+    if (permission === 'default') permission = await requestPermission()
+    setPerm(permission)
+    if (permission === 'granted') {
+      notifyTest(sections.late.length, sections.today.length)
+      setFlash('Reminders on — one alert a day when something is late or due today.')
+    } else {
+      setFlash('Notifications blocked — allow them from the 🔒 icon in your address bar.')
+    }
   }
 
   return (
@@ -176,22 +228,37 @@ export default function App() {
             <span className="text-red-400">late</span>.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setSettingsOpen(true)}
-          aria-label="Open settings"
-          className="rounded-lg border border-white/10 bg-white/[0.03] p-2 text-slate-400 transition hover:border-white/25 hover:text-slate-200"
-        >
-          ⚙️
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleReminders}
+            title={perm === 'granted' ? 'Daily reminders on — click to test' : 'Enable daily reminders'}
+            aria-label="Toggle reminders"
+            className={`rounded-lg border p-2 transition ${
+              perm === 'granted'
+                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:text-slate-200'
+            }`}
+          >
+            {perm === 'granted' ? '🔔' : '🔕'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Open settings"
+            className="rounded-lg border border-white/10 bg-white/[0.03] p-2 text-slate-400 transition hover:border-white/25 hover:text-slate-200"
+          >
+            ⚙️
+          </button>
+        </div>
       </header>
 
       {/* Input */}
       <AddBar onAdd={addTask} busy={busy} />
 
       {flash && (
-        <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
-          ✓ Captured: <span className="font-semibold">{flash.title}</span> · {flash.due}
+        <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
+          ✓ {flash}
         </div>
       )}
 
@@ -263,6 +330,7 @@ export default function App() {
           <Section
             title="Done"
             tone="green"
+            hint={`${onTime} finished on time`}
             tasks={sections.done}
             onToggle={toggleTask}
             onDelete={deleteTask}
