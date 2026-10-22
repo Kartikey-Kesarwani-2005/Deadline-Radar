@@ -23,15 +23,21 @@ export default function WeatherStrip({ days, active, onPick }) {
             className={`flex flex-col items-center rounded-lg border px-0.5 py-1.5 transition ${
               active === d.key
                 ? 'border-emerald-500/60 bg-emerald-500/10'
-                : d.level === 'storm'
+                : d.isToday
+                  ? 'border-emerald-500/30 bg-emerald-500/[0.05] ring-1 ring-emerald-500/20'
+                  : d.level === 'storm'
                   ? 'border-red-500/30 bg-red-500/[0.06] hover:border-red-400/50'
                   : d.level === 'heavy'
                     ? 'border-amber-500/30 bg-amber-500/[0.06] hover:border-amber-400/50'
                     : 'border-white/10 bg-white/[0.03] hover:border-white/25'
             }`}
           >
-            <span className="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">
-              {d.isToday ? 'Tdy' : d.label}
+            <span
+              className={`text-[9px] font-semibold tracking-wider uppercase ${
+                d.isToday ? 'text-emerald-400' : 'text-slate-500'
+              }`}
+            >
+              {d.isToday ? 'Today' : d.label}
             </span>
             <span className="my-0.5 text-base leading-none">{d.icon}</span>
             <span
