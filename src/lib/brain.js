@@ -7,7 +7,7 @@
  * No network, no accounts — the app gets smarter the more deadlines it sees.
  */
 
-import { addDays, dayDiff, toDateKey, todayKey } from './dates'
+import { addDays, dayDiff, toDateKey, todayKey } from './dates.js'
 
 /** Days early (+) or late (−) a finished task was relative to its due date. */
 function bufferDays(task) {
@@ -96,6 +96,81 @@ export function forecastWeather(tasks) {
 }
 
 /**
+ * ⏱️ Effort model — the radar learns minutes-per-mark per subject from your own
+ * focus-timer sessions (finished tasks with effortMin). Until you have data it
+ * falls back to an honest default (~6 min per mark, clamped 30 min – 6 h).
+ */
+const DEFAULT_MIN_PER_MARK = 6
+const ASSUMED_HOURS_PER_DAY = 3 // latest-start math: plausible focused hours per day
+
+function pacePerMark(tasks) {
+  const acc = {}
+  for (const t of tasks) {
+    if (!t.done || !t.effortMin || !t.marks || !t.subject) continue
+    const key = String(t.subject).trim().toLowerCase()
+    ;(acc[key] ||= []).push(t.effortMin / t.marks)
+  }
+  const pace = {}
+  for (const [k, list] of Object.entries(acc)) {
+    pace[k] = list.reduce((a, b) => a + b, 0) / list.length
+  }
+  return pace
+}
+
+/** Estimated minutes for one task — learned subject pace if it exists. */
+export function estimateEffort(task, pace) {
+  const marks = task.marks || 10
+  const p = task.subject ? pace[String(task.subject).trim().toLowerCase()] : null
+  const minutes = Math.min(360, Math.max(30, Math.round(marks * (p || DEFAULT_MIN_PER_MARK))))
+  return { minutes, learned: p != null }
+}
+
+export function fmtHours(minutes) {
+  if (minutes < 60) return `${minutes}m`
+  const h = minutes / 60
+  return Number.isInteger(h) ? `${h}h` : `${h.toFixed(1)}h`
+}
+
+/**
+ * 🎯 "Ab kya karun?" — the do-now engine. Lists show what exists; this ranks
+ * what to START RIGHT NOW: marks-per-hour ROI weighted by urgency, so overdue
+ * and latest-start tasks (their estimate no longer fits comfortably before the
+ * due date) jump the queue. Pure function of your own data — no accounts.
+ */
+export function doNow(tasks) {
+  const pace = pacePerMark(tasks)
+  const today = todayKey()
+  const pending = tasks.filter((t) => !t.done && t.dueDate)
+  if (!pending.length) return null
+  const items = pending.map((t) => {
+    const { minutes, learned } = estimateEffort(t, pace)
+    const hours = minutes / 60
+    const roi = (t.marks || 10) / hours
+    const daysLeft = dayDiff(today, t.dueDate)
+    const fitsDays = Math.ceil(hours / ASSUMED_HOURS_PER_DAY)
+    return {
+      task: t,
+      minutes,
+      learned,
+      roi,
+      daysLeft,
+      latestStart: daysLeft <= fitsDays,
+      score: roi / (1 + Math.max(0, daysLeft)),
+    }
+  })
+  items.sort((a, b) => b.score - a.score)
+  return { pick: items[0], next: items.slice(1, 3) }
+}
+
+/** One-line reason for a ranked item — spoken by the voice query too. */
+export function doNowReason(item) {
+  if (item.daysLeft < 0) return `already late — about ${Math.round(item.roi)} marks/hr, finish it first`
+  if (item.latestStart)
+    return `latest start — begin now to fit ~${fmtHours(item.minutes)} before ${WEEKDAY(item.task.dueDate)}`
+  return `highest marks/hr — about ${Math.round(item.roi)} marks per hour`
+}
+
+/**
  * One-line personal chip for a pending card — null until the brain has
  * enough history (≥2 finished tasks in that subject).
  */
@@ -169,6 +244,14 @@ export function answerQuery(query, { tasks, stats }) {
       text: busy.length
         ? `Heaviest day coming up: ${WEEKDAY(busy[0].key)} — ${busy[0].marks} marks, ${busy[0].count} submissions.`
         : 'Clear week ahead — no submission storms.',
+    }
+  }
+  if (/(ab kya|kya karu|kya karun|what next|start what|pehle kya|kaunsa|which one)/.test(s)) {
+    const plan = doNow(tasks)
+    if (!plan) return { text: 'Nothing pending with a due date — nothing to start right now.' }
+    const { task, minutes, learned } = plan.pick
+    return {
+      text: `Start now: ${task.title}${task.marks ? `, ${task.marks} marks` : ''} — about ${fmtHours(minutes)}${learned ? ', from your own pace' : ''}. ${doNowReason(plan.pick)}.`,
     }
   }
   const m = marksAtRisk(tasks)

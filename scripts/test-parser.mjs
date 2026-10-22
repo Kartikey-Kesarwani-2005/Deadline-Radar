@@ -4,6 +4,7 @@
  */
 import { extractLocal, extractManyLocal } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
+import { answerQuery, doNow, estimateEffort } from '../src/lib/brain.js'
 
 const today = new Date()
 const key = (d) =>
@@ -132,6 +133,36 @@ try { parseBackup('not json at all') } catch { threw += 1 }
 try { parseBackup('{"hello": 1}') } catch { threw += 1 }
 try { parseBackup('{"tasks": []}') } catch { threw += 1 }
 check('backup: invalid inputs all throw', threw, 3)
+
+// --- Radar Brain: effort model + "ab kya karun" do-now engine ---
+const pace = { dbms: 4.5 }
+check('effort: learned pace applies', estimateEffort({ marks: 20, subject: 'DBMS' }, pace), { minutes: 90, learned: true })
+check('effort: default estimate without history', estimateEffort({ marks: 10, subject: null }, {}), { minutes: 60, learned: false })
+check('effort: clamps to 6h max', estimateEffort({ marks: 100, subject: null }, {}), { minutes: 360, learned: false })
+
+const dnTasks = [
+  { id: 'a', title: 'DBMS quiz', subject: 'DBMS', dueDate: shift(1), marks: 20, done: false },
+  { id: 'b', title: 'OS lab', subject: 'Operating Systems', dueDate: shift(5), marks: 10, done: false },
+  { id: 'c', title: 'DBMS old 1', subject: 'DBMS', dueDate: shift(-20), marks: 10, done: true, effortMin: 50, completedAt: Date.now() - 15 * 864e5 },
+  { id: 'd', title: 'DBMS old 2', subject: 'DBMS', dueDate: shift(-10), marks: 10, done: true, effortMin: 40, completedAt: Date.now() - 8 * 864e5 },
+]
+check('doNow: due-soonest high-ROI task wins', doNow(dnTasks).pick.task.id, 'a')
+
+const dn2 = [
+  { id: 'far', title: 'Far big', subject: null, dueDate: shift(7), marks: 30, done: false },
+  { id: 'near', title: 'Near small', subject: null, dueDate: shift(1), marks: 10, done: false },
+]
+check('doNow: nearer task outranks higher-marks far task', doNow(dn2).pick.task.id, 'near')
+
+const dn3 = [
+  { id: 'far2', title: 'Far', subject: null, dueDate: shift(2), marks: 40, done: false },
+  { id: 'late1', title: 'Late', subject: null, dueDate: shift(-1), marks: 5, done: false },
+]
+check('doNow: overdue jumps the queue', doNow(dn3).pick.task.id, 'late1')
+check('doNow: nothing pending -> null', doNow([{ id: 'x', done: true, dueDate: shift(1) }]), null)
+
+const dq = answerQuery('ab kya karun', { tasks: dnTasks, stats: {} })
+check('voice: "ab kya karun" answers the pick', dq.text.includes('Start now: DBMS quiz'), true)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

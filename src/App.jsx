@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, extractManyLocal } from './lib/extract'
-import { adviceFor, answerQuery, computeBrain, forecastWeather, marksAtRisk } from './lib/brain'
+import { adviceFor, answerQuery, computeBrain, doNow, forecastWeather, marksAtRisk } from './lib/brain'
 import { canListen, listenOnce, speak } from './lib/voice'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
@@ -18,6 +18,7 @@ import AddBar from './components/AddBar'
 import StatsBar from './components/StatsBar'
 import RadarDial from './components/RadarDial'
 import WeatherStrip from './components/WeatherStrip'
+import DoNowCard from './components/DoNowCard'
 import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
@@ -65,7 +66,7 @@ function byUrgency(a, b) {
   return b.createdAt - a.createdAt
 }
 
-function Section({ sectionKey, title, tone, hint, tasks, getAdvice, onToggle, onDelete, onEdit, onDateChange, onShare }) {
+function Section({ sectionKey, title, tone, hint, tasks, getAdvice, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, focusId }) {
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-6 scroll-mt-4">
@@ -87,6 +88,8 @@ function Section({ sectionKey, title, tone, hint, tasks, getAdvice, onToggle, on
             onEdit={() => onEdit(task.id)}
             onDateChange={(date) => onDateChange(task.id, date)}
             onShare={() => onShare(task.id)}
+            onFocus={() => onFocus(task.id)}
+            focusing={focusId === task.id}
           />
         ))}
       </div>
@@ -150,6 +153,7 @@ function buildSampleTasks() {
       subject: 'DBMS',
       dueDate: addDays(today, -12),
       marks: 10,
+      effortMin: 55,
       priority: 'normal',
       done: true,
       completedAt: now - 11 * 864e5,
@@ -162,6 +166,7 @@ function buildSampleTasks() {
       subject: 'DBMS',
       dueDate: addDays(today, -6),
       marks: 10,
+      effortMin: 40,
       priority: 'normal',
       done: true,
       completedAt: now - 3 * 864e5,
@@ -174,6 +179,7 @@ function buildSampleTasks() {
       subject: 'Operating Systems',
       dueDate: addDays(today, -9),
       marks: 15,
+      effortMin: 120,
       priority: 'normal',
       done: true,
       completedAt: now - 9 * 864e5,
@@ -186,6 +192,7 @@ function buildSampleTasks() {
       subject: 'Software Engineering',
       dueDate: addDays(today, -15),
       marks: 5,
+      effortMin: 25,
       priority: 'normal',
       done: true,
       completedAt: now - 14 * 864e5,
@@ -210,6 +217,15 @@ export default function App() {
   const [clipSuggest, setClipSuggest] = useState(null)
   const [askCard, setAskCard] = useState(null)
   const [listening, setListening] = useState(false)
+  // ⏱️ Focus timer — { taskId, startedAt }; survives refresh via localStorage.
+  const [focus, setFocus] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('dr_focus'))
+    } catch {
+      return null
+    }
+  })
+  const [focusTick, setFocusTick] = useState(0)
   const lastClipRef = useRef('')
   const armedRef = useRef(false)
   const inputRef = useRef(null)
@@ -231,6 +247,22 @@ export default function App() {
       window.removeEventListener('resize', resize)
     }
   }, [])
+
+  // ⏱️ Focus timer: persist + tick the header display once a second.
+  useEffect(() => {
+    if (focus) localStorage.setItem('dr_focus', JSON.stringify(focus))
+    else localStorage.removeItem('dr_focus')
+  }, [focus])
+  useEffect(() => {
+    if (!focus) return undefined
+    const id = setInterval(() => setFocusTick((n) => n + 1), 1000)
+    return () => clearInterval(id)
+  }, [focus])
+  const focusTask = focus ? tasks.find((t) => t.id === focus.taskId) || null : null
+  const fmtElapsed = (ms) => {
+    const s = Math.floor(ms / 1000)
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+  }
 
   // Dev-only: log elements wider than the viewport (debug overflow).
   useEffect(() => {
@@ -455,6 +487,31 @@ export default function App() {
     setFlash({ msg: 'Task updated ✓' })
   }
 
+  // ⏱️ Focus timer — real minutes on a task train the effort model (marks/hr).
+  const startFocus = (id) => {
+    const task = tasks.find((t) => t.id === id)
+    if (!task || focus?.taskId === id) return
+    setFocus({ taskId: id, startedAt: Date.now() })
+    setFlash({ msg: `⏱ Focus: ${task.title.slice(0, 48)} — stop from the header when done.` })
+  }
+  const stopFocus = () => {
+    if (!focus) return
+    const minutes = Math.round((Date.now() - focus.startedAt) / 60000)
+    const task = tasks.find((t) => t.id === focus.taskId)
+    setFocus(null)
+    if (!task) return
+    if (minutes < 1) {
+      setFlash({ msg: 'Focus stopped — under a minute, not counted.' })
+      return
+    }
+    setTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, effortMin: (t.effortMin || 0) + minutes } : t)),
+    )
+    setFlash({
+      msg: `⏱ ${minutes} min added to "${task.title.slice(0, 36)}" — your pace estimate just got real.`,
+    })
+  }
+
   // Restores tasks from a JSON backup, skipping ones already captured (same id).
   async function importBackup(file) {
     try {
@@ -561,6 +618,7 @@ export default function App() {
   const brain = useMemo(() => computeBrain(tasks), [tasks])
   const risk = useMemo(() => marksAtRisk(tasks), [tasks])
   const forecast = useMemo(() => forecastWeather(tasks), [tasks])
+  const plan = useMemo(() => doNow(tasks), [tasks])
   const canAsk = canListen()
 
   // 🎙️ "Ask the radar" — one spoken question, spoken answer.
@@ -639,6 +697,22 @@ export default function App() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {focusTask && (
+            <button
+              type="button"
+              onClick={stopFocus}
+              title="Stop focus — the minutes train your pace estimate"
+              aria-label="Stop focus timer"
+              className="flex items-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-2.5 py-2 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25"
+            >
+              <span aria-hidden="true">⏱</span>
+              <span className="hidden max-w-[150px] truncate sm:inline">{focusTask.title}</span>
+              <span key={focusTick} className="tabular-nums">
+                {fmtElapsed(Date.now() - focus.startedAt)}
+              </span>
+              <span aria-hidden="true">⏹</span>
+            </button>
+          )}
           {installEvt && (
             <button
               type="button"
@@ -871,6 +945,9 @@ export default function App() {
 
         {/* Right column: the radar sections */}
         <div className="flex min-w-0 flex-col gap-4">
+          {tasks.length > 0 && (
+            <DoNowCard plan={plan} onStart={startFocus} focusId={focus?.taskId} />
+          )}
           {tasks.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
               <p className="text-3xl">📡</p>
@@ -902,6 +979,8 @@ export default function App() {
                   onEdit={setEditingId}
                   onDateChange={changeDate}
                   onShare={shareTask}
+                  onFocus={startFocus}
+                  focusId={focus?.taskId}
                 />
               ))}
               {visible.length === 0 && (

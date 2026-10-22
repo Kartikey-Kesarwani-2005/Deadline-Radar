@@ -12,6 +12,8 @@ export default function TaskCard({
   onEdit,
   onDateChange,
   onShare,
+  onFocus,
+  focusing = false,
 }) {
   const diff = task.dueDate ? dayDiff(todayKey(), task.dueDate) : null
   const isLate = !task.done && diff !== null && diff < 0
@@ -91,6 +93,26 @@ export default function TaskCard({
           </label>
         </div>
       </div>
+
+      {!task.done && (
+        <button
+          type="button"
+          onClick={onFocus}
+          aria-label={focusing ? 'Stop focus timer' : 'Start focus timer'}
+          title={
+            focusing
+              ? 'Focus running — click to stop and save the minutes'
+              : 'Start a focus timer — the radar learns your real pace'
+          }
+          className={`mt-0.5 shrink-0 rounded p-1 transition ${
+            focusing
+              ? 'task-actions bg-emerald-500/15 text-emerald-300 opacity-100'
+              : 'task-actions text-slate-700 opacity-0 group-hover:opacity-100 hover:bg-white/10 hover:text-emerald-300 focus:opacity-100'
+          }`}
+        >
+          {focusing ? '⏹' : '▶️'}
+        </button>
+      )}
 
       <button
         type="button"

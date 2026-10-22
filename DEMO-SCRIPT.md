@@ -36,12 +36,14 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   tak, 20 marks…` → one structured card with date + marks.)*
 
 ### 1:10–1:40 — What it gives back
-- Screen: the **radar dial** (rings fill by urgency, sweep rotating, on-time % in the centre),
-  the **🎯 marks-at-risk** line, and the **🌦️ 7-day weather forecast** — tap the ⛈️ storm day
-  to filter to it. A card shows its **🧠 prediction chip** ("Usually 2.0d late — start NOW").
-  Tick a task done — **confetti bursts** — open **Weekly report**.
-- **Voice query beat:** press **🎙️ Ask** and say *"kitne marks risk me hain?"* → the radar
-  **answers out loud** + on-screen card. **(10s)**
+- Screen: the **"🎯 Ab kya karun?"** decision card at the top (start a ⏱ focus with
+  one click), the **radar dial** (rings fill by urgency, sweep rotating, on-time %
+  in the centre), the **🎯 marks-at-risk** line, and the **🌦️ 7-day weather forecast** —
+  tap the ⛈️ storm day to filter to it. A card shows its **🧠 prediction chip**
+  ("Usually 2.0d late — start NOW"). Tick a task done — **confetti bursts** — open
+  **Weekly report**.
+- **Voice query beat:** press **🎙️ Ask** and say *"ab kya karun?"* → the radar
+  **speaks the pick** ("Start now: SE slides… about 1.3h") + on-screen card. **(10s)**
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
   your on-time score. It counts marks at risk, learns my own rhythm from history, and I can
   just ask it — out loud — what's due today."*

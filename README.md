@@ -58,6 +58,10 @@ replacing anything you captured).
 - **🎯 Marks at risk** — the radar counts *marks*, not just tasks: how many marks are already
   late and how many ride on this week's submissions. Shown in the rail, the weekly report and
   the voice answers.
+- **🎯 "Ab kya karun?" (do-now engine)** — lists show what exists; this names the ONE
+  task to start right now: marks-per-hour ROI weighted by urgency, so overdue and
+  latest-start tasks jump the queue. A **⏱ focus timer** on every card tracks real
+  minutes, so each subject's effort estimate comes from YOUR pace, not a guess.
 - **🌦️ Deadline Weather** — the week as a weather forecast: ☀️ clear day, ⛅ light,
   🌧️ heavy (10+ marks), ⛈️ storm (3+ submissions or 25+ marks). Tap a day to filter the
   radar to it. Nobody else forecasts deadlines like weather.
