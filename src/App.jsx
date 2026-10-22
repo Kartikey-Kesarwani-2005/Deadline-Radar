@@ -160,11 +160,21 @@ export default function App() {
     notifyDaily(tasks)
   }, [tasks])
 
-  // ?demo=1 prefills an empty radar with samples — README/screenshots/demo link.
-  // Never touches tasks someone already captured.
+  // ?demo=1 loads sample deadlines for reviewers/screenshots — merged in,
+  // deduped by title, never replacing anything the visitor captured themselves.
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has('demo')) return
-    setTasks((prev) => (prev.length === 0 ? buildSampleTasks() : prev))
+    const have = new Set(tasks.map((t) => t.title.toLowerCase()))
+    const fresh = buildSampleTasks().filter((s) => !have.has(s.title.toLowerCase()))
+    if (fresh.length) {
+      setTasks((prev) => [...fresh, ...prev])
+      setFlash({
+        msg: `Demo mode ✓ ${fresh.length} sample deadlines added — your own tasks are untouched.`,
+      })
+    } else {
+      setFlash({ msg: 'Demo mode ✓ samples already on the radar — your own tasks are untouched.' })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on mount only
   }, [])
 
   useEffect(() => {

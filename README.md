@@ -18,7 +18,8 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 ![Deadline Radar dashboard](./public/tour.png)
 
 **Open it with data:** [live demo (samples preloaded)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1)
-— the `?demo=1` param fills an empty radar with samples; your own captured tasks are never touched.
+— `?demo=1` adds the sample deadlines to the radar (merged with your own, deduped, never
+replacing anything you captured).
 
 ## ✨ Features (MVP)
 
