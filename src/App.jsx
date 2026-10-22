@@ -683,7 +683,7 @@ export default function App() {
               <span className="relative">📡</span>
             </span>
             <div>
-              <h1 className="app-title text-lg font-extrabold tracking-tight text-slate-50">
+              <h1 className="app-title bg-gradient-to-r from-emerald-200 via-sky-200 to-slate-100 bg-clip-text text-lg font-extrabold tracking-tight text-transparent">
                 Deadline Radar
               </h1>
               <p className="text-xs text-slate-500">{formatLongToday()}</p>
@@ -771,7 +771,7 @@ export default function App() {
       />
 
       {flash && (
-        <div className="mt-2 flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
+        <div className="rise mt-2 flex items-center gap-3 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 shadow-[0_10px_30px_-18px_rgba(16,185,129,0.8)]">
           <span className="min-w-0 flex-1 break-words">✓ {flash.msg}</span>
           {flash.action && (
             <button
@@ -1005,7 +1005,7 @@ export default function App() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-10 border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-slate-600">
+      <footer className="mt-12 border-t border-white/[0.07] pt-5 text-center text-[11px] leading-relaxed text-slate-600">
         Built hands-free with <span className="text-slate-500">Wispr Flow</span> ·{' '}
         <span className="text-slate-500">#NoHandsChallenge</span> · WeMakeDevs × Wispr Flow
         <br />

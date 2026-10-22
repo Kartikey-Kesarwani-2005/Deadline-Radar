@@ -27,11 +27,15 @@ export default function RadarDial({ late, today, week, later, onTime, done }) {
     <div
       role="img"
       aria-label={`Deadline radar: ${late} late, ${today} due today, ${week} this week, ${later} later. ${pct ?? 0} percent finished on time.`}
-      className="rise radar-dial relative h-[168px] w-[168px] shrink-0 self-center overflow-hidden rounded-full bg-[#0a1122] ring-1 ring-white/10"
+      className="rise radar-dial relative h-[168px] w-[168px] shrink-0 self-center overflow-hidden rounded-full bg-[#0a1122] shadow-[0_0_55px_-14px_rgba(16,185,129,0.45)] ring-1 ring-white/15"
     >
       <span aria-hidden="true" className="radar-sweep" />
 
       <svg viewBox="0 0 220 220" className="absolute inset-0 h-full w-full">
+        {/* instrument grid — outer bezel + crosshair */}
+        <circle cx="110" cy="110" r="103" fill="none" stroke="rgba(148,163,184,0.07)" strokeWidth="1" />
+        <line x1="110" y1="8" x2="110" y2="212" stroke="rgba(148,163,184,0.06)" strokeWidth="1" />
+        <line x1="8" y1="110" x2="212" y2="110" stroke="rgba(148,163,184,0.06)" strokeWidth="1" />
         {ZONES.map((z, i) => {
           const c = counts[z.k]
           const deg = ringDeg(c)

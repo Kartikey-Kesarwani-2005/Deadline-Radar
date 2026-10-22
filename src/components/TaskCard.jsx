@@ -22,14 +22,26 @@ export default function TaskCard({
     <div
       title={task.source}
       style={style}
-      className={`rise group flex items-start gap-3 rounded-xl border p-3 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 ${
+      className={`rise group relative flex items-start gap-3 rounded-xl border p-3 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 ${
         task.done
           ? 'border-emerald-500/20 bg-emerald-500/[0.05]'
           : isLate
             ? 'border-red-500/30 bg-red-500/[0.06]'
-            : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+            : diff === 0
+              ? 'border-amber-500/25 bg-amber-500/[0.05]'
+              : 'border-white/10 bg-white/[0.03] hover:border-white/20'
       }`}
     >
+      {/* urgency rail — a left-edge tell for scanning: red = late, amber = today */}
+      {!task.done && (isLate || diff === 0) && (
+        <span
+          aria-hidden="true"
+          className={`absolute inset-y-3 left-0 w-[3px] rounded-full ${
+            isLate ? 'bg-red-400/80' : 'bg-amber-400/80'
+          }`}
+        />
+      )}
+
       <button
         type="button"
         onClick={onToggle}

@@ -11,7 +11,11 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, listenin
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_10px_40px_-16px_rgba(16,185,129,0.5)] backdrop-blur">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_10px_40px_-16px_rgba(16,185,129,0.5)] backdrop-blur transition focus-within:border-emerald-500/40 focus-within:shadow-[0_18px_55px_-20px_rgba(16,185,129,0.6)]">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent"
+      />
       <textarea
         rows={2}
         ref={inputRef}
@@ -25,11 +29,15 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, listenin
         }}
         placeholder="Paste an assignment message… or hold your Wispr key, speak, and hit Enter"
         aria-label="Add a deadline"
-        className="w-full resize-none bg-transparent px-2 py-1.5 text-[15px] leading-relaxed text-slate-100 placeholder:text-slate-500 focus:outline-none"
+        className="w-full resize-none bg-transparent px-2 py-1.5 text-[15px] leading-relaxed text-slate-100 caret-emerald-400 placeholder:text-slate-500 focus:outline-none"
       />
       <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-1">
-        <span className="wispr-hint text-xs text-slate-500">
-          🎙️ Hold your Wispr key and speak — the text lands right here
+        <span className="wispr-hint inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-500">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </span>
+          Hold your Wispr key and speak — the text lands right here
         </span>
         <div className="flex items-center gap-2">
           {canAsk && (
@@ -68,7 +76,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, listenin
             type="button"
             onClick={submit}
             disabled={!text.trim() || busy}
-            className="add-submit rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="add-submit rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-[0_8px_22px_-10px_rgba(16,185,129,0.85)] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             {busy ? 'Reading…' : 'Add to radar →'}
           </button>

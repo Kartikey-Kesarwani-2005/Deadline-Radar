@@ -12,8 +12,39 @@ body {
     "Helvetica Neue", Arial, sans-serif;
   background-image:
     radial-gradient(1100px 550px at 85% -10%, rgba(16, 185, 129, 0.13), transparent),
-    radial-gradient(900px 500px at -10% 8%, rgba(56, 189, 248, 0.10), transparent);
+    radial-gradient(900px 500px at -10% 8%, rgba(56, 189, 248, 0.10), transparent),
+    radial-gradient(820px 620px at 50% 118%, rgba(139, 92, 246, 0.10), transparent),
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1.4px);
+  background-size: auto, auto, auto, 26px 26px;
   background-attachment: fixed;
+}
+
+/* Keyboard-first: a visible, on-brand focus ring everywhere. */
+*:focus-visible {
+  outline: 2px solid rgba(52, 211, 153, 0.55);
+  outline-offset: 2px;
+}
+
+/* Thin, quiet scrollbars. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  border: 2px solid #070b16;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.32);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tactile press on every button. */
+button:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
 }
 
 kbd {
@@ -74,10 +105,54 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   animation: rise-in 0.35s ease-out both;
 }
 
+/* The "Ab kya karun?" hero card: a slow radar sweep of light runs its border. */
+@property --donow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.donow {
+  position: relative;
+}
+.donow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--donow-angle),
+    transparent 0 62deg,
+    rgba(52, 211, 153, 0.85) 112deg,
+    rgba(56, 189, 248, 0.55) 152deg,
+    transparent 210deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: donow-sweep 7s linear infinite;
+  pointer-events: none;
+}
+@keyframes donow-sweep {
+  to {
+    --donow-angle: 360deg;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rise,
-  .radar-sweep {
+  .radar-sweep,
+  .animate-ping {
     animation: none !important;
+  }
+  .donow::before {
+    animation: none !important;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.55), rgba(56, 189, 248, 0.3));
   }
 }
 
