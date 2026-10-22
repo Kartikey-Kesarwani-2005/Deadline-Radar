@@ -497,7 +497,7 @@ export default function App() {
       {/* Dashboard */}
       {tasks.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
-          <p className="text-3xl"> radar silent </p>
+          <p className="text-3xl">📡</p>
           <p className="mt-2 text-sm font-semibold text-slate-200">No deadlines captured yet</p>
           <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
             Paste your most recent assignment WhatsApp message above — or hold your Wispr key and
