@@ -7,6 +7,7 @@ import AddBar from './components/AddBar'
 import StatsBar from './components/StatsBar'
 import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
+import WeeklyReport from './components/WeeklyReport'
 
 const SECTION_TONES = {
   red: 'bg-red-500',
@@ -112,6 +113,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [flash, setFlash] = useState(null)
   const [perm, setPerm] = useState(() => getPermission())
+  const [reportOpen, setReportOpen] = useState(false)
 
   useEffect(() => saveTasks(tasks), [tasks])
 
@@ -265,6 +267,13 @@ export default function App() {
       {/* Stats */}
       <div className="mt-4 mb-6">
         <StatsBar {...stats} />
+        <button
+          type="button"
+          onClick={() => setReportOpen(true)}
+          className="mt-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+        >
+          📊 Weekly report — real result + copy check-in post
+        </button>
       </div>
 
       {/* Dashboard */}
@@ -346,6 +355,8 @@ export default function App() {
         <br />
         All data stays in this browser (localStorage).
       </footer>
+
+      {reportOpen && <WeeklyReport tasks={tasks} onClose={() => setReportOpen(false)} />}
 
       {settingsOpen && (
         <SettingsModal

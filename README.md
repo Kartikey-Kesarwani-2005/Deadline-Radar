@@ -22,6 +22,8 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 - **On-time metric** — every tick records when you finished it, so the app shows *"N finished
   on time"* — the real result for your demo video.
 - **Urgency sorting** — each section orders itself: priority → nearest deadline → highest marks.
+- **Weekly report** — one tap shows your real result (captured / finished / on time) and copies a
+  ready-made check-in text for your #NoHandsChallenge post.
 - **Daily check-in** — open the app, tick things off.
 - **Everything in localStorage** — no account, no backend, data never leaves your browser
   (except the optional AI call you configure yourself).
@@ -55,8 +57,8 @@ output directory = `dist`. (Netlify works the same way.)
 
 - [x] Browser notification reminders for "Due today"
 - [x] Marks-weighted priority sorting (high marks = top of the list)
+- [x] Weekly report card ("saved N submissions from going late")
 - [ ] Screenshot → deadline (photo/notice extraction)
-- [ ] Weekly report card ("saved N submissions from going late")
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
