@@ -6,6 +6,7 @@ export const defaultSettings = {
   apiKey: '',
   baseUrl: 'https://api.openai.com/v1',
   model: 'gpt-4o-mini',
+  clipDetect: true,
 }
 
 export function loadTasks() {

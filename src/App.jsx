@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { extractMany } from './lib/extract'
+import { extractMany, extractManyLocal } from './lib/extract'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
   exportTasks,
@@ -153,6 +153,9 @@ export default function App() {
   const [editingId, setEditingId] = useState(null)
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
+  const [clipSuggest, setClipSuggest] = useState(null)
+  const lastClipRef = useRef('')
+  const armedRef = useRef(false)
   const inputRef = useRef(null)
   const [installEvt, setInstallEvt] = useState(null)
   // Connectivity + screen size drive the offline banner and desktop / phone modes.
@@ -216,6 +219,55 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on mount only
   }, [])
 
+  // Share Target (PWA): any app's share sheet → Deadline Radar lands here with
+  // ?text=… and captures it automatically.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const shared = (params.get('text') || params.get('body') || '').trim()
+    if (shared) {
+      addTask(shared, 'from the share sheet')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, [])
+
+  // Clipboard auto-detect: copy a notice (WhatsApp etc.), come back to this tab —
+  // we check the clipboard and offer a one-tap capture. Never prompts on page load.
+  async function detectClipboard() {
+    try {
+      const text = ((await navigator.clipboard?.readText?.()) || '').trim()
+      if (text.length < 15 || text === lastClipRef.current) return
+      if (!extractManyLocal(text).length) return
+      setClipSuggest((prev) => (prev?.text === text ? prev : { text }))
+    } catch {
+      /* clipboard permission denied or unsupported — stay quiet */
+    }
+  }
+
+  useEffect(() => {
+    if (!settings.clipDetect) return undefined
+    const onBlur = () => {
+      armedRef.current = true
+    }
+    const onFocus = () => {
+      if (!armedRef.current) return
+      armedRef.current = false
+      detectClipboard()
+    }
+    const onVis = () => {
+      if (!document.hidden) detectClipboard()
+    }
+    window.addEventListener('blur', onBlur)
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm only when the setting flips
+  }, [settings.clipDetect])
+
   useEffect(() => {
     if (!flash) return undefined
     const timer = setTimeout(() => setFlash(null), 5000)
@@ -246,7 +298,7 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', onPrompt)
   }, [])
 
-  async function addTask(text) {
+  async function addTask(text, via) {
     setBusy(true)
     try {
       const parsed = await extractMany(text, settings)
@@ -257,11 +309,19 @@ export default function App() {
         done: false,
         createdAt: Date.now(),
       }))
-      setTasks((prev) => [...created, ...prev])
+      // Dedupe by exact title so share/clipboard re-runs never double-capture.
+      const have = new Set(tasks.map((t) => t.title.toLowerCase().trim()))
+      const fresh = created.filter((c) => !have.has(c.title.toLowerCase().trim()))
+      if (!fresh.length) {
+        setFlash({ msg: 'Already on the radar — nothing new in that text.' })
+        return
+      }
+      setTasks((prev) => [...fresh, ...prev])
+      const where = via ? ` ${via}` : created.length > 1 ? ' from one paste' : ''
       setFlash(
-        created.length > 1
-          ? { msg: `Captured ${created.length} deadlines from one paste ✓` }
-          : { msg: `Captured: ${created[0].title} · ${formatDue(created[0].dueDate)}` },
+        fresh.length > 1
+          ? { msg: `Captured ${fresh.length} deadlines${where} ✓` }
+          : { msg: `Captured: ${fresh[0].title} · ${formatDue(fresh[0].dueDate)}` },
       )
     } finally {
       setBusy(false)
@@ -556,6 +616,40 @@ export default function App() {
               {flash.action.label}
             </button>
           )}
+        </div>
+      )}
+
+      {/* Clipboard auto-detect suggestion */}
+      {clipSuggest && (
+        <div className="mt-2 flex items-center gap-3 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs text-slate-200">
+          <span aria-hidden="true">📋</span>
+          <p className="min-w-0 flex-1 break-words">
+            <b>Clipboard check</b> — looks like a deadline notice. Add it?{' '}
+            <span className="text-slate-500">{clipSuggest.text.slice(0, 80)}…</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              const t = clipSuggest.text
+              lastClipRef.current = t
+              setClipSuggest(null)
+              addTask(t, 'from your clipboard')
+            }}
+            className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 font-semibold text-slate-950 transition hover:bg-emerald-400"
+          >
+            ✓ Add
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              lastClipRef.current = clipSuggest.text
+              setClipSuggest(null)
+            }}
+            aria-label="Dismiss clipboard suggestion"
+            className="shrink-0 rounded-lg border border-white/15 px-2.5 py-1.5 text-slate-400 transition hover:text-slate-200"
+          >
+            ✕
+          </button>
         </div>
       )}
 

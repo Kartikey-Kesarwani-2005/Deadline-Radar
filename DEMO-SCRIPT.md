@@ -21,13 +21,17 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   as one list that answers: what is due today, and what is getting late."*
 - Caption: **Deadline Radar — link in description**
 
-### 0:35–1:05 — Capture demo (the core)
+### 0:35–1:10 — Capture demo (the core)
 1. Paste a **multi-line notice** (3 deadlines) → Enter → *"Captured 3 deadlines from one
-   paste ✓"* — all three cards land in the radar. **(10s)**
-2. Click 📷 → pick a notice screenshot → "Reading…" → task extracted from the image.
-   **(15s)**
-3. Hold Wispr key, speak a third one hands-free → text lands → Enter. **(15s)**
-- **VO:** *"Text, a whole notice, or straight from my mouth — same radar."*
+   paste ✓"* — all three cards land in the radar. **(8s)**
+2. **Auto-detect beat:** copy a message in WhatsApp (desktop), switch to Deadline Radar →
+   the 📋 "Clipboard check" card pops **by itself** → tap **✓ Add**. **(8s)**
+   *(Android bonus: installed app → Share → Deadline Radar captures via the PWA share target.)*
+3. Click 📷 → pick a notice screenshot → "Reading…" → task extracted from the image.
+   **(9s)**
+4. Hold Wispr key, speak one hands-free → text lands → Enter. **(9s)**
+- **VO:** *"One paste — and it even catches what I copy from WhatsApp on its own. Photo, or
+  straight from my mouth — same radar."*
 - *(Alt if a take goes wrong: paste a single messy message `dbms ka assignment friday
   tak, 20 marks…` → one structured card with date + marks.)*
 

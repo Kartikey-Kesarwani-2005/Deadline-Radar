@@ -5,6 +5,11 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": { "title": "title", "text": "text" }
+  },
   "background_color": "#070b16",
   "theme_color": "#070b16",
   "icons": [

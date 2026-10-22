@@ -39,6 +39,10 @@ replacing anything you captured).
   parser understands how students actually speak, not just textbook English.
 - **Bulk capture** — paste a whole notice/syllabus (one deadline per line or sentence) → every
   task is extracted in a single go: *"Captured 3 deadlines from one paste ✓"*.
+- **Clipboard auto-detect** — copy an assignment message (WhatsApp, notes…), switch back to the
+  tab, and the radar itself asks *"📋 looks like a deadline — add it?"* — one tap.
+- **Share to the radar (Android PWA)** — install the app, then any app → *Share → Deadline Radar*
+  and the shared text is captured automatically (PWA Share Target).
 - **Share** — 📤 on any card copies a ready-to-paste line + app link, for the study group chat.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.

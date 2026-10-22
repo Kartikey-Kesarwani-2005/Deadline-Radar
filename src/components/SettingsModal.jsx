@@ -121,6 +121,34 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
           )}
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">🧲 Clipboard auto-detect</p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+                  Copy an assignment message (WhatsApp, notes…), switch back to this tab — we
+                  check the clipboard and offer a one-tap capture. The text never leaves your
+                  browser. Allow clipboard access once when asked.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={draft.clipDetect}
+                onClick={() => set({ clipDetect: !draft.clipDetect })}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+                  draft.clipDetect ? 'bg-emerald-500' : 'bg-slate-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                    draft.clipDetect ? 'left-[22px]' : 'left-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
             <p className="text-sm font-semibold text-slate-200">🖥️ Display mode</p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
               Auto picks the layout from your screen size. Phone mode: compact, big tap targets,
