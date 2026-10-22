@@ -4,7 +4,7 @@
  */
 import { extractLocal, extractManyLocal } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
-import { answerQuery, doNow, estimateEffort } from '../src/lib/brain.js'
+import { answerQuery, briefingText, doNow, estimateEffort, paceRows } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
 
 const today = new Date()
@@ -164,6 +164,29 @@ check('doNow: nothing pending -> null', doNow([{ id: 'x', done: true, dueDate: s
 
 const dq = answerQuery('ab kya karun', { tasks: dnTasks, stats: {} })
 check('voice: "ab kya karun" answers the pick', dq.text.includes('Start now: DBMS quiz'), true)
+
+// --- Radar Samachaar (spoken briefing) ---
+const briefTasks = [
+  { id: 'b1', title: 'DBMS quiz', subject: 'DBMS', dueDate: '2026-10-21', done: false },
+  { id: 'b2', title: 'OS lab record', subject: 'OS', dueDate: '2026-10-22', done: false },
+]
+const brief = briefingText(briefTasks, '2026-10-22')
+check('briefing: speaks late + today items', brief.includes('already late') && brief.includes('DBMS quiz') && brief.includes('OS lab record'), true)
+check('briefing: ends with the do-now pick', brief.includes('Ab kya karun?'), true)
+const clearBrief = briefingText([{ id: 'b3', title: 'PPT next week', dueDate: '2026-10-27', done: false }], '2026-10-22')
+check('briefing: clear-days message', clearBrief.includes('clear'), true)
+
+// --- Pace report card (per-subject rows) ---
+const paceTasks = [
+  { id: 'p1', title: 'DBMS a1', subject: 'DBMS', dueDate: '2026-10-10', done: true, completedAt: new Date('2026-10-10T10:00:00Z').getTime(), effortMin: 40, marks: 10 },
+  { id: 'p2', title: 'DBMS a2', subject: 'DBMS', dueDate: '2026-10-15', done: true, completedAt: new Date('2026-10-17T10:00:00Z').getTime(), effortMin: 60, marks: 10 },
+  { id: 'p3', title: 'SE essay', subject: 'SE', dueDate: '2026-10-12', done: true, completedAt: new Date('2026-10-11T10:00:00Z').getTime(), effortMin: 30, marks: 10 },
+]
+const rows = paceRows(paceTasks)
+check('paceRows: one row per subject', rows.length, 2)
+check('paceRows: worst on-time subject first', rows[0].key, 'dbms')
+check('paceRows: learned min/mark from focus sessions', rows[0].minPerMark, 5)
+check('paceRows: buffer reflects avg days late/early', Math.abs(rows[0].avgBuffer - 1) < 0.01, true)
 
 // --- Calendar export (.ics) ---
 const icsTasks = [

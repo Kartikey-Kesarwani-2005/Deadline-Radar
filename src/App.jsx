@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, extractManyLocal } from './lib/extract'
-import { adviceFor, answerQuery, computeBrain, doNow, forecastWeather, marksAtRisk } from './lib/brain'
+import { adviceFor, answerQuery, briefingText, computeBrain, doNow, forecastWeather, marksAtRisk } from './lib/brain'
 import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
@@ -645,6 +645,13 @@ export default function App() {
     }
   }
 
+  // 🔊 Radar Samachaar — the radar speaks your whole day on one tap.
+  function playBriefing() {
+    if (busy) return
+    speak(briefingText(tasks))
+    setFlash({ msg: '🔊 Radar Samachaar — sun raha hoon…' })
+  }
+
   async function toggleReminders() {
     const current = getPermission()
     if (current === 'unsupported') {
@@ -769,6 +776,7 @@ export default function App() {
         inputRef={inputRef}
         onImage={addFromImage}
         onAsk={askRadar}
+        onBrief={playBriefing}
         listening={listening}
         canAsk={canAsk}
       />

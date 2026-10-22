@@ -42,7 +42,9 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   tap the ⛈️ storm day to filter to it. A card shows its **🧠 prediction chip**
   ("Usually 2.0d late — start NOW"). Tick a task done — **confetti bursts** — open
   **Weekly report**.
-- **Voice query beat:** press **🎙️ Ask** and say *"ab kya karun?"* → the radar
+- **Voice beats:** press **🔊 Briefing** — the radar *speaks* your whole day
+  (late → today → tomorrow → on-time rate → "ab kya karun" pick). Then press
+  **🎙️ Ask** and say *"ab kya karun?"* → the radar
   **speaks the pick** ("Start now: SE slides… about 1.3h") + on-screen card. **(10s)**
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
   your on-time score. It counts marks at risk, learns my own rhythm from history, and I can

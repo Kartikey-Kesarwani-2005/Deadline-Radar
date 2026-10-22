@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, listening, canAsk }) {
+export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief, listening, canAsk }) {
   const [text, setText] = useState('')
 
   async function submit() {
@@ -40,6 +40,14 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, listenin
           Hold your Wispr key and speak — the text lands right here
         </span>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBrief}
+            title="Radar Samachaar — hear your day spoken out loud"
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+          >
+            🔊 Briefing
+          </button>
           {canAsk && (
             <button
               type="button"

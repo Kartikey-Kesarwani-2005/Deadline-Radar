@@ -162,6 +162,58 @@ export function doNow(tasks) {
   return { pick: items[0], next: items.slice(1, 3) }
 }
 
+/**
+ * 🔊 Radar Samachaar — the spoken briefing. One tap → the radar speaks your
+ * day: late, today, tomorrow, your on-time rate, and the single best next
+ * move. Pure text generation; speaking happens in voice.js (Web Speech).
+ */
+export function briefingText(tasks, today = todayKey()) {
+  const pending = tasks.filter((t) => !t.done && t.dueDate)
+  const late = pending.filter((t) => dayDiff(today, t.dueDate) < 0)
+  const dueToday = pending.filter((t) => t.dueDate === today)
+  const tomorrow = addDays(today, 1)
+  const dueTomorrow = pending.filter((t) => t.dueDate === tomorrow)
+  const brain = computeBrain(tasks)
+  const ranked = doNow(tasks)
+
+  const parts = ['Radar samachaar.']
+  if (late.length)
+    parts.push(
+      `Warning: ${late.length} ${late.length === 1 ? 'deadline is' : 'deadlines are'} already late — ${late[0].title}${late.length > 1 ? ', and more' : ''}.`,
+    )
+  if (dueToday.length) parts.push(`Aaj due: ${dueToday.map((t) => t.title).join(', ')}.`)
+  if (dueTomorrow.length) parts.push(`Kal due: ${dueTomorrow.map((t) => t.title).join(', ')}.`)
+  if (!late.length && !dueToday.length && !dueTomorrow.length)
+    parts.push('Next two days clear — good time to get ahead.')
+  if (brain.overall) parts.push(`Tumhara on-time rate: ${brain.overall.onTimeRate} percent.`)
+  if (ranked?.pick)
+    parts.push(`Ab kya karun? ${ranked.pick.task.title}. ${doNowReason(ranked.pick)}.`)
+  return parts.join(' ')
+}
+
+/**
+ * 🧠 Pace report card rows — per-subject on-time rate, average buffer (days
+ * early + / late −) and learned minutes-per-mark, worst subject first.
+ */
+export function paceRows(tasks) {
+  const done = tasks.filter((t) => t.done && t.dueDate && t.completedAt)
+  const pace = pacePerMark(tasks)
+  const bySubject = {}
+  for (const t of done) {
+    const key = (t.subject || '').trim().toLowerCase()
+    if (!key) continue
+    ;(bySubject[key] ||= []).push(t)
+  }
+  return Object.entries(bySubject)
+    .map(([key, list]) => ({
+      key,
+      label: key.charAt(0).toUpperCase() + key.slice(1),
+      ...statsFor(list),
+      minPerMark: pace[key] != null ? Math.round(pace[key]) : null,
+    }))
+    .sort((a, b) => a.onTimeRate - b.onTimeRate || b.n - a.n)
+}
+
 /** One-line reason for a ranked item — spoken by the voice query too. */
 export function doNowReason(item) {
   if (item.daysLeft < 0) return `already late — about ${Math.round(item.roi)} marks/hr, finish it first`

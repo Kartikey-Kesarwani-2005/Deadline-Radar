@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
-import { marksAtRisk } from '../lib/brain'
+import { marksAtRisk, paceRows } from '../lib/brain'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -26,6 +26,7 @@ export default function WeeklyReport({ tasks, onClose }) {
     .length
   const doneEver = tasks.filter((t) => t.done).length
   const risk = marksAtRisk(tasks)
+  const pace = paceRows(tasks)
 
   const reportText = [
     'Deadline Radar — weekly check-in 📡',
@@ -34,9 +35,14 @@ export default function WeeklyReport({ tasks, onClose }) {
     `📌 Pending with a deadline: ${pending}${late ? ` · late: ${late}` : ''}`,
     `🎯 Marks at risk: ${risk.total}${risk.late ? ` (${risk.late} already late)` : ''}`,
     `🏁 Total finished so far: ${doneEver}`,
+    pace.length
+      ? `🧠 Weakest subject: ${pace[0].label} (${pace[0].onTimeRate}% on time)`
+      : null,
     '',
     'Built hands-free with Wispr Flow · #NoHandsChallenge',
-  ].join('\n')
+  ]
+    .filter(Boolean)
+    .join('\n')
 
   async function copy() {
     try {
@@ -79,6 +85,59 @@ export default function WeeklyReport({ tasks, onClose }) {
         <Row label="Late right now" value={late} className="text-red-400" />
         <Row label="🎯 Marks at risk (late + this week)" value={risk.total} className="text-amber-300" />
         <Row label="Total finished" value={doneEver} className="text-emerald-300" />
+
+        {pace.length > 0 && (
+          <>
+            <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">
+              🧠 Per-subject pace (worst first)
+            </p>
+            <div className="overflow-hidden rounded-lg border border-white/5">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr className="bg-white/[0.02] text-slate-500">
+                    <th className="px-2.5 py-1.5 text-left font-medium">Subject</th>
+                    <th className="px-2.5 py-1.5 text-right font-medium">On time</th>
+                    <th className="px-2.5 py-1.5 text-right font-medium">Buffer</th>
+                    <th className="px-2.5 py-1.5 text-right font-medium">min/mark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pace.map((r) => (
+                    <tr key={r.key} className="border-t border-white/5">
+                      <td className="px-2.5 py-1.5 text-left font-medium text-slate-200">{r.label}</td>
+                      <td
+                        className={`px-2.5 py-1.5 text-right font-semibold tabular-nums ${
+                          r.onTimeRate >= 80
+                            ? 'text-emerald-300'
+                            : r.onTimeRate >= 50
+                              ? 'text-amber-300'
+                              : 'text-red-400'
+                        }`}
+                      >
+                        {r.onTimeRate}%
+                      </td>
+                      <td
+                        className={`px-2.5 py-1.5 text-right tabular-nums ${
+                          r.avgBuffer >= 0 ? 'text-teal-300' : 'text-red-400'
+                        }`}
+                      >
+                        {r.avgBuffer >= 0 ? '+' : ''}
+                        {r.avgBuffer.toFixed(1)}d
+                      </td>
+                      <td className="px-2.5 py-1.5 text-right tabular-nums text-slate-400">
+                        {r.minPerMark != null ? r.minPerMark : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-600">
+              Buffer = days early (+) or late (−) you usually finish. min/mark is learned from your
+              focus-timer sessions.
+            </p>
+          </>
+        )}
 
         <button
           type="button"
