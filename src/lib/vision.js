@@ -1,4 +1,4 @@
-import { todayKey } from './dates'
+import { todayKey } from './dates.js'
 
 /**
  * Read a screenshot/photo of a notice, message or syllabus and pull the

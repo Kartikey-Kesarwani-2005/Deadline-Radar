@@ -1,4 +1,4 @@
-import { todayKey } from './dates'
+import { todayKey } from './dates.js'
 
 /* ------------------------------------------------------------------ *
  * Local (offline) extractor — works with zero setup, no API key.
