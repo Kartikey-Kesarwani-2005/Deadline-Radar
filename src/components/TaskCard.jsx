@@ -8,6 +8,7 @@ export default function TaskCard({
   task,
   style,
   advice,
+  estimate,
   onToggle,
   onDelete,
   onEdit,
