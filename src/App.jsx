@@ -9,10 +9,12 @@ import {
   saveSettings,
   saveTasks,
 } from './lib/store'
+import { burstConfetti } from './lib/confetti'
 import { getPermission, notifyDaily, notifyTest, requestPermission } from './lib/notify'
 import { extractFromImage, fileToDataUrl } from './lib/vision'
 import AddBar from './components/AddBar'
 import StatsBar from './components/StatsBar'
+import RadarDial from './components/RadarDial'
 import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
@@ -60,10 +62,10 @@ function byUrgency(a, b) {
   return b.createdAt - a.createdAt
 }
 
-function Section({ title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateChange, onShare }) {
+function Section({ sectionKey, title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateChange, onShare }) {
   if (!tasks.length) return null
   return (
-    <section className="mb-6">
+    <section id={`radar-${sectionKey}`} className="mb-6 scroll-mt-4">
       <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
         <span className={`h-2 w-2 rounded-full ${SECTION_TONES[tone]}`} />
         {title}
@@ -71,11 +73,12 @@ function Section({ title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateC
         {hint && <span className="ml-auto font-normal normal-case tracking-normal text-slate-600">{hint}</span>}
       </div>
       <div className="space-y-2">
-        {tasks.map((task) => (
+        {tasks.map((task, index) => (
           <TaskCard
             key={task.id}
             task={task}
-            onToggle={() => onToggle(task.id)}
+            style={{ animationDelay: `${Math.min(index * 45, 320)}ms` }}
+            onToggle={(e) => onToggle(task.id, e)}
             onDelete={() => onDelete(task.id)}
             onEdit={() => onEdit(task.id)}
             onDateChange={(date) => onDateChange(task.id, date)}
@@ -258,7 +261,11 @@ export default function App() {
     }
   }
 
-  const toggleTask = (id) =>
+  const toggleTask = (id, event) => {
+    const current = tasks.find((t) => t.id === id)
+    if (!current?.done && typeof event?.clientX === 'number') {
+      burstConfetti(event.clientX, event.clientY)
+    }
     setTasks((prev) =>
       prev.map((t) =>
         t.id === id
@@ -266,6 +273,7 @@ export default function App() {
           : t,
       ),
     )
+  }
   const deleteTask = (id) => {
     const index = tasks.findIndex((t) => t.id === id)
     if (index === -1) return
@@ -383,6 +391,11 @@ export default function App() {
     dueToday: tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) === 0)
       .length,
     late: tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) < 0).length,
+    week: tasks.filter(
+      (t) =>
+        !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) > 0 && dayDiff(todayKey(), t.dueDate) <= 7,
+    ).length,
+    later: tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) > 7).length,
     done: tasks.filter((t) => t.done).length,
     onTime,
   }
@@ -419,7 +432,7 @@ export default function App() {
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-emerald-500/15 text-lg ring-1 ring-emerald-500/40">
+            <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-emerald-500/15 text-lg shadow-[0_0_22px_-6px_rgba(16,185,129,0.65)] ring-1 ring-emerald-500/40">
               <span aria-hidden="true" className="radar-sweep" />
               <span className="relative">📡</span>
             </span>
@@ -491,16 +504,26 @@ export default function App() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="mt-4 mb-6">
-        <StatsBar {...stats} />
-        <button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          className="mt-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
-        >
-          📊 Weekly report — real result + copy check-in post
-        </button>
+      {/* Stats + radar dial */}
+      <div className="mt-4 mb-6 flex items-stretch gap-3">
+        <RadarDial
+          late={stats.late}
+          today={stats.dueToday}
+          week={stats.week}
+          later={stats.later}
+          onTime={stats.onTime}
+          done={stats.done}
+        />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} />
+          <button
+            type="button"
+            onClick={() => setReportOpen(true)}
+            className="mt-auto rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+          >
+            📊 Weekly report — real result + copy check-in post
+          </button>
+        </div>
       </div>
 
       {/* Search + subject filters */}

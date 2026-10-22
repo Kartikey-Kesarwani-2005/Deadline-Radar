@@ -42,7 +42,13 @@ replacing anything you captured).
 - **Share** — 📤 on any card copies a ready-to-paste line + app link, for the study group chat.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
-- **Stats bar** — Captured / Due today / Late / Done / **On time** counts at a glance.
+- **Radar dial** — the signature widget: concentric rings for Late / Due today / This week / Later
+  with a live rotating sweep and the **on-time % ring** in the centre. Tap a ring to jump to that
+  zone.
+- **Celebration confetti** — ticking a task done bursts colourful confetti right from the click.
+- **Premium feel** — cards glide in with a stagger, lift on hover, and the header logo glows;
+  every animation respects the OS reduced-motion setting.
+- **Stats bar** — Captured / Due today / Late / Done pills next to the dial.
 - **Daily reminder** — one browser notification a day when something is late or due today
   (enable it with the 🔔 button in the header).
 - **On-time metric** — every tick records when you finished it, so the app shows *"N finished
