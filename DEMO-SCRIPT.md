@@ -35,24 +35,26 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 - *(Alt if a take goes wrong: paste a single messy message `dbms ka assignment friday
   tak, 20 marks…` → one structured card with date + marks.)*
 
-### 1:05–1:30 — What it gives back
+### 1:10–1:40 — What it gives back
 - Screen: the **radar dial** (rings fill by urgency, sweep rotating, on-time % in the centre),
-  then sections (Late / Due today / This week), tick a task done — **confetti bursts** —
-  open **Weekly report**.
+  the **🎯 marks-at-risk** line, and a card's **🧠 prediction chip** ("Usually 1.0d late in
+  DBMS"). Tick a task done — **confetti bursts** — open **Weekly report**.
+- **Voice query beat:** press **🎙️ Ask** and say *"kitne marks risk me hain?"* → the radar
+  **answers out loud** + on-screen card. **(10s)**
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
-  your on-time score. It sorts by urgency and marks, nags me once a day, and keeps the
-  receipt — deadlines captured, finished, and finished on time."*
+  your on-time score. It counts marks at risk, learns my own rhythm from history, and I can
+  just ask it — out loud — what's due today."*
 - Tap a dial ring → it jumps to that section. Show the **On time** ring and Weekly report
   numbers — this is the "one real result".
 
-### 1:30–1:50 — The voice story (challenge twist)
+### 1:40–1:52 — The voice story (challenge twist)
 - Screen: Wispr Insights usage card glimpse + a clip of coding with voice (terminal/AI
   tool visible, no hands typing).
 - **VO:** *"The whole build was voice — spec, code, docs — with Wispr Flow. That's my
   usage card: [X] words, zero typing."*
 - Caption: **#NoHandsChallenge**
 
-### 1:50–2:00 — Close
+### 1:52–2:00 — Close
 - Screen: live link + repo on screen.
 - **VO:** *"Deadline Radar — built hands-free. Try it: [link]."*
 

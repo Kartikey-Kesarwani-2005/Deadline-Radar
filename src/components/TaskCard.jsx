@@ -6,6 +6,7 @@ const chipBase =
 export default function TaskCard({
   task,
   style,
+  advice,
   onToggle,
   onDelete,
   onEdit,
@@ -64,6 +65,18 @@ export default function TaskCard({
           {task.priority === 'high' && !task.done && (
             <span className={`${chipBase} border-red-500/40 bg-red-500/15 font-bold text-red-300`}>
               HIGH
+            </span>
+          )}
+          {advice && (
+            <span
+              title="From your own submission history"
+              className={`${chipBase} ${
+                advice.tone === 'warn'
+                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+              }`}
+            >
+              🧠 {advice.text}
             </span>
           )}
 

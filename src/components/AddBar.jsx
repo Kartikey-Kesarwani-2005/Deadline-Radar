@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function AddBar({ onAdd, busy, inputRef, onImage }) {
+export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, listening, canAsk }) {
   const [text, setText] = useState('')
 
   async function submit() {
@@ -32,6 +32,21 @@ export default function AddBar({ onAdd, busy, inputRef, onImage }) {
           🎙️ Hold your Wispr key and speak — the text lands right here
         </span>
         <div className="flex items-center gap-2">
+          {canAsk && (
+            <button
+              type="button"
+              onClick={onAsk}
+              disabled={busy || listening}
+              title="Ask the radar — say “aaj kya hai”, “kitne marks risk me”, “what's late”…"
+              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                listening
+                  ? 'animate-pulse border-violet-400 bg-violet-500/20 text-violet-200'
+                  : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-violet-500/40 hover:text-violet-300'
+              }`}
+            >
+              {listening ? '🎧 sun raha hoon…' : '🎙️ Ask'}
+            </button>
+          )}
           <label
             title="Extract a task from a screenshot or photo"
             className="cursor-pointer rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-slate-400 transition hover:border-sky-500/40 hover:text-sky-300"

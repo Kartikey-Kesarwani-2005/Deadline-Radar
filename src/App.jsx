@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, extractManyLocal } from './lib/extract'
+import { adviceFor, answerQuery, computeBrain, marksAtRisk } from './lib/brain'
+import { canListen, listenOnce, speak } from './lib/voice'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
   exportTasks,
@@ -62,7 +64,7 @@ function byUrgency(a, b) {
   return b.createdAt - a.createdAt
 }
 
-function Section({ sectionKey, title, tone, hint, tasks, onToggle, onDelete, onEdit, onDateChange, onShare }) {
+function Section({ sectionKey, title, tone, hint, tasks, getAdvice, onToggle, onDelete, onEdit, onDateChange, onShare }) {
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-6 scroll-mt-4">
@@ -77,6 +79,7 @@ function Section({ sectionKey, title, tone, hint, tasks, onToggle, onDelete, onE
           <TaskCard
             key={task.id}
             task={task}
+            advice={getAdvice ? getAdvice(task) : null}
             style={{ animationDelay: `${Math.min(index * 45, 320)}ms` }}
             onToggle={(e) => onToggle(task.id, e)}
             onDelete={() => onDelete(task.id)}
@@ -139,6 +142,55 @@ function buildSampleTasks() {
       createdAt: now - 500,
       source: 'Fill the workshop registration form today',
     },
+    // Finished history — this is what the Radar Brain learns your rhythm from.
+    {
+      id: crypto.randomUUID(),
+      title: 'DBMS SQL worksheet — joins and subqueries (set 2)',
+      subject: 'DBMS',
+      dueDate: addDays(today, -12),
+      marks: 10,
+      priority: 'normal',
+      done: true,
+      completedAt: now - 11 * 864e5,
+      createdAt: now - 14 * 864e5,
+      source: 'DBMS SQL worksheet set 2, 10 marks, submitted on the portal',
+    },
+    {
+      id: crypto.randomUUID(),
+      title: 'DBMS normalisation tutorial — 3NF problems 1 to 6',
+      subject: 'DBMS',
+      dueDate: addDays(today, -6),
+      marks: 10,
+      priority: 'normal',
+      done: true,
+      completedAt: now - 3 * 864e5,
+      createdAt: now - 8 * 864e5,
+      source: 'Normalisation tutorial due last week, 10 marks',
+    },
+    {
+      id: crypto.randomUUID(),
+      title: 'Operating Systems memory management assignment',
+      subject: 'Operating Systems',
+      dueDate: addDays(today, -9),
+      marks: 15,
+      priority: 'normal',
+      done: true,
+      completedAt: now - 9 * 864e5,
+      createdAt: now - 12 * 864e5,
+      source: 'OS memory management assignment, 15 marks',
+    },
+    {
+      id: crypto.randomUUID(),
+      title: 'Software Engineering sprint retrospective write-up',
+      subject: 'Software Engineering',
+      dueDate: addDays(today, -15),
+      marks: 5,
+      priority: 'normal',
+      done: true,
+      completedAt: now - 14 * 864e5,
+      createdAt: now - 17 * 864e5,
+      source: 'SE sprint retro write-up, 5 marks',
+    },
   ]
 }
 
@@ -154,6 +206,8 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
   const [clipSuggest, setClipSuggest] = useState(null)
+  const [askCard, setAskCard] = useState(null)
+  const [listening, setListening] = useState(false)
   const lastClipRef = useRef('')
   const armedRef = useRef(false)
   const inputRef = useRef(null)
@@ -500,6 +554,32 @@ export default function App() {
     onTime,
   }
 
+  // Radar Brain: personal rhythm from finished work + marks riding on pending work.
+  const brain = useMemo(() => computeBrain(tasks), [tasks])
+  const risk = useMemo(() => marksAtRisk(tasks), [tasks])
+  const canAsk = canListen()
+
+  // 🎙️ "Ask the radar" — one spoken question, spoken answer.
+  async function askRadar() {
+    if (!canAsk || listening || busy) return
+    setListening(true)
+    try {
+      const q = await listenOnce()
+      const { text } = answerQuery(q, { tasks, stats })
+      setAskCard({ q, a: text })
+      speak(text)
+    } catch (err) {
+      setFlash({
+        msg:
+          err?.message === 'not-allowed'
+            ? 'Mic blocked — allow microphone access and try again.'
+            : 'Could not catch that — try again (Chrome/Edge work best).',
+      })
+    } finally {
+      setListening(false)
+    }
+  }
+
   async function toggleReminders() {
     const current = getPermission()
     if (current === 'unsupported') {
@@ -602,7 +682,15 @@ export default function App() {
       )}
 
       {/* Input */}
-      <AddBar onAdd={addTask} busy={busy} inputRef={inputRef} onImage={addFromImage} />
+      <AddBar
+        onAdd={addTask}
+        busy={busy}
+        inputRef={inputRef}
+        onImage={addFromImage}
+        onAsk={askRadar}
+        listening={listening}
+        canAsk={canAsk}
+      />
 
       {flash && (
         <div className="mt-2 flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
@@ -653,6 +741,26 @@ export default function App() {
         </div>
       )}
 
+      {/* 🎙️ Voice query answer */}
+      {askCard && (
+        <div className="mt-2 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-slate-200">
+          <span aria-hidden="true">🎙️</span>
+          <p className="min-w-0 flex-1 leading-relaxed">
+            <span className="text-slate-400">«{askCard.q}»</span>
+            <br />
+            {askCard.a}
+          </p>
+          <button
+            type="button"
+            onClick={() => setAskCard(null)}
+            aria-label="Dismiss answer"
+            className="shrink-0 rounded-lg border border-white/15 px-2.5 py-1 text-slate-400 transition hover:text-slate-200"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Dashboard grid — on wide screens the radar sections sit beside the stat rail */}
       <div
         className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start' : ''}`}
@@ -673,6 +781,17 @@ export default function App() {
             />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} />
+              {risk.total > 0 && (
+                <p
+                  className="px-0.5 text-[11px] font-semibold text-amber-300/90"
+                  title="Marks riding on late + this-week submissions"
+                >
+                  🎯 {risk.total} marks at risk
+                  {risk.late > 0 && (
+                    <span className="font-medium text-red-300"> · {risk.late} already late</span>
+                  )}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
@@ -750,6 +869,7 @@ export default function App() {
                   tone={tone}
                   hint={key === 'done' ? `${onTime} finished on time` : hint}
                   tasks={sections[key]}
+                  getAdvice={(task) => adviceFor(brain, task)}
                   onToggle={toggleTask}
                   onDelete={deleteTask}
                   onEdit={setEditingId}

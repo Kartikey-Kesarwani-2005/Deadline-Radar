@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
+import { marksAtRisk } from '../lib/brain'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -24,12 +25,14 @@ export default function WeeklyReport({ tasks, onClose }) {
   const late = tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) < 0)
     .length
   const doneEver = tasks.filter((t) => t.done).length
+  const risk = marksAtRisk(tasks)
 
   const reportText = [
     'Deadline Radar — weekly check-in 📡',
     `📥 Captured this week: ${captured}`,
     `✅ Finished this week: ${finished.length} · on time: ${onTime}`,
     `📌 Pending with a deadline: ${pending}${late ? ` · late: ${late}` : ''}`,
+    `🎯 Marks at risk: ${risk.total}${risk.late ? ` (${risk.late} already late)` : ''}`,
     `🏁 Total finished so far: ${doneEver}`,
     '',
     'Built hands-free with Wispr Flow · #NoHandsChallenge',
@@ -74,6 +77,7 @@ export default function WeeklyReport({ tasks, onClose }) {
         <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">Overall</p>
         <Row label="Pending with a deadline" value={pending} className="text-amber-300" />
         <Row label="Late right now" value={late} className="text-red-400" />
+        <Row label="🎯 Marks at risk (late + this week)" value={risk.total} className="text-amber-300" />
         <Row label="Total finished" value={doneEver} className="text-emerald-300" />
 
         <button

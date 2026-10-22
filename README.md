@@ -55,6 +55,14 @@ replacing anything you captured).
 - **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
   desktop gets a wider radar dashboard with a stat rail; phone gets a compact layout with
   big tap targets and always-visible card buttons.
+- **🎯 Marks at risk** — the radar counts *marks*, not just tasks: how many marks are already
+  late and how many ride on this week's submissions. Shown in the rail, the weekly report and
+  the voice answers.
+- **🧠 Radar Brain (personal prediction)** — from your own finished work it learns per-subject
+  rhythm — how often you're on time and how early/late you usually submit — and every card gets
+  an honest chip like *"🧠 Usually 1.0d late in DBMS — start now"*.
+- **🎙️ Ask the radar** — press 🎙️ Ask and speak: *"aaj kya hai"*, *"kitne marks risk me"*,
+  *"what's late"* — it answers **out loud** (Chrome/Edge).
 - **Offline banner** — lose the connection and the radar says so: capture, parsing and data
   all keep working on-device; AI extract silently falls back to the offline parser.
 - **Stats bar** — Captured / Due today / Late / Done pills next to the dial.
