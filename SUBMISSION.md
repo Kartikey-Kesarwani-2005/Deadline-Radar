@@ -95,7 +95,13 @@ Schedule:
 > [__] of them finished **before** the deadline — the app measures this itself in its
 > "On time" counter (Weekly report card shows the numbers).
 
-Fill the `[__]` from your Weekly report screenshot so the numbers are real.
+Fill the `[__]`s — **30 Oct subah, 2 minute, every number from a real screenshot:**
+
+1. **Wispr usage `[___]`** → Wispr desktop app → **Insights** → words dictated during the challenge
+2. **`[__]` days / `[__]` captured / `[__]` finished / `[__]` before deadline** → app kholo →
+   **Weekly report** → numbers usi card se
+
+Koi number guess mat karo — judges screenshot maang sakte hain.
 
 ---
 
