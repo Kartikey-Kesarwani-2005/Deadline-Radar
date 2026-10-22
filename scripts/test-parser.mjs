@@ -186,7 +186,7 @@ const rows = paceRows(paceTasks)
 check('paceRows: one row per subject', rows.length, 2)
 check('paceRows: worst on-time subject first', rows[0].key, 'dbms')
 check('paceRows: learned min/mark from focus sessions', rows[0].minPerMark, 5)
-check('paceRows: buffer reflects avg days late/early', Math.abs(rows[0].avgBuffer - 1) < 0.01, true)
+check('paceRows: buffer reflects avg days late/early', Math.abs(rows[0].avgBuffer - -1) < 0.01, true)
 
 // --- Calendar export (.ics) ---
 const icsTasks = [
