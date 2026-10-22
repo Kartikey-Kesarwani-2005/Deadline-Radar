@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
-import { marksAtRisk, paceRows } from '../lib/brain'
+import { marksAtRisk, paceRows, weeklyTrend } from '../lib/brain'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -27,6 +27,9 @@ export default function WeeklyReport({ tasks, onClose }) {
   const doneEver = tasks.filter((t) => t.done).length
   const risk = marksAtRisk(tasks)
   const pace = paceRows(tasks)
+  const trend = weeklyTrend(tasks)
+  const delta = (now, before) =>
+    now > before ? 'text-emerald-300' : now < before ? 'text-red-400' : 'text-slate-100'
 
   const reportText = [
     'Deadline Radar — weekly check-in 📡',
@@ -35,6 +38,7 @@ export default function WeeklyReport({ tasks, onClose }) {
     `📌 Pending with a deadline: ${pending}${late ? ` · late: ${late}` : ''}`,
     `🎯 Marks at risk: ${risk.total}${risk.late ? ` (${risk.late} already late)` : ''}`,
     `🏁 Total finished so far: ${doneEver}`,
+    `📈 Trend: finished ${trend.lastWeek.finished}→${trend.thisWeek.finished} · on time ${trend.lastWeek.onTime}→${trend.thisWeek.onTime} · focused ${(trend.thisWeek.focusMin / 60).toFixed(1)}h`,
     pace.length
       ? `🧠 Weakest subject: ${pace[0].label} (${pace[0].onTimeRate}% on time)`
       : null,
@@ -79,6 +83,25 @@ export default function WeeklyReport({ tasks, onClose }) {
         <Row label="Captured" value={captured} />
         <Row label="Finished" value={finished.length} className="text-emerald-300" />
         <Row label="… of those finished on time" value={onTime} className="text-teal-300" />
+
+        <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">
+          📈 Trend vs last week
+        </p>
+        <Row
+          label="Finished — last → this"
+          value={`${trend.lastWeek.finished} → ${trend.thisWeek.finished}`}
+          className={delta(trend.thisWeek.finished, trend.lastWeek.finished)}
+        />
+        <Row
+          label="On time — last → this"
+          value={`${trend.lastWeek.onTime} → ${trend.thisWeek.onTime}`}
+          className={delta(trend.thisWeek.onTime, trend.lastWeek.onTime)}
+        />
+        <Row
+          label="⏱ Focused (timer sessions)"
+          value={`${(trend.thisWeek.focusMin / 60).toFixed(1)}h`}
+          className="text-sky-300"
+        />
 
         <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">Overall</p>
         <Row label="Pending with a deadline" value={pending} className="text-amber-300" />

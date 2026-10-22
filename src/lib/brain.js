@@ -186,6 +186,11 @@ export function briefingText(tasks, today = todayKey()) {
   if (!late.length && !dueToday.length && !dueTomorrow.length)
     parts.push('Next two days clear — good time to get ahead.')
   if (brain.overall) parts.push(`Tumhara on-time rate: ${brain.overall.onTimeRate} percent.`)
+  const alerts = startAlerts(tasks, today)
+  if (alerts.length)
+    parts.push(
+      `Start window closing: ${alerts.slice(0, 2).map((a) => a.task.title).join(', ')} — aaj shuru karo.`,
+    )
   if (ranked?.pick)
     parts.push(`Ab kya karun? ${ranked.pick.task.title}. ${doNowReason(ranked.pick)}.`)
   return parts.join(' ')
@@ -212,6 +217,46 @@ export function paceRows(tasks) {
       minPerMark: pace[key] != null ? Math.round(pace[key]) : null,
     }))
     .sort((a, b) => a.onTimeRate - b.onTimeRate || b.n - a.n)
+}
+
+/**
+ * ⏳ Start-window alerts — most trackers remind you the night before it's due;
+ * this tells you when you must START (pace + hours/day you can fit), so the
+ * strip is amber while you can still save it and red only when it's too late.
+ * Late tasks are excluded — they already live in the LATE section.
+ */
+export function startAlerts(tasks, today = todayKey()) {
+  const pace = pacePerMark(tasks)
+  return tasks
+    .filter((t) => !t.done && t.dueDate)
+    .map((t) => {
+      const daysLeft = dayDiff(today, t.dueDate)
+      const { minutes } = estimateEffort(t, pace)
+      const fitsDays = Math.ceil(minutes / 60 / ASSUMED_HOURS_PER_DAY)
+      return { task: t, daysLeft, fitsDays }
+    })
+    .filter((x) => x.daysLeft >= 0 && x.daysLeft <= x.fitsDays)
+    .sort((a, b) => a.daysLeft - b.daysLeft || a.fitsDays - b.fitsDays)
+}
+
+/** 📈 This week vs last week — from completed timestamps only, injected clock. */
+export function weeklyTrend(tasks, now = Date.now()) {
+  const WEEK = 7 * 24 * 60 * 60 * 1000
+  const bucket = (from, to) => {
+    const list = tasks.filter(
+      (t) => t.done && t.completedAt && t.completedAt >= from && t.completedAt < to,
+    )
+    return {
+      finished: list.length,
+      onTime: list.filter((t) => t.dueDate && toDateKey(new Date(t.completedAt)) <= t.dueDate)
+        .length,
+      focusMin: list.reduce((a, t) => a + (t.effortMin || 0), 0),
+    }
+  }
+  return {
+    thisWeek: bucket(now - WEEK, now),
+    lastWeek: bucket(now - 2 * WEEK, now - WEEK),
+  }
 }
 
 /** One-line reason for a ranked item — spoken by the voice query too. */

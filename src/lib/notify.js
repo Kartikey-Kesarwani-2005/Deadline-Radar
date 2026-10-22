@@ -1,4 +1,5 @@
 import { dayDiff, todayKey } from './dates'
+import { startAlerts } from './brain'
 
 const NOTIFIED_ON_KEY = 'deadline-radar.notifiedOn'
 
@@ -38,16 +39,20 @@ export function notifyDaily(tasks) {
 
   const late = tasks.filter((t) => !t.done && t.dueDate && dayDiff(today, t.dueDate) < 0)
   const dueToday = tasks.filter((t) => !t.done && t.dueDate && dayDiff(today, t.dueDate) === 0)
-  if (!late.length && !dueToday.length) return false
+  const startSoon = startAlerts(tasks, today)
+  if (!late.length && !dueToday.length && !startSoon.length) return false
 
   const parts = []
   if (late.length) parts.push(`${late.length} late`)
   if (dueToday.length) parts.push(`${dueToday.length} due today`)
-  const first = (late[0] || dueToday[0]).title
+  if (startSoon.length) parts.push(`${startSoon.length} start window closing`)
+  const first = (late[0] || dueToday[0] || startSoon[0]).title
+  const bodyLead = late.length || dueToday.length ? '' : 'Start window closing: '
+  const total = late.length + dueToday.length + startSoon.length
 
   const ok = fire(
     `📡 Deadline Radar — ${parts.join(' · ')}`,
-    first + (late.length + dueToday.length > 1 ? ` (+${late.length + dueToday.length - 1} more)` : ''),
+    bodyLead + first + (total > 1 ? ` (+${total - 1} more)` : ''),
   )
   if (ok) {
     try {

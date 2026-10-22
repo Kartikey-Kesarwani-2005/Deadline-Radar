@@ -4,7 +4,7 @@
  */
 import { extractLocal, extractManyLocal } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
-import { answerQuery, briefingText, doNow, estimateEffort, paceRows } from '../src/lib/brain.js'
+import { answerQuery, briefingText, doNow, estimateEffort, paceRows, startAlerts, weeklyTrend } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
 
 const today = new Date()
@@ -173,6 +173,7 @@ const briefTasks = [
 const brief = briefingText(briefTasks, '2026-10-22')
 check('briefing: speaks late + today items', brief.includes('already late') && brief.includes('DBMS quiz') && brief.includes('OS lab record'), true)
 check('briefing: ends with the do-now pick', brief.includes('Ab kya karun?'), true)
+check('briefing: warns when a start window is closing', brief.includes('Start window closing'), true)
 const clearBrief = briefingText([{ id: 'b3', title: 'PPT next week', dueDate: '2026-10-27', done: false }], '2026-10-22')
 check('briefing: clear-days message', clearBrief.includes('clear'), true)
 
@@ -187,6 +188,39 @@ check('paceRows: one row per subject', rows.length, 2)
 check('paceRows: worst on-time subject first', rows[0].key, 'dbms')
 check('paceRows: learned min/mark from focus sessions', rows[0].minPerMark, 5)
 check('paceRows: buffer reflects avg days late/early', Math.abs(rows[0].avgBuffer - -1) < 0.01, true)
+
+// --- Start-window alerts (start now, not just due soon) ---
+const saTasks = [
+  { id: 's1', title: 'Late thing', dueDate: '2026-10-21', done: false },
+  { id: 's2', title: 'Closing report', dueDate: '2026-10-23', done: false, marks: 100 },
+  { id: 's3', title: 'Relaxed task', dueDate: '2026-10-30', done: false },
+]
+const alerts = startAlerts(saTasks, '2026-10-22')
+check('startAlerts: only the closing-window pending task', alerts.length, 1)
+check('startAlerts: picks the right task, late excluded', alerts[0]?.task.id, 's2')
+
+// --- Trend vs last week ---
+const nowT = Date.now()
+const DAY_MS = 24 * 60 * 60 * 1000
+const tr = weeklyTrend(
+  [
+    { id: 'w1', done: true, completedAt: nowT - DAY_MS, dueDate: '2099-01-01', effortMin: 90 },
+    { id: 'w2', done: true, completedAt: nowT - 9 * DAY_MS, dueDate: '2099-01-01', effortMin: 60 },
+    { id: 'w3', done: true, completedAt: nowT - DAY_MS, dueDate: '2026-01-01', effortMin: 30 },
+    { id: 'w4', done: false, completedAt: null },
+  ],
+  nowT,
+)
+check(
+  'trend: buckets finished/on-time per week',
+  tr.thisWeek.finished === 2 && tr.thisWeek.onTime === 1 && tr.lastWeek.finished === 1,
+  true,
+)
+check(
+  'trend: focus minutes tracked per week',
+  tr.thisWeek.focusMin === 120 && tr.lastWeek.focusMin === 60,
+  true,
+)
 
 // --- Calendar export (.ics) ---
 const icsTasks = [

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, extractManyLocal } from './lib/extract'
-import { adviceFor, answerQuery, briefingText, computeBrain, doNow, forecastWeather, marksAtRisk } from './lib/brain'
+import { adviceFor, answerQuery, briefingText, computeBrain, doNow, forecastWeather, marksAtRisk, startAlerts, weeklyTrend } from './lib/brain'
 import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
@@ -622,6 +622,8 @@ export default function App() {
   const risk = useMemo(() => marksAtRisk(tasks), [tasks])
   const forecast = useMemo(() => forecastWeather(tasks), [tasks])
   const plan = useMemo(() => doNow(tasks), [tasks])
+  const startSoon = useMemo(() => startAlerts(tasks), [tasks])
+  const trend = useMemo(() => weeklyTrend(tasks), [tasks])
   const canAsk = canListen()
 
   // 🎙️ "Ask the radar" — one spoken question, spoken answer.
@@ -814,6 +816,23 @@ export default function App() {
         </div>
       )}
 
+      {/* ⏳ Start window closing — "start now", not just "due soon" */}
+      {startSoon.length > 0 && (
+        <div className="rise mt-2 rounded-xl border border-amber-400/30 bg-amber-500/[0.07] px-3.5 py-2 text-xs text-amber-200">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-bold text-amber-100">⏳ Start window closing</span>
+            {startSoon.slice(0, 3).map((a) => (
+              <span key={a.task.id} className="rounded bg-amber-400/10 px-1.5 py-0.5">
+                {a.task.title.length > 36 ? `${a.task.title.slice(0, 35)}…` : a.task.title}
+                {' · '}
+                <b>{a.daysLeft === 0 ? 'aaj shuru!' : `${a.daysLeft}d fit hain`}</b>
+              </span>
+            ))}
+            <span className="text-amber-300/70">— varna deadline se pehle fit nahi hoga</span>
+          </div>
+        </div>
+      )}
+
       {/* Clipboard auto-detect suggestion */}
       {clipSuggest && (
         <div className="mt-2 flex items-center gap-3 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs text-slate-200">
@@ -887,7 +906,7 @@ export default function App() {
               done={stats.done}
             />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} />
+              <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} focusH={(trend.thisWeek.focusMin / 60).toFixed(1)} />
               {risk.total > 0 && (
                 <p
                   className="px-0.5 text-[11px] font-semibold text-amber-300/90"

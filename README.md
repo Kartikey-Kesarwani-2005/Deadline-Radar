@@ -73,9 +73,16 @@ replacing anything you captured).
 - **🔊 Radar Samachaar (spoken briefing)** — one tap and the radar *speaks your whole day*:
   what's already late, what's due today and tomorrow, your on-time rate, and the single
   best next move. A voice-first product for a voice-first workflow.
+- **⏳ Start-window alerts** — most trackers remind you the night *before it's due*; the radar
+  tells you when you must **start** (your learned pace + hours/day that still fit): an amber
+  strip on the dashboard, a line in the daily notification, and a mention in the spoken briefing.
+- **📈 Trend vs last week** — the weekly report compares finished / on-time counts with last
+  week (green ↑ / red ↓) and totals your **⏱ focused hours** from focus-timer sessions — the
+  "am I actually improving?" answer, plus a focus-hours pill on the dashboard.
 - **Offline banner** — lose the connection and the radar says so: capture, parsing and data
   all keep working on-device; AI extract silently falls back to the offline parser.
-- **Stats bar** — Captured / Due today / Late / Done pills next to the dial.
+- **Stats bar** — Captured / Due today / Late / Done pills next to the dial, plus a wide
+  ⏱ focused-this-week pill fed by your timer sessions.
 - **Daily reminder** — one browser notification a day when something is late or due today
   (enable it with the 🔔 button in the header).
 - **On-time metric** — every tick records when you finished it, so the app shows *"N finished
