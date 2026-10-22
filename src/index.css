@@ -96,6 +96,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 .phone-mode .stats-pills {
   width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .phone-mode .weekly-btn {
   width: 100%;

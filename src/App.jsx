@@ -173,6 +173,21 @@ export default function App() {
     }
   }, [])
 
+  // Dev-only: log elements wider than the viewport (debug overflow).
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const t = setTimeout(() => {
+      const w = document.documentElement.clientWidth
+      const bad = [...document.querySelectorAll('*')]
+        .map((el) => ({ el, r: el.getBoundingClientRect().right }))
+        .filter((x) => x.r > w + 1)
+        .slice(0, 10)
+        .map((x) => `${x.el.tagName}.${String(x.el.className).slice(0, 70)} right=${Math.round(x.r)}`)
+      console.log('[overflow-debug] viewport=', w, JSON.stringify(bad, null, 1))
+    }, 1200)
+    return () => clearTimeout(t)
+  }, [])
+
   const displayMode = settings.displayMode || 'auto'
   const isPhone = displayMode === 'phone' || (displayMode === 'auto' && vw < 640)
   const isWide = !isPhone && vw >= 1024
@@ -549,7 +564,7 @@ export default function App() {
         className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
-        <div className="rail flex flex-col gap-4">
+        <div className="rail flex min-w-0 flex-col gap-4">
           {/* Stats + radar dial */}
           <div
             className={`stats-row flex items-stretch gap-3 ${isWide ? 'lg:flex-col lg:items-stretch' : ''}`}
@@ -615,7 +630,7 @@ export default function App() {
         </div>
 
         {/* Right column: the radar sections */}
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
           {tasks.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
               <p className="text-3xl">📡</p>
