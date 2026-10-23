@@ -45,6 +45,34 @@ export function formatDue(key) {
   return `in ${diff} days · ${label}`
 }
 
+const MS_MIN = 60 * 1000
+const MS_HOUR = 60 * MS_MIN
+
+/**
+ * Live countdown to a deadline's end-of-day (23:59:59). Returns null when the
+ * task has no/invalid date. `now` is injectable so the ticking clock and the
+ * tests stay deterministic. Includes both a compact `label` (for task cards)
+ * and raw parts (for the seconds-precision rail).
+ */
+export function countdownTo(dueDate, now = Date.now()) {
+  if (!dueDate) return null
+  const end = parseDateKey(dueDate)
+  if (!end) return null
+  end.setHours(23, 59, 59, 999)
+  const ms = end.getTime() - now
+  const late = ms < 0
+  const abs = Math.abs(ms)
+  const d = Math.floor(abs / 864e5)
+  const h = Math.floor((abs % 864e5) / MS_HOUR)
+  const m = Math.floor((abs % MS_HOUR) / MS_MIN)
+  const s = Math.floor((abs % MS_MIN) / 1000)
+  let core
+  if (d > 0) core = `${d}d ${h}h`
+  else if (h > 0) core = `${h}h ${m}m`
+  else core = `${Math.max(m, late ? 0 : 1)}m`
+  return { ms, late, label: late ? `${core} over` : core, d, h, m, s }
+}
+
 export function formatLongToday() {
   return new Date().toLocaleDateString('en-IN', {
     weekday: 'long',

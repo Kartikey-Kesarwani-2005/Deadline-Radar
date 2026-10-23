@@ -1,8 +1,43 @@
-import { dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
+import { useEffect, useState } from 'react'
+import { countdownTo, dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
 import { fmtHours } from '../lib/brain'
 
 const chipBase =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium'
+
+/**
+ * ⏳ Live countdown chip — its own 30s tick so only this chip re-renders, not
+ * the whole app. Shows time left to end-of-day ("2d 14h") on pending dated
+ * cards; turns red once the deadline is over.
+ */
+function CountdownChip({ dueDate, done }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+  if (done || !dueDate) return null
+  const cd = countdownTo(dueDate, now)
+  if (!cd) return null
+  return (
+    <span
+      title={
+        cd.late
+          ? 'Past the deadline — handle it now'
+          : 'Live time left until end of the deadline day'
+      }
+      className={`${chipBase} tabular-nums ${
+        cd.late
+          ? 'border-red-500/40 bg-red-500/15 text-red-300'
+          : cd.d === 0 && cd.h < 6
+            ? 'border-amber-400/40 bg-amber-400/15 text-amber-300'
+            : 'border-teal-500/25 bg-teal-500/10 text-teal-300/90'
+      }`}
+    >
+      ⏳ {cd.label}
+    </span>
+  )
+}
 
 export default function TaskCard({
   task,
@@ -99,6 +134,7 @@ export default function TaskCard({
             </span>
           )}
           <span className={`${chipBase} ${dueTone(task)}`}>📅 {formatDue(task.dueDate)}</span>
+          <CountdownChip dueDate={task.dueDate} done={task.done} />
           {task.priority === 'high' && !task.done && (
             <span className={`${chipBase} border-red-500/40 bg-red-500/15 font-bold text-red-300`}>
               HIGH
@@ -129,7 +165,7 @@ export default function TaskCard({
             </a>
           )}
 
-          <label className="ml-auto flex items-center gap-1.5 text-[11px] text-slate-600">
+          <label className="flex items-center gap-1.5 text-[11px] text-slate-600">
             <input
               type="date"
               value={task.dueDate || ''}

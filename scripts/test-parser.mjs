@@ -7,7 +7,7 @@ import { parseCommand } from '../src/lib/commands.js'
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
-import { dueTone } from '../src/lib/dates.js'
+import { dueTone, countdownTo } from '../src/lib/dates.js'
 
 const today = new Date()
 const key = (d) =>
@@ -525,6 +525,21 @@ check('cmd: vague clarify carries no options', 'options' in (cmdVague || {}), fa
 check('cmd: already-done work is never re-ticked', parseCommand('mark workshop form done', vcTasks)?.type, 'clarify')
 check('cmd: a plain statement is not an order', parseCommand('dbms assignment friday tak submit karna hai', vcTasks), null)
 check('cmd: empty input → null', parseCommand('', vcTasks), null)
+
+// --- ⏳ Live countdown (countdownTo) ---
+const NOW = new Date(2026, 9, 23, 10, 0, 0).getTime() // 23 Oct 2026, 10:00 local
+const cdFar = countdownTo('2026-10-25', NOW)
+check('countdown: 2+ days out → "Xd Yh"', cdFar.label, '2d 13h')
+check('countdown: far deadline is not late', cdFar.late, false)
+const cdSame = countdownTo('2026-10-23', new Date(2026, 9, 23, 20, 0, 0).getTime())
+check('countdown: same day → "Xh Ym"', cdSame.label, '3h 59m')
+const cdSoon = countdownTo('2026-10-23', new Date(2026, 9, 23, 23, 30, 0).getTime())
+check('countdown: under an hour → "Xm"', cdSoon.label, '29m')
+const cdLate = countdownTo('2026-10-20', NOW)
+check('countdown: past deadline → "over"', cdLate.late, true)
+check('countdown: late keeps day/hour magnitude', cdLate.label, '2d 10h over')
+check('countdown: null date → null', countdownTo(null, NOW), null)
+check('countdown: undefined date → null', countdownTo(undefined, NOW), null)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

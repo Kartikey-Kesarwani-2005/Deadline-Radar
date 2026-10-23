@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-122%2F122%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-130%2F130%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -100,6 +100,10 @@ replacing anything you captured).
 - **⏳ Start-window alerts** — most trackers remind you the night *before it's due*; the radar
   tells you when you must **start** (your learned pace + hours/day that still fit): an amber
   strip on the dashboard, a line in the daily notification, and a mention in the spoken briefing.
+- **🛰 Live countdown rail (big screens)** — every pending card carries a ticking `⏳ 2d 14h`
+  chip, and on wide monitors a right-edge rail counts down to the *next* deadline in
+  seconds-precision, beside a per-subject load meter. The dashboard breathes instead of
+  sitting still — and no dead space on a desktop.
 - **📈 Trend vs last week** — the weekly report compares finished / on-time counts with last
   week (green ↑ / red ↓) and totals your **⏱ focused hours** from focus-timer sessions — the
   "am I actually improving?" answer, plus a focus-hours pill on the dashboard.
@@ -181,6 +185,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # offline extractor + bulk + backup parser + voice commands (122 checks)
+npm test       # offline extractor + bulk + backup parser + voice commands + countdown (130 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

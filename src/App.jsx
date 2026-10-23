@@ -22,6 +22,7 @@ import RadarDial from './components/RadarDial'
 import WeatherStrip from './components/WeatherStrip'
 import TrendSpark from './components/TrendSpark'
 import DoNowCard from './components/DoNowCard'
+import LiveRail from './components/LiveRail'
 import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
@@ -1103,9 +1104,11 @@ export default function App() {
         </div>
       )}
 
-      {/* Dashboard grid — on wide screens the radar sections sit beside the stat rail */}
+      {/* Dashboard grid — on wide screens the radar sections sit beside the stat
+          rail; on very wide (2xl) a live countdown + subject-load rail fills the
+          right edge so the middle column stops stretching into dead space. */}
       <div
-        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-6 lg:items-start' : ''}`}
+        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-6 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div
@@ -1291,6 +1294,14 @@ export default function App() {
             </>
           )}
         </div>
+
+        {/* Right edge (2xl only): live countdown + subject load — keeps the
+            middle column from stretching into empty space on big monitors */}
+        {isWide && (
+          <div className="hidden 2xl:block">
+            <LiveRail tasks={tasks} activeSubject={subjectFilter} onPickSubject={(s) => setSubjectFilter((cur) => (cur === s ? null : s))} />
+          </div>
+        )}
       </div>
 
       {/* Footer */}
