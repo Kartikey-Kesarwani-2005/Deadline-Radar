@@ -111,7 +111,7 @@ export async function extractFromImage(dataUrl, settings) {
       typeof parsed.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dueDate)
         ? parsed.dueDate
         : null,
-    marks: Number.isFinite(parsed.marks) ? parsed.marks : null,
+    marks: Number.isFinite(parsed.marks) && parsed.marks > 0 ? parsed.marks : null,
     priority: parsed.priority === 'high' ? 'high' : 'normal',
     link:
       typeof parsed.link === 'string' && /^https?:\/\//i.test(parsed.link)

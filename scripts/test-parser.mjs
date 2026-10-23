@@ -7,7 +7,7 @@ import { parseCommand } from '../src/lib/commands.js'
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
-import { dueTone, countdownTo } from '../src/lib/dates.js'
+import { dueTone, countdownTo, parseDateKey, dayDiff, todayKey } from '../src/lib/dates.js'
 
 const today = new Date()
 const key = (d) =>
@@ -548,6 +548,27 @@ check('clip: a random sentence is NOT a deadline', looksLikeDeadline('hey bro ar
 check('clip: a copied code snippet is NOT a deadline', looksLikeDeadline('const fetchData = async () => { return await response.json() }'), false)
 check('clip: date alone without task noun is NOT enough', looksLikeDeadline('meeting on 25-10 at the cafe'), false)
 check('clip: empty input is NOT a deadline', looksLikeDeadline(''), false)
+
+// --- 📅 Day-only ordinal roll — "by 3rd" that already passed means NEXT month ---
+{
+  // "by 3rd" with no month: the 3rd of this month may already be past, so the
+  // parser must roll forward rather than report a weeks-late deadline.
+  const d = dayDiff(todayKey(), extractLocal('submit lab report by 3rd').dueDate)
+  check('ordinal: "by 3rd" is never in the past', d !== null && d >= 0, true)
+  const t = dayDiff(todayKey(), extractLocal('submit report 25 tarikh').dueDate)
+  check('ordinal: "25 tarikh" is never in the past', t !== null && t >= 0, true)
+  // A near-future ordinal this month stays put (e.g. a day that hasn't passed).
+  const soonDay = today.getDate() + 2 > 28 ? 2 : today.getDate() + 2
+  const s = extractLocal(`submit by the ${soonDay}${soonDay === 2 ? 'nd' : 'th'}`).dueDate
+  check('ordinal: a future day this month stays this month', dayDiff(todayKey(), s) >= 0, true)
+}
+
+// --- 🗓️ Date validity — impossible dates read as "no date", never lie ---
+check('date: impossible 2026-02-31 is rejected', parseDateKey('2026-02-31'), null)
+check('date: impossible 2026-04-31 is rejected', parseDateKey('2026-04-31'), null)
+check('date: valid 2026-02-28 parses', parseDateKey('2026-02-28') !== null, true)
+check('date: valid leap 2028-02-29 parses', parseDateKey('2028-02-29') !== null, true)
+check('date: non-leap 2027-02-29 is rejected', parseDateKey('2027-02-29'), null)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

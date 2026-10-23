@@ -437,7 +437,9 @@ export default function App() {
       const created = freshParsed.map((p) => ({
         id: uid(),
         ...p,
-        source: text,
+        // Cap stored source — a whole pasted syllabus ×N tasks used to risk
+        // blowing the localStorage quota (silent data loss). 600 matches backup.
+        source: text.slice(0, 600),
         done: false,
         createdAt: Date.now(),
       }))
@@ -462,7 +464,7 @@ export default function App() {
             const u = map.get(t.id)
             if (!u) return t
             const { from, ...patch } = u
-            return { ...t, ...patch, source: text }
+            return { ...t, ...patch, source: text.slice(0, 600) }
           })
           return next
         })
@@ -613,15 +615,33 @@ export default function App() {
   }
 
   // ⏱️ Focus timer — real minutes on a task train the effort model (marks/hr).
+  // Cap one session at 8h so an abandoned timer (overnight laptop sleep) can't
+  // poison the pace model with a thousand bogus minutes.
+  const FOCUS_CAP_MIN = 480
+  const bankFocus = () => {
+    if (!focus) return 0
+    const minutes = Math.min(Math.round((Date.now() - focus.startedAt) / 60000), FOCUS_CAP_MIN)
+    const taskId = focus.taskId
+    setFocus(null)
+    if (minutes >= 1) {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, effortMin: (t.effortMin || 0) + minutes } : t)),
+      )
+    }
+    return minutes
+  }
   const startFocus = (id) => {
     const task = tasks.find((t) => t.id === id)
     if (!task || focus?.taskId === id) return
+    // Switching tasks banks the running timer's minutes first — never silently
+    // throw away focus time when moving to another task.
+    bankFocus()
     setFocus({ taskId: id, startedAt: Date.now() })
     setFlash({ msg: `⏱ Focus: ${task.title.slice(0, 48)} — stop from the header when done.` })
   }
   const stopFocus = () => {
     if (!focus) return
-    const minutes = Math.round((Date.now() - focus.startedAt) / 60000)
+    const minutes = Math.min(Math.round((Date.now() - focus.startedAt) / 60000), FOCUS_CAP_MIN)
     const task = tasks.find((t) => t.id === focus.taskId)
     setFocus(null)
     if (!task) return
@@ -1025,7 +1045,12 @@ export default function App() {
           {flash.action && (
             <button
               type="button"
-              onClick={flash.action.run}
+              onClick={() => {
+                flash.action.run()
+                // Clear after acting so a double-click can't run the action twice
+                // (an undo re-inserting a task twice would duplicate its id).
+                setFlash(null)
+              }}
               className="shrink-0 rounded border border-emerald-400/40 px-2 py-0.5 text-[11px] font-bold text-emerald-200 transition hover:bg-emerald-500/20"
             >
               {flash.action.label}
@@ -1386,6 +1411,7 @@ export default function App() {
           }}
           onClearAll={() => {
             setTasks([])
+            setFocus(null) // no zombie focus timer after wiping the list
             setSettingsOpen(false)
           }}
           onExport={() => {

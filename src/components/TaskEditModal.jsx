@@ -50,7 +50,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
       title: draft.title.trim() || task.title,
       subject: draft.subject.trim() || null,
       dueDate: draft.dueDate || null,
-      marks: Number.isFinite(marks) ? marks : null,
+      marks: Number.isFinite(marks) && marks >= 0 ? marks : null,
       priority: draft.priority,
       link: normalizeLink(draft.link),
       repeat: draft.repeat === 'weekly' ? 'weekly' : null,

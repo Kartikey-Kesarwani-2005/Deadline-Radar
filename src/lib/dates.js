@@ -15,7 +15,12 @@ export function parseDateKey(key) {
   if (!key) return null
   const [y, m, d] = key.split('-').map(Number)
   if (!y || !m || !d) return null
-  return new Date(y, m - 1, d)
+  const date = new Date(y, m - 1, d)
+  // Round-trip validation: reject impossible dates like "2026-02-31" (which
+  // would silently roll to Mar 3 and make a task render nowhere / read
+  // "Invalid Date"). Malformed dates must read as "no date", not lie.
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null
+  return date
 }
 
 export function addDays(key, n) {

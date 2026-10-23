@@ -82,6 +82,20 @@ function rollIfLongPast(d) {
   return d
 }
 
+// A day-number with NO month name ("by 3rd", "25 tarikh") that already passed
+// this month means next month's occurrence — "by 3rd" said on the 23rd is
+// Nov 3rd, not a deadline three weeks late. Clamps day to short months.
+function rollDayOnly(d) {
+  if (!d) return null
+  const t = new Date()
+  t.setHours(0, 0, 0, 0)
+  if (d >= t) return d
+  const y = d.getFullYear()
+  const m = d.getMonth()
+  const daysInNext = new Date(y, m + 2, 0).getDate() // last day of next month
+  return new Date(y, m + 1, Math.min(d.getDate(), daysInNext))
+}
+
 function findDate(text) {
   const year = new Date().getFullYear()
 
@@ -158,7 +172,7 @@ function findDate(text) {
   if (m) {
     const now = new Date()
     const d = validDate(now.getFullYear(), now.getMonth(), Number(m[1]))
-    if (d) return { key: keyOf(d), matchText: m[0] }
+    if (d) return { key: keyOf(rollDayOnly(d)), matchText: m[0] }
   }
 
   // "due on the 26th" / "by 3rd" — an ordinal with no month name → this month
@@ -167,7 +181,7 @@ function findDate(text) {
   if (m) {
     const now = new Date()
     const d = validDate(now.getFullYear(), now.getMonth(), Number(m[1]))
-    if (d) return { key: keyOf(d), matchText: m[0] }
+    if (d) return { key: keyOf(rollDayOnly(d)), matchText: m[0] }
   }
 
   m = text.match(
