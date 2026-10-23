@@ -13,11 +13,48 @@ function Field({ label, hint, children }) {
 const inputCls =
   'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/60 focus:outline-none'
 
+// Free-tier keys have distinctive prefixes — sniff the provider so pasting a
+// Groq key auto-fills the right base URL + model. Without this, a user who
+// pastes a gsk_… key but forgets the "Groq (free)" chip sends it to OpenAI and
+// gets a confusing 401. The whole point: it "just works" the moment you paste.
+const PROVIDERS = [
+  { test: /^gsk_/i, name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1', model: 'qwen/qwen3.8-27b' },
+  {
+    test: /^AIza/i,
+    name: 'Gemini',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    model: 'gemini-2.5-flash',
+  },
+]
+
+function guessProvider(key) {
+  const k = String(key || '').trim()
+  return PROVIDERS.find((p) => p.test.test(k)) || null
+}
+
 export default function SettingsModal({ settings, onSave, onClose, onClearAll, onExport, onImport }) {
   const [draft, setDraft] = useState(settings)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [detected, setDetected] = useState(null)
 
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }))
+
+  // Type/paste a key → snap base URL + model to that provider if they don't
+  // already match. Never clobbers a manually-set endpoint (only fires when the
+  // current baseUrl isn't already this provider's).
+  function onKeyChange(raw) {
+    set({ apiKey: raw })
+    const p = guessProvider(raw)
+    if (!p) {
+      setDetected(null)
+      return
+    }
+    setDraft((d) => {
+      const alreadyGroqish = d.baseUrl === p.baseUrl
+      if (!alreadyGroqish) setDetected(p.name)
+      return alreadyGroqish ? d : { ...d, baseUrl: p.baseUrl, model: p.model }
+    })
+  }
 
   return (
     <div
@@ -49,7 +86,8 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
               <p className="text-sm font-semibold text-slate-200">Smart extract with AI</p>
               <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
                 OFF still works — a built-in parser handles dates, marks and subjects offline.
-                Turn ON for messier messages (needs an OpenAI-compatible API key).
+                Turn ON for messier messages. Paste a Groq or Gemini key and the rest fills in
+                automatically.
               </p>
             </div>
             <button
@@ -99,10 +137,16 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
                 <input
                   type="password"
                   value={draft.apiKey}
-                  onChange={(e) => set({ apiKey: e.target.value })}
-                  placeholder="sk-…"
+                  onChange={(e) => onKeyChange(e.target.value)}
+                  placeholder="sk-… / gsk_… / AIza…"
                   className={inputCls}
                 />
+                {detected && (
+                  <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                    <span aria-hidden="true">✓</span>
+                    {detected} detected — base URL &amp; model set automatically
+                  </p>
+                )}
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Base URL">
