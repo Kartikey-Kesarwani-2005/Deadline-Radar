@@ -16,10 +16,12 @@ const shift = (n) => {
   d.setDate(d.getDate() + n)
   return key(d)
 }
-const nextWeekday = (target) => {
+// allowToday: bare weekday names mean "today" when today IS that weekday;
+// explicit "next X" / "agle x" skip a week (mirrors the parser).
+const nextWeekday = (target, allowToday = true) => {
   const d = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   let delta = (target - d.getDay() + 7) % 7
-  if (delta === 0) delta = 7
+  if (delta === 0 && !allowToday) delta = 7
   d.setDate(d.getDate() + delta)
   return key(d)
 }
@@ -29,6 +31,14 @@ const prevWeekday = (target) => {
   if (delta === 0) delta = 7
   d.setDate(d.getDate() - delta)
   return key(d)
+}
+// Mirror of the parser's no-year rule: a month/day lands this year unless it
+// was written more than 45 days in the past (then it is next year's date).
+const ymd = (m, d) => {
+  let dt = new Date(today.getFullYear(), m, d)
+  const midnight = new Date(new Date().setHours(0, 0, 0, 0))
+  if (Math.round((midnight - dt) / 864e5) > 45) dt = new Date(today.getFullYear() + 1, m, d)
+  return key(dt)
 }
 
 let pass = 0
@@ -50,7 +60,7 @@ const t2 = extractLocal('lab record by tomorrow')
 check('tomorrow', t2.dueDate, shift(1))
 
 const t3 = extractLocal('submit the report on 25/10 before 11:59 pm')
-check('dd/mm date', t3.dueDate, `${today.getFullYear()}-10-25`)
+check('dd/mm date', t3.dueDate, ymd(9, 25))
 
 const t4 = extractLocal('OS viva on 2026-11-02, 10 marks')
 check('ISO date + marks', { d: t4.dueDate, m: t4.marks }, { d: '2026-11-02', m: 10 })
@@ -62,14 +72,14 @@ const t6 = extractLocal('DBMS quiz on ' + friday + ', 15 marks, high weightage')
 check('high marks -> high priority', t6.priority, 'high')
 
 const t7 = extractLocal('October 30 deadline for the final write-up')
-check('Month DD format', t7.dueDate, `${today.getFullYear()}-10-30`)
+check('Month DD format', t7.dueDate, ymd(9, 30))
 
 // --- Hinglish dates ---
 const t8 = extractLocal('OS viva agle somvar, 10 marks')
-check('agle somvar -> next Monday', t8.dueDate, nextWeekday(1))
+check('agle somvar -> the Monday after this one', t8.dueDate, nextWeekday(1, false))
 
 const t9 = extractLocal('DBMS quiz 25 tarikh tak submit karna hai')
-check('25 tarikh -> Oct 25', t9.dueDate, `${today.getFullYear()}-10-25`)
+check('25 tarikh -> 25th of this month', t9.dueDate, key(new Date(today.getFullYear(), today.getMonth(), 25)))
 
 const t10 = extractLocal('lab record parso tak dena')
 check('parso -> day after tomorrow', t10.dueDate, shift(2))
@@ -88,7 +98,7 @@ const notice =
   'DBMS assignment - 25 Oct, 20 marks\nOS lab record - 28 Oct, 10 marks\nSE presentation - 30 Oct, 15 marks'
 const many = extractManyLocal(notice)
 check('bulk: 3-line notice -> 3 tasks', many.length, 3)
-check('bulk: per-task fields', { d: many[1].dueDate, s: many[1].subject }, { d: `${today.getFullYear()}-10-28`, s: 'OS' })
+check('bulk: per-task fields', { d: many[1].dueDate, s: many[1].subject }, { d: ymd(9, 28), s: 'OS' })
 
 const one = extractManyLocal('dbms ka assignment friday tak, 20 marks')
 check('bulk: single line stays single', one.length, 1)
@@ -179,7 +189,7 @@ const { updates: rcE2e } = reconcile(
   [{ id: 'r9', title: e2eFirst.title, dueDate: '2026-10-23', marks: 20, done: false }],
   [extractLocal('DBMS quiz due 27 Oct, 25 marks')],
 )
-check('reconcile e2e: re-pasted message moves the deadline', rcE2e[0]?.dueDate, '2026-10-27')
+check('reconcile e2e: re-pasted message moves the deadline', rcE2e[0]?.dueDate, ymd(9, 27))
 
 let threw = 0
 try { parseBackup('not json at all') } catch { threw += 1 }
@@ -371,7 +381,7 @@ check(
 check(
   'unambiguous "25-10" (day > 12) still parses',
   extractLocal('DBMS assignment 25-10 tak submit').dueDate,
-  `${today.getFullYear()}-10-25`,
+  ymd(9, 25),
 )
 
 // --- Audit round: backup restore keeps effort + rejects junk dates ---
@@ -387,6 +397,60 @@ check('backup: malformed dueDate downgraded to null', bEff[1].dueDate, null)
 // --- Audit round: due-date pill tone ---
 check('dueTone: undefined dueDate stays calm slate', dueTone({ done: false, dueDate: undefined }).includes('slate-400'), true)
 check('dueTone: missing dueDate key also slate (was falsely yellow)', dueTone({ done: false }).includes('slate-400'), true)
+
+// --- Fuzz round: weekday spellings the old regex silently dropped ---
+check('Saturday parses (old regex missed it)', extractLocal('OS lab this Saturday, 10 marks').dueDate, nextWeekday(6))
+check('Sunday parses (was not in the list at all)', extractLocal('seminar due Sunday').dueDate, nextWeekday(0))
+check('Wednesday parses (full spelling)', extractLocal('viva on Wednesday').dueDate, nextWeekday(3))
+check('bare short form "due fri" parses', extractLocal('DBMS writeup due fri').dueDate, nextWeekday(5))
+const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()]
+check(
+  'bare weekday on that same weekday means today (matches the AI parser)',
+  extractLocal(`viva ${todayName} tak`).dueDate,
+  key(today),
+)
+check(
+  '"next <weekday>" on that same weekday still skips a week',
+  extractLocal(`viva next ${todayName} tak`).dueDate,
+  nextWeekday(today.getDay(), false),
+)
+check('"today" -> today', extractLocal('attendance form bharo today').dueDate, key(today))
+check(
+  'bulk: "and" split catches both once every weekday parses',
+  extractManyLocal('Q3 due tomorrow and Q4 due Saturday').length,
+  2,
+)
+
+// --- Fuzz round: ordinals, year handling ---
+check(
+  'standalone ordinal "the 26th" -> this month',
+  extractLocal('viva on the 26th, 10 marks').dueDate,
+  key(new Date(today.getFullYear(), today.getMonth(), 26)),
+)
+const yrTask = extractLocal('deadline 27 October 2026, 20 marks')
+check(
+  'explicit year never rolls and is consumed from the title',
+  { d: yrTask.dueDate, orphan: yrTask.title.includes('2026') },
+  { d: '2026-10-27', orphan: false },
+)
+check('no-year month far in the past rolls forward ("jan 15")', extractLocal('jan 15 tak final report').dueDate, ymd(0, 15))
+
+// --- Fuzz round: subject junk + title cleanup ---
+check(
+  'subject: weekday glue words are not a subject',
+  extractLocal('har somvar lab record dena hai').subject,
+  null,
+)
+check(
+  'subject: lone lowercase word before the noun is not a subject',
+  extractLocal('grade submission Friday tak teacher ko dena hai').subject,
+  null,
+)
+check(
+  'title: no double commas after field removal',
+  extractLocal('DBMS assignment 1 ki last date 31/10/2026 hai, 25 marks, moodle pe submit karna').title.includes(',,'),
+  false,
+)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

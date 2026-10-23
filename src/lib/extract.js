@@ -44,10 +44,12 @@ function keyOf(d) {
   return `${y}-${m}-${day}`
 }
 
-function nextWeekday(target, from = new Date()) {
+function nextWeekday(target, from = new Date(), allowToday = false) {
   const d = new Date(from.getFullYear(), from.getMonth(), from.getDate())
   let delta = (target - d.getDay() + 7) % 7
-  if (delta === 0) delta = 7 // "Friday" said on Friday means next Friday
+  // Bare "due Friday" read ON Friday means today (the AI parser reads it that
+  // way too); only an explicit "next Friday" jumps to the following week.
+  if (delta === 0 && !allowToday) delta = 7
   d.setDate(d.getDate() + delta)
   return d
 }
@@ -67,6 +69,19 @@ function validDate(year, month, day) {
   return d
 }
 
+// A month/day written WITHOUT a year that landed months in the past is next
+// year's date ("jan 15" read in October), not a months-late deadline.
+// Recent past dates (≤45 days) stay put — those really are missed deadlines.
+function rollIfLongPast(d) {
+  if (!d) return null
+  const t = new Date()
+  t.setHours(0, 0, 0, 0)
+  if (Math.round((t - d) / 86400000) > 45) {
+    return validDate(d.getFullYear() + 1, d.getMonth(), d.getDate()) || d
+  }
+  return d
+}
+
 function findDate(text) {
   const year = new Date().getFullYear()
 
@@ -77,18 +92,18 @@ function findDate(text) {
     if (d) return { key: keyOf(d), matchText: m[0] }
   }
 
-  // 2. 25 Oct / 25th October / 25 of Oct
-  m = text.match(/\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/i)
+  // 2. 25 Oct / 25th October / 25 of Oct / 27 October 2026
+  m = text.match(/\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b(?:[\s,]+(\d{4}))?/i)
   if (m) {
-    const d = validDate(year, MONTHS[m[2].toLowerCase().slice(0, 3)], Number(m[1]))
-    if (d) return { key: keyOf(d), matchText: m[0] }
+    const d = validDate(m[3] ? Number(m[3]) : year, MONTHS[m[2].toLowerCase().slice(0, 3)], Number(m[1]))
+    if (d) return { key: keyOf(m[3] ? d : rollIfLongPast(d)), matchText: m[0] }
   }
 
-  // 3. Oct 25 / October 25th
-  m = text.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b/i)
+  // 3. Oct 25 / October 25th / October 25 2026
+  m = text.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b(?:[\s,]+(\d{4}))?/i)
   if (m) {
-    const d = validDate(year, MONTHS[m[1].toLowerCase().slice(0, 3)], Number(m[2]))
-    if (d) return { key: keyOf(d), matchText: m[0] }
+    const d = validDate(m[3] ? Number(m[3]) : year, MONTHS[m[1].toLowerCase().slice(0, 3)], Number(m[2]))
+    if (d) return { key: keyOf(m[3] ? d : rollIfLongPast(d)), matchText: m[0] }
   }
 
   // 4. 25/10 (slash = always dd/mm in India), 25-10-2026, or "25-10" / "25.10".
@@ -104,7 +119,7 @@ function findDate(text) {
       let y = yearPart ?? year
       if (y < 100) y += 2000
       const d = validDate(y, monthNum - 1, dayNum)
-      if (d) return { key: keyOf(d), matchText: m[0] }
+      if (d) return { key: keyOf(yearPart == null ? rollIfLongPast(d) : d), matchText: m[0] }
     }
   }
 
@@ -120,14 +135,20 @@ function findDate(text) {
     d.setDate(d.getDate() + 1)
     return { key: keyOf(d), matchText: text.match(/\btomorrow\b/i)[0] }
   }
+  if (/\btoday\b|\btonight\b/i.test(text)) {
+    return { key: keyOf(new Date()), matchText: text.match(/\btoday\b|\btonight\b/i)[0] }
+  }
 
-  // 6. weekday names: "Friday", "next Monday"
-  m = text.match(/\b(?:on|by|before|next|this)?\s*\b(mon|tues?|wed|thur?s?|fri|sat|ur)s?day\b/i)
+  // 6. weekday names & short forms: "Friday", "next Monday", "this Sat", "due fri".
+  // Full spellings first — Saturday/Wednesday don't end in "…sday", and the old
+  // list didn't even contain "Sunday".
+  m = text.match(
+    /\b(?:on|by|before|next|this)?\s*\b(sundays?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|sun|mon|tues?|weds?|thur?s?|fri|sat)\b/i,
+  )
   if (m) {
-    const name = m[1].toLowerCase().replace(/s$/, '')
-    const target = WEEKDAYS[name.startsWith('thur') ? 'thursday' : name]
+    const target = WEEKDAYS[m[1].toLowerCase().replace(/s$/, '')]
     if (target !== undefined) {
-      const d = nextWeekday(target)
+      const d = nextWeekday(target, new Date(), !/\bnext\b/i.test(m[0]))
       return { key: keyOf(d), matchText: m[0] }
     }
   }
@@ -140,13 +161,25 @@ function findDate(text) {
     if (d) return { key: keyOf(d), matchText: m[0] }
   }
 
+  // "due on the 26th" / "by 3rd" — an ordinal with no month name → this month
+  // (month-named forms like "5th November" are already caught in patterns 2/3).
+  m = text.match(/\b(?:the\s+|on\s+)?(\d{1,2})(?:st|nd|rd|th)\b/i)
+  if (m) {
+    const now = new Date()
+    const d = validDate(now.getFullYear(), now.getMonth(), Number(m[1]))
+    if (d) return { key: keyOf(d), matchText: m[0] }
+  }
+
   m = text.match(
     /\b(pichhla|pichhle|pichle|pichla|agle|agla|agli)?\s*(ravivar|ravivaar|somvar|somvaar|somavar|mangalvar|mangalvaar|mangalwaar|budhvar|budhvaar|budhwaar|guruvar|guruvaar|guruwaar|brhaspativar|shukravar|shukravaar|shanivar|shanivaar)\b/i,
   )
   if (m) {
     const target = HI_WEEKDAYS[m[2].toLowerCase()]
     if (target !== undefined) {
-      const d = /^pichh/i.test(m[1] || '') ? prevWeekday(target) : nextWeekday(target)
+      const pre = (m[1] || '').toLowerCase()
+      const d = /^pichh/.test(pre)
+        ? prevWeekday(target)
+        : nextWeekday(target, new Date(), !/^(?:agle|agla|agli)/.test(pre))
       return { key: keyOf(d), matchText: m[0] }
     }
   }
@@ -185,8 +218,35 @@ function findSubject(text) {
   // "…for DBMS…" / "DBMS ka assignment" → word right before the assignment noun
   const m = text.match(/\b([A-Za-z& ]{2,30}?)\s+(?:ka\s+|ke\s+)?(?:assignment|homework|lab|experiment|submission|project|report|worksheet|activity)\b/i)
   if (m) {
-    const candidate = m[1].trim().split(/\s+/).slice(-3).join(' ')
-    if (candidate.length >= 2) return candidate.replace(/\b\w/g, (c) => c.toUpperCase())
+    const words = m[1].trim().split(/\s+/)
+    // Grammatical glue and weekday names are never the subject
+    // ("har somvar lab record…" → subject must not become "Har Somvar").
+    const glue = new Set([
+      'and', 'or', 'but', 'the', 'a', 'an', 'of', 'in', 'on', 'at', 'by', 'to', 'is', 'are',
+      'was', 'were', 'for', 'with', 'from', 'this', 'that', 'please', 'kindly', 'hi', 'hello',
+      'all', 'team', 'everyone', 'reminder', 'note', 'due', 'before', 'after', 'ke', 'ki', 'ka',
+      'ko', 'tak', 'se', 'hai', 'hain', 'har', 'aur', 'ya', 'pe', 'me', 'ne', 'bhi', 'ho', 'do',
+      'dena', 'karna', 'kar', 'wala', 'vala',
+    ])
+    const filtered = words.filter((w) => {
+      const lw = w.toLowerCase()
+      if (glue.has(lw)) return false
+      const wd = lw.replace(/s$/, '')
+      if (WEEKDAYS[wd] || HI_WEEKDAYS[lw]) return false
+      return true
+    })
+    const candidate = filtered.slice(-3).join(' ').trim()
+    if (candidate) {
+      const tokens = candidate.split(' ')
+      if (tokens.length === 1) {
+        // A lone lowercase word before the noun is usually the task itself
+        // ("grade submission…") — trust proper nouns only.
+        const raw = words.find((w) => w.toLowerCase() === tokens[0].toLowerCase())
+        if (raw && !/^[A-Z]/.test(raw)) return null
+      }
+      return candidate.replace(/\b\w/g, (c) => c.toUpperCase())
+    }
+    return null
   }
   return null
 }
@@ -197,12 +257,28 @@ function cleanTitle(text, dateMatch, marksMatch) {
   if (marksMatch) t = t.replace(marksMatch, ' ')
   t = t
     .replace(/\b(please|kindly|hi|hello|dear|team|everyone|all|note|reminder|as per|kind(?:ly)?)\b[:,]?/gi, ' ')
-    .replace(/\b(submit|submission|due|deadline|on|by|before)\b\s*[:\-]?\s*$/i, ' ')
+    .replace(/\(\s*\)/g, ' ') // marks came out of "(10 marks)" → "( )"
     .replace(/\s{2,}/g, ' ')
     .replace(/\s+([,.;])/g, '$1')
+    .replace(/,\s*,/g, ',') // two removals side by side → "…hai,, moodle…"
+    .replace(/^[,;:\-•●▪\s]+/, '')
     .trim()
-  if (!t) t = text.trim()
-  t = t.replace(/^[,;:\-•●▪\s]+/, '')
+  // Date/marks-free version — a safer fallback than the raw text, which would
+  // put the date straight back into the title.
+  const stripped = t
+  // Strip an orphaned trailing connector only when something survives.
+  const trimmed = t
+    .replace(/\b(submit|submission|due|deadline|on|by|before)\b\s*[:\-]?[,.;]?\s*$/i, ' ')
+    .trim()
+  if (trimmed) t = trimmed
+  if (dateMatch) {
+    // "23-10-2026 ko DBMS viva…" → don't leave the dangling "ko" at the front.
+    t = t.replace(/^(?:ko|ke|ka|ki|tak|hai|hain)\b\s*/i, '').replace(/^[,;:\-\s]+/, '')
+  }
+  t = t
+    .replace(/\s*\b(?:hai|hain)\s*[.,;]?\s*$/i, '')
+    .replace(/[,;:\-\s]+$/, '')
+  if (!t) t = stripped || text.trim()
   if (t.length > 110) t = t.slice(0, 107) + '…'
   return t
 }
@@ -256,7 +332,9 @@ const TASK_NOUN =
 function tasksFrom(chunk) {
   const task = extractLocal(chunk)
   if (!task.dueDate) return []
-  if (!task.title || task.title.length < 6) return []
+  // Date + noun/marks are the real signal; a tiny title ("Q3", "viva") is a
+  // perfectly good task name, so don't reject fragments by title length.
+  if (!task.title || task.title.length < 2) return []
   if (!TASK_NOUN.test(chunk) && task.marks == null) return []
   return [task]
 }
