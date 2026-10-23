@@ -183,7 +183,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   width: 100%;
 }
 .phone-mode .add-submit {
-  flex: 1;
+  flex: 1 0 100%;
+  margin-top: 4px;
+}
+.phone-mode .add-row {
+  justify-content: center;
+  row-gap: 8px;
+}
+.phone-mode .add-row > button,
+.phone-mode .add-row > label {
+  padding-inline: 0.625rem;
 }
 .phone-mode .wispr-hint {
   display: none;

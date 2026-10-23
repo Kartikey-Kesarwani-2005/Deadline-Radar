@@ -39,12 +39,12 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
           </span>
           Hold your Wispr key and speak — the text lands right here
         </span>
-        <div className="flex items-center gap-2">
+        <div className="add-row flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={onBrief}
             title="Radar Samachaar — hear your day spoken out loud"
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm whitespace-nowrap text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
           >
             🔊 Briefing
           </button>
@@ -54,7 +54,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
               onClick={onAsk}
               disabled={busy || listening}
               title="Ask the radar — say “aaj kya hai”, “kitne marks risk me”, or just order it: “mark DBMS done”, “delete OS lab”, “add viva Friday”"
-              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`whitespace-nowrap rounded-lg border px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
                 listening
                   ? 'animate-pulse border-violet-400 bg-violet-500/20 text-violet-200'
                   : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-violet-500/40 hover:text-violet-300'
@@ -84,7 +84,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
             type="button"
             onClick={submit}
             disabled={!text.trim() || busy}
-            className="add-submit rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-[0_8px_22px_-10px_rgba(16,185,129,0.85)] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="add-submit whitespace-nowrap rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-[0_8px_22px_-10px_rgba(16,185,129,0.85)] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             {busy ? 'Reading…' : 'Add to radar →'}
           </button>

@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react'
-import { countdownTo, formatDue } from '../lib/dates'
-import { subjectLoad } from '../lib/brain'
+import { useEffect, useMemo, useState } from 'react'
+import { addDays, countdownTo, formatDue, toDateKey, todayKey } from '../lib/dates'
+import { onTimeStreak, subjectLoad } from '../lib/brain'
 
 /**
  * 🛰 Live rail (wide screens only) — the "mission control" strip that fills the
  * right edge of a big monitor with things that actually move:
- *   1. a seconds-precision countdown to the NEXT deadline (the nearest pending,
- *      dated task), and
- *   2. a per-subject load meter (pending marks, heaviest bar first).
+ *   1. a seconds-precision countdown to the NEXT deadline,
+ *   2. a 🔥 on-time streak + last-7-days finish strip, and
+ *   3. a per-subject load meter (pending marks, heaviest bar first).
  * Everything else already lives in the left rail, so nothing here duplicates it.
+ * The countdown owns the only 1s tick; the rest is memoized on `tasks`.
  */
 export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
   const [now, setNow] = useState(() => Date.now())
@@ -17,13 +18,25 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
     return () => clearInterval(id)
   }, [])
 
-  const pending = tasks.filter((t) => !t.done && t.dueDate)
-  const next = pending.reduce(
-    (best, t) => (!best || t.dueDate < best.dueDate ? t : best),
-    null,
+  const pending = useMemo(() => tasks.filter((t) => !t.done && t.dueDate), [tasks])
+  const next = useMemo(
+    () => pending.reduce((best, t) => (!best || t.dueDate < best.dueDate ? t : best), null),
+    [pending],
   )
+  const load = useMemo(() => subjectLoad(tasks), [tasks])
+  const streak = useMemo(() => onTimeStreak(tasks), [tasks])
+  // Last 7 days (oldest → today): did any task get finished that day?
+  const week = useMemo(() => {
+    const doneKeys = new Set(
+      tasks.filter((t) => t.done && t.completedAt).map((t) => toDateKey(new Date(t.completedAt))),
+    )
+    return Array.from({ length: 7 }, (_, i) => {
+      const key = addDays(todayKey(), -(6 - i))
+      return { key, done: doneKeys.has(key) }
+    })
+  }, [tasks])
+
   const cd = next ? countdownTo(next.dueDate, now) : null
-  const load = subjectLoad(tasks)
   const maxMarks = Math.max(1, ...load.map((s) => s.marks || s.count))
 
   return (
@@ -65,6 +78,30 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
             Nothing pending with a date. Add a deadline and the countdown starts itself.
           </p>
         )}
+      </div>
+
+      {/* 🔥 Momentum — on-time streak + a last-7-days finish strip */}
+      <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+        <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">🔥 Momentum</p>
+        {streak > 0 ? (
+          <p className="mt-2 text-sm text-slate-300">
+            <span className="text-2xl font-bold text-emerald-300">{streak}</span> on-time in a row
+          </p>
+        ) : (
+          <p className="mt-2 text-xs leading-relaxed text-slate-500">
+            Tick a task done before its deadline to light the streak.
+          </p>
+        )}
+        <div className="mt-3 flex items-center gap-1.5" aria-hidden="true">
+          {week.map((d) => (
+            <span
+              key={d.key}
+              title={d.done ? `Finished something on ${d.key}` : `Nothing finished on ${d.key}`}
+              className={`h-2.5 flex-1 rounded-full ${d.done ? 'bg-emerald-400/90' : 'bg-white/[0.08]'}`}
+            />
+          ))}
+        </div>
+        <p className="mt-1.5 text-[10px] text-slate-600">last 7 days · filled = finished something</p>
       </div>
 
       {/* 📊 Load by subject — pending marks, heaviest first */}

@@ -74,11 +74,12 @@ function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onTo
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-6 scroll-mt-4">
-      <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-        <span className={`h-2 w-2 rounded-full ${SECTION_TONES[tone]}`} />
+      <div className="mb-2.5 flex items-center gap-2 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+        <span className={`h-2 w-2 shrink-0 rounded-full ${SECTION_TONES[tone]}`} />
         {title}
         <span className="font-medium text-slate-600">· {tasks.length}</span>
-        {hint && <span className="ml-auto font-normal normal-case tracking-normal text-slate-600">{hint}</span>}
+        <span aria-hidden="true" className="h-px min-w-8 flex-1 bg-gradient-to-r from-white/12 to-transparent" />
+        {hint && <span className="shrink-0 font-normal normal-case tracking-normal text-slate-600">{hint}</span>}
       </div>
       <div className="space-y-2">
         {tasks.map((task, index) => (
