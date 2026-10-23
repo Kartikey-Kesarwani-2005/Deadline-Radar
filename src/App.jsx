@@ -311,12 +311,23 @@ export default function App() {
 
   // ?demo=1 loads sample deadlines for reviewers/screenshots — merged in,
   // deduped by title, never replacing anything the visitor captured themselves.
+  const demoLoadedRef = useRef(false)
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has('demo')) return
+    // Guard: React StrictMode (dev) double-invokes effects with a stale `tasks`
+    // closure, which used to add every sample twice when a reviewer ran
+    // `npm run dev` + ?demo=1. The ref persists across the double-invoke.
+    if (demoLoadedRef.current) return
+    demoLoadedRef.current = true
     const have = new Set(tasks.map((t) => t.title.toLowerCase()))
     const fresh = buildSampleTasks().filter((s) => !have.has(s.title.toLowerCase()))
     if (fresh.length) {
-      setTasks((prev) => [...fresh, ...prev])
+      setTasks((prev) => {
+        // Re-dedupe against live state in case anything landed in between.
+        const seen = new Set(prev.map((t) => t.title.toLowerCase()))
+        const toAdd = fresh.filter((s) => !seen.has(s.title.toLowerCase()))
+        return toAdd.length ? [...toAdd, ...prev] : prev
+      })
       setFlash({
         msg: `Demo mode ✓ ${fresh.length} sample deadlines added — your own tasks are untouched.`,
       })
@@ -772,6 +783,8 @@ export default function App() {
   // recommending a hidden task is a contradiction. `visible` === all tasks when
   // no filter is set, so this is a no-op in the unfiltered view.
   const plan = useMemo(() => doNow(visible), [visible])
+  // True when every captured task is ticked off — the radar is genuinely clear.
+  const cleared = useMemo(() => tasks.length > 0 && tasks.every((t) => t.done), [tasks])
   const startSoon = useMemo(() => startAlerts(tasks), [tasks])
   const trend = useMemo(() => weeklyTrend(tasks), [tasks])
   const pace = useMemo(() => paceModel(tasks), [tasks])
@@ -1311,7 +1324,7 @@ export default function App() {
         {/* Right column: the radar sections */}
         <div className="flex min-w-0 flex-col gap-4">
           {tasks.length > 0 && (
-            <DoNowCard plan={plan} onStart={startFocus} focusId={focus?.taskId} />
+            <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
           )}
           {tasks.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">

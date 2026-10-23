@@ -212,6 +212,15 @@ export default function WeeklyReport({ tasks, onClose }) {
           </>
         )}
 
+        {/* When the clipboard is blocked the old message said "select the text
+            above" but there was no text to select — show it so the instruction
+            actually works. */}
+        {copyErr && (
+          <pre className="mt-3 max-h-40 overflow-auto rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[11px] leading-relaxed whitespace-pre-wrap text-slate-300 select-text">
+            {reportText}
+          </pre>
+        )}
+
         <button
           type="button"
           onClick={copy}

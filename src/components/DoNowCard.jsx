@@ -6,8 +6,24 @@ import { doNowReason, fmtHours } from '../lib/brain'
  * with two runners-up. Start button wires the focus timer, which feeds the
  * effort model real minutes.
  */
-export default function DoNowCard({ plan, onStart, focusId }) {
-  if (!plan) return null
+export default function DoNowCard({ plan, cleared, onStart, focusId }) {
+  // Everything ticked off — celebrate the zero state instead of blinking out.
+  if (!plan) {
+    if (!cleared) return null
+    return (
+      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-3.5 text-center">
+        <p className="text-[11px] font-bold tracking-widest text-emerald-300 uppercase">
+          🎯 Ab kya karun?
+        </p>
+        <p className="mt-1.5 text-sm font-semibold text-slate-100">
+          Nothing left — radar clear 🎉
+        </p>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+          Every task is done. Paste or speak the next deadline and the radar picks it back up.
+        </p>
+      </div>
+    )
+  }
   const { pick, next } = plan
   const t = pick.task
   const running = focusId === t.id
