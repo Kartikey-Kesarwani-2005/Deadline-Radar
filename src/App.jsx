@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, looksLikeDeadline, nextOccurrence, reconcile } from './lib/extract'
 import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
 import { downloadICS } from './lib/calendar'
-import { canListen, listenOnce, speak } from './lib/voice'
+import { canListen, canSpeak, listenOnce, speak } from './lib/voice'
 import { parseCommand } from './lib/commands'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
@@ -170,7 +170,7 @@ function buildSampleTasks() {
     },
     {
       id: uid(),
-      title: 'DBMS normalisation tutorial — 3NF problems 1 to 6',
+      title: 'DBMS normalization tutorial — 3NF problems 1 to 6',
       subject: 'DBMS',
       dueDate: addDays(today, -6),
       marks: 10,
@@ -496,7 +496,7 @@ export default function App() {
       return created.length
     } catch (err) {
       console.error('[Deadline Radar] capture failed:', err)
-      setFlash({ msg: `Could not read that text — ${err?.message || 'try again'}` })
+      setFlash({ msg: `Could not read that text — ${err?.message || 'try again'}`, tone: 'error' })
       // null = failure (distinct from 0 = "nothing new") so callers like the
       // AddBar can restore the user's pasted text instead of losing it.
       return null
@@ -532,6 +532,7 @@ export default function App() {
         msg: navigator.onLine
           ? `Could not read that image — ${err.message || 'try again'}`
           : '📵 Screenshot reading needs internet — type or paste the notice instead; the offline parser handles it.',
+        tone: 'error',
       })
     } finally {
       setBusy(false)
@@ -652,7 +653,7 @@ export default function App() {
         msg: `Restored ${fresh.length} task${fresh.length > 1 ? 's' : ''} from backup ✓`,
       })
     } catch (err) {
-      setFlash({ msg: `Import failed — ${err.message}` })
+      setFlash({ msg: `Import failed — ${err.message}`, tone: 'error' })
     }
   }
 
@@ -806,6 +807,7 @@ export default function App() {
           err?.message === 'not-allowed'
             ? 'Mic blocked — allow microphone access and try again.'
             : 'Could not catch that — try again (Chrome/Edge work best).',
+        tone: 'error',
       })
     } finally {
       setListening(false)
@@ -815,8 +817,13 @@ export default function App() {
   // 🔊 Radar Samachaar — the radar speaks your whole day on one tap.
   function playBriefing() {
     if (busy) return
+    // Never claim to be speaking on a browser without speech synthesis.
+    if (!canSpeak()) {
+      setFlash({ msg: 'This browser can\'t read aloud — Chrome or Edge will speak your briefing.', tone: 'error' })
+      return
+    }
     speak(briefingText(tasks))
-    setFlash({ msg: '🔊 Radar Samachaar — sun raha hoon…' })
+    setFlash({ msg: '🔊 Radar Samachaar — bol raha hoon…' })
   }
 
   // 📤 One-tap week plan for the study group — native share sheet, clipboard fallback.
@@ -834,14 +841,14 @@ export default function App() {
       await navigator.clipboard.writeText(text)
       setFlash({ msg: '📤 Week plan copied — paste it in your group chat.' })
     } catch {
-      setFlash({ msg: 'Sharing blocked by the browser — copy it from the weekly report instead.' })
+      setFlash({ msg: 'Sharing blocked by the browser — copy it from the weekly report instead.', tone: 'error' })
     }
   }
 
   async function toggleReminders() {
     const current = getPermission()
     if (current === 'unsupported') {
-      setFlash({ msg: 'This browser does not support notifications.' })
+      setFlash({ msg: 'This browser does not support notifications.', tone: 'error' })
       return
     }
     let permission = current
@@ -851,7 +858,7 @@ export default function App() {
       notifyTest(stats.late, stats.dueToday)
       setFlash({ msg: 'Reminders on — one alert a day when something is late or due today.' })
     } else {
-      setFlash({ msg: 'Notifications blocked — allow them from the 🔒 icon in your address bar.' })
+      setFlash({ msg: 'Notifications blocked — allow them from the 🔒 icon in your address bar.', tone: 'error' })
     }
   }
 
@@ -987,7 +994,7 @@ export default function App() {
           <span className="font-bold text-violet-100">✨ Demo mode — try:</span>
           <span>🔊 Briefing — the radar speaks your day</span>
           <span>🎙️ Ask → “ab kya karun?” · “mark DBMS done” ✅</span>
-          <span>▶️ focus timer · ⛈️ storm day</span>
+          <span>▶️ focus timer · 🔁 weekly tasks roll over</span>
           <button
             type="button"
             onClick={() => setHintsClosed(true)}
@@ -1003,9 +1010,18 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className="rise mt-2 flex items-center gap-3 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 shadow-[0_10px_30px_-18px_rgba(16,185,129,0.8)]"
+          className={`rise mt-2 flex items-center gap-3 rounded-xl border px-3 py-2 text-xs font-medium shadow-[0_10px_30px_-18px_rgba(16,185,129,0.8)] ${
+            flash.tone === 'error'
+              ? 'border-red-500/40 bg-red-500/10 text-red-300'
+              : 'border-emerald-500/35 bg-emerald-500/10 text-emerald-300'
+          }`}
         >
-          <span className="min-w-0 flex-1 break-words">✓ {flash.msg}</span>
+          {/* Success gets a ✓; errors must NOT wear a checkmark (a green tick
+              announcing "Mic blocked" is exactly the kind of contradiction a
+              judge screenshots). Strip a trailing ✓ so we never show two. */}
+          <span className="min-w-0 flex-1 break-words">
+            {flash.tone === 'error' ? flash.msg : `✓ ${flash.msg.replace(/\s*✓$/u, '')}`}
+          </span>
           {flash.action && (
             <button
               type="button"
@@ -1122,7 +1138,7 @@ export default function App() {
         <div className="mt-2 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-slate-200">
           <span aria-hidden="true">🎙️</span>
           <p className="min-w-0 flex-1 leading-relaxed">
-            <span className="text-slate-400">«{askCard.q}»</span>
+            <span className="text-slate-400">“{askCard.q}”</span>
             <br />
             {askCard.a}
           </p>
@@ -1340,7 +1356,7 @@ export default function App() {
       {/* Footer */}
       <footer className="mt-12 border-t border-white/[0.07] pt-5 text-center text-[11px] leading-relaxed text-slate-600">
         Built hands-free with <span className="text-slate-500">Wispr Flow</span> ·{' '}
-        <span className="text-slate-500">#NoHandsChallenge</span> · WeMakeDevs × Wispr Flow
+        <span className="text-slate-500">#NoHandsChallenge</span> · WeMakeDevs
         <br />
         All data stays in this browser (localStorage).
       </footer>

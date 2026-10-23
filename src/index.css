@@ -157,10 +157,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 }
 
-/* Touch devices have no hover — card actions must always be visible. */
+/* Touch devices have no hover — card actions must always be visible.
+   The resting slate-700 is near-invisible on the dark card, so when we force
+   them visible we also lift the color to a readable slate. */
 @media (hover: none) {
   .task-actions {
     opacity: 1;
+    color: #64748b; /* slate-500 */
   }
 }
 
@@ -168,6 +171,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* Phone mode — compact, thumb-friendly, no hover-only affordances. */
 .phone-mode .task-actions {
   opacity: 1;
+  color: #64748b; /* slate-500 */
 }
 .phone-mode .radar-dial {
   width: 150px;

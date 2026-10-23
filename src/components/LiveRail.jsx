@@ -69,6 +69,12 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
                   : `${String(cd.d).padStart(2, '0')}:${String(cd.h).padStart(2, '0')}:${String(cd.m).padStart(2, '0')}:${String(cd.s).padStart(2, '0')}`}
               </p>
             )}
+            {/* Label the 01:02:14:33 blocks so nobody has to guess which digit is days */}
+            {cd && !cd.late && (
+              <p className="mt-0.5 font-mono text-[10px] tracking-widest text-slate-600" aria-hidden="true">
+                days : hrs : min : sec
+              </p>
+            )}
             <p className="mt-1.5 text-[11px] text-slate-500">
               {next.subject ? `${next.subject} · ` : ''}📅 {formatDue(next.dueDate)}
             </p>
