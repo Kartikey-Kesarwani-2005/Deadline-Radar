@@ -78,9 +78,9 @@ function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onTo
       <div className="mb-2.5 flex items-center gap-2 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
         <span className={`h-2 w-2 shrink-0 rounded-full ${SECTION_TONES[tone]}`} />
         {title}
-        <span className="font-medium text-slate-600">· {tasks.length}</span>
+        <span className="font-medium text-slate-500">· {tasks.length}</span>
         <span aria-hidden="true" className="h-px min-w-8 flex-1 bg-gradient-to-r from-white/12 to-transparent" />
-        {hint && <span className="shrink-0 font-normal normal-case tracking-normal text-slate-600">{hint}</span>}
+        {hint && <span className="shrink-0 font-normal normal-case tracking-normal text-slate-500">{hint}</span>}
       </div>
       <div className="space-y-2">
         {tasks.map((task, index) => (
@@ -1397,9 +1397,9 @@ export default function App() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-12 border-t border-white/[0.07] pt-5 text-center text-[11px] leading-relaxed text-slate-600">
-        Built hands-free with <span className="text-slate-500">Wispr Flow</span> ·{' '}
-        <span className="text-slate-500">#NoHandsChallenge</span> · WeMakeDevs
+      <footer className="mt-12 border-t border-white/[0.07] pt-5 text-center text-[11px] leading-relaxed text-slate-500">
+        Built hands-free with <span className="text-slate-400">Wispr Flow</span> ·{' '}
+        <span className="text-slate-400">#NoHandsChallenge</span> · WeMakeDevs
         <br />
         All data stays in this browser (localStorage).
       </footer>

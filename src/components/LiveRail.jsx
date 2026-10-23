@@ -71,7 +71,7 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
             )}
             {/* Label the 01:02:14:33 blocks so nobody has to guess which digit is days */}
             {cd && !cd.late && (
-              <p className="mt-0.5 font-mono text-[10px] tracking-widest text-slate-600" aria-hidden="true">
+              <p className="mt-0.5 font-mono text-[10px] tracking-widest text-slate-500" aria-hidden="true">
                 days : hrs : min : sec
               </p>
             )}
@@ -107,7 +107,7 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
             />
           ))}
         </div>
-        <p className="mt-1.5 text-[10px] text-slate-600">last 7 days · filled = finished something</p>
+        <p className="mt-1.5 text-[10px] text-slate-500">last 7 days · filled = finished something</p>
       </div>
 
       {/* 📊 Load by subject — pending marks, heaviest first */}
