@@ -25,6 +25,9 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1424] p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
