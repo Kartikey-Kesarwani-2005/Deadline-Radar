@@ -32,13 +32,32 @@ export default class ErrorBoundary extends Component {
             <p className="mt-2 break-words font-mono text-[10px] text-slate-600">
               {String(this.state.error?.message || this.state.error)}
             </p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
-            >
-              Reload
-            </button>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+              >
+                Reload
+              </button>
+              {/* Escape hatch: if stored data itself is what's crashing the app,
+                  Reload just re-crashes. This clears the tasks and reloads so the
+                  judge is never stuck in an unrecoverable loop. */}
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('deadline-radar.tasks.v1')
+                  } catch {
+                    /* storage blocked — reload still runs */
+                  }
+                  window.location.reload()
+                }}
+                className="rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+              >
+                Reset tasks &amp; reload
+              </button>
+            </div>
           </div>
         </div>
       )

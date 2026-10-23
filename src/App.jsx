@@ -12,6 +12,7 @@ import {
   parseBackup,
   saveSettings,
   saveTasks,
+  uid,
 } from './lib/store'
 import { burstConfetti } from './lib/confetti'
 import { getPermission, notifyDaily, notifyTest, requestPermission } from './lib/notify'
@@ -108,7 +109,7 @@ function buildSampleTasks() {
   const today = todayKey()
   return [
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'DBMS normalization assignment — solve Q1 to Q5 and submit on the portal',
       subject: 'DBMS',
       dueDate: addDays(today, 1),
@@ -119,7 +120,7 @@ function buildSampleTasks() {
       source: 'DBMS assignment due tomorrow, Q1-Q5 on normalization, 20 marks, submit on the portal',
     },
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'Operating Systems lab record — complete experiments 4 and 5',
       subject: 'Operating Systems',
       dueDate: addDays(today, 5),
@@ -131,7 +132,7 @@ function buildSampleTasks() {
       source: 'OS lab record exp 4 and 5 due next week, 10 marks',
     },
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'Submit group presentation slides for Software Engineering',
       subject: 'Software Engineering',
       dueDate: addDays(today, -1),
@@ -142,7 +143,7 @@ function buildSampleTasks() {
       source: 'SE presentation slides were due yesterday, 15 marks, submit in the shared drive',
     },
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'Attend workshop registration form (free for first 50)',
       subject: null,
       dueDate: today,
@@ -155,7 +156,7 @@ function buildSampleTasks() {
     },
     // Finished history — this is what the Radar Brain learns your rhythm from.
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'DBMS SQL worksheet — joins and subqueries (set 2)',
       subject: 'DBMS',
       dueDate: addDays(today, -12),
@@ -168,7 +169,7 @@ function buildSampleTasks() {
       source: 'DBMS SQL worksheet set 2, 10 marks, submitted on the portal',
     },
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'DBMS normalisation tutorial — 3NF problems 1 to 6',
       subject: 'DBMS',
       dueDate: addDays(today, -6),
@@ -181,7 +182,7 @@ function buildSampleTasks() {
       source: 'Normalisation tutorial due last week, 10 marks',
     },
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'Operating Systems memory management assignment',
       subject: 'Operating Systems',
       dueDate: addDays(today, -9),
@@ -194,7 +195,7 @@ function buildSampleTasks() {
       source: 'OS memory management assignment, 15 marks',
     },
     {
-      id: crypto.randomUUID(),
+      id: uid(),
       title: 'Software Engineering sprint retrospective write-up',
       subject: 'Software Engineering',
       dueDate: addDays(today, -15),
@@ -434,7 +435,7 @@ export default function App() {
       // UPDATES it (teacher moved the deadline) instead of being dropped.
       const { fresh: freshParsed, updates } = reconcile(tasks, parsed)
       const created = freshParsed.map((p) => ({
-        id: crypto.randomUUID(),
+        id: uid(),
         ...p,
         source: text,
         done: false,
@@ -517,7 +518,7 @@ export default function App() {
       const dataUrl = await fileToDataUrl(file)
       const parsed = await extractFromImage(dataUrl, settings)
       const task = {
-        id: crypto.randomUUID(),
+        id: uid(),
         ...parsed,
         source: `📷 ${file.name}`,
         done: false,
@@ -561,7 +562,7 @@ export default function App() {
             ...next,
             {
               ...current,
-              id: crypto.randomUUID(),
+              id: uid(),
               done: false,
               completedAt: null,
               dueDate: coming,
