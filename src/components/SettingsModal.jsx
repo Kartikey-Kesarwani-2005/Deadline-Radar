@@ -94,6 +94,7 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
               type="button"
               role="switch"
               aria-checked={draft.aiEnabled}
+              aria-label="Smart extract with AI"
               onClick={() => set({ aiEnabled: !draft.aiEnabled })}
               className={`relative h-6 w-11 shrink-0 rounded-full transition ${
                 draft.aiEnabled ? 'bg-emerald-500' : 'bg-slate-700'
@@ -181,6 +182,7 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
                 type="button"
                 role="switch"
                 aria-checked={draft.clipDetect}
+                aria-label="Clipboard auto-detect"
                 onClick={() => set({ clipDetect: !draft.clipDetect })}
                 className={`relative h-6 w-11 shrink-0 rounded-full transition ${
                   draft.clipDetect ? 'bg-emerald-500' : 'bg-slate-700'

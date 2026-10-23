@@ -1171,9 +1171,14 @@ export default function App() {
         </div>
       )}
 
-      {/* 🎙️ Voice query answer */}
+      {/* 🎙️ Voice query answer — announced to screen readers (a voice app's
+          answer must reach AT too, not just play out loud). */}
       {askCard && (
-        <div className="mt-2 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-slate-200">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-2 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-slate-200"
+        >
           <span aria-hidden="true">🎙️</span>
           <p className="min-w-0 flex-1 leading-relaxed">
             <span className="text-slate-400">“{askCard.q}”</span>

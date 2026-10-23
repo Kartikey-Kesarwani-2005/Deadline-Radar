@@ -170,7 +170,7 @@ export default function TaskCard({
               type="date"
               value={task.dueDate || ''}
               onChange={(e) => onDateChange(e.target.value || null)}
-              aria-label="Change due date"
+              aria-label={`Change due date for ${task.title}`}
               className="rounded-md border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[11px] text-slate-400 focus:border-emerald-500/50 focus:outline-none"
             />
           </label>
@@ -181,7 +181,7 @@ export default function TaskCard({
         <button
           type="button"
           onClick={onFocus}
-          aria-label={focusing ? 'Stop focus timer' : 'Start focus timer'}
+          aria-label={`${focusing ? 'Stop' : 'Start'} focus timer for ${task.title}`}
           title={
             focusing
               ? 'Focus running — click to stop and save the minutes'
@@ -200,7 +200,7 @@ export default function TaskCard({
       <button
         type="button"
         onClick={onShare}
-        aria-label="Copy share text"
+        aria-label={`Copy share text for ${task.title}`}
         title="Copy for WhatsApp / group"
         className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
       >
@@ -210,7 +210,7 @@ export default function TaskCard({
       <button
         type="button"
         onClick={onEdit}
-        aria-label="Edit task"
+        aria-label={`Edit ${task.title}`}
         className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
       >
         ✏️
@@ -219,7 +219,7 @@ export default function TaskCard({
       <button
         type="button"
         onClick={onDelete}
-        aria-label="Delete task"
+        aria-label={`Delete ${task.title}`}
         className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus:opacity-100"
       >
         ✕
