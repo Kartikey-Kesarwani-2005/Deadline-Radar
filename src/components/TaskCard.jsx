@@ -77,6 +77,14 @@ export default function TaskCard({
               {task.marks} marks
             </span>
           )}
+          {task.repeat === 'weekly' && (
+            <span
+              title="Repeats weekly — ticking it off rolls the next occurrence onto the radar automatically"
+              className={`${chipBase} border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300`}
+            >
+              🔁 weekly
+            </span>
+          )}
           {estimate && !task.done && (
             <span
               title={

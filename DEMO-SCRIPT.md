@@ -41,16 +41,17 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   in the centre), the **🎯 marks-at-risk** line, the **📈 6-week finish arc**
   (green = on time, amber = late — the result *over time*), and the **🌦️ 7-day weather forecast** —
   tap the ⛈️ storm day to filter to it. A card shows its **🧠 prediction chip**
-  ("Usually 2.0d late — start NOW"). Tick a task done — **confetti bursts** — open
-  **Weekly report**.
+  ("Usually 2.0d late — start NOW"). Tick a task done — **confetti bursts** — tick the
+  **🔁 weekly** lab record and next week's deadline **rolls itself onto the radar** —
+  open **Weekly report**.
 - **Voice beats:** press **🔊 Briefing** — the radar *speaks* your whole day
   (late → today → tomorrow → on-time rate → "ab kya karun" pick). Then press
   **🎙️ Ask** and say *"ab kya karun?"* → the radar
   **speaks the pick** ("Start now: SE slides… about 1.3h") + on-screen card. **(10s)**
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
   your on-time score. It counts marks at risk, learns my own rhythm from history — the
-  six-week arc shows that rhythm actually improving — and I can just ask it, out loud,
-  what's due today."*
+  six-week arc shows that rhythm actually improving, weekly labs roll themselves into next
+  week — and I can just ask it, out loud, what's due today."*
 - Tap a dial ring → it jumps to that section. Show the **On time** ring, the **📈 6-week arc**
   and Weekly report numbers — this is the "one real result".
 

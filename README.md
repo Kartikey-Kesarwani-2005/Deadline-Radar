@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-89%2F89%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-102%2F102%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -53,6 +53,11 @@ replacing anything you captured).
 - **🔁 Re-capture updates** — teacher moved the deadline? Paste the same message again and
   the pending task updates **in place** (date/marks/link) with a *"📅 Fri → Mon updated"*
   flash — not dropped as a duplicate. Finished tasks are never reopened.
+- **🔁 Weekly recurring deadlines** — paste *"DBMS lab every Friday"*, *"har somvar lab
+  record"* or *"weekly viva due Monday"* and the card is stamped **🔁 weekly**: tick it off
+  and the next occurrence rolls onto the radar automatically (undo pulls it back; the edit
+  modal can turn the flag off), and the `.ics` export carries a real `RRULE:FREQ=WEEKLY`
+  so phone calendars keep repeating it too.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
 - **Radar dial** — the signature widget: concentric rings for Late / Due today / This week / Later
@@ -173,6 +178,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # offline extractor + bulk + backup parser (89 checks)
+npm test       # offline extractor + bulk + backup parser (102 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

@@ -20,6 +20,13 @@ function vEvent(t, stamp) {
     `DTSTART;VALUE=DATE:${t.dueDate.replace(/-/g, '')}`,
     `SUMMARY:${esc(t.title)}`,
   ]
+  // 🔁 Weekly tasks travel as a real RRULE, so the phone calendar keeps
+  // repeating them too instead of a single stale occurrence.
+  if (t.repeat === 'weekly') {
+    const [y, m, d] = t.dueDate.split('-').map(Number)
+    const byDay = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][new Date(y, m - 1, d).getDay()]
+    lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${byDay}`)
+  }
   const detail = [t.subject, t.marks ? `${t.marks} marks` : null].filter(Boolean).join(' · ')
   if (detail) lines.push(`DESCRIPTION:${esc(detail)}`)
   if (t.link) lines.push(`URL:${t.link}`)

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { extractMany, extractManyLocal, reconcile } from './lib/extract'
+import { extractMany, extractManyLocal, nextOccurrence, reconcile } from './lib/extract'
 import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
 import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
@@ -122,6 +122,7 @@ function buildSampleTasks() {
       dueDate: addDays(today, 5),
       marks: 10,
       priority: 'normal',
+      repeat: 'weekly',
       done: false,
       createdAt: now - 2000,
       source: 'OS lab record exp 4 and 5 due next week, 10 marks',
@@ -459,6 +460,7 @@ export default function App() {
           changes.push(`${prior?.marks ?? '—'} → ${u0.marks} marks`)
         }
         if (u0.link && u0.link !== prior?.link) changes.push(prior?.link ? '🔗 link swapped' : '🔗 link added')
+        if (u0.repeat && u0.repeat !== prior?.repeat) changes.push('🔁 now weekly')
         const extra = updates.length > 1 ? ` (+${updates.length - 1} more)` : ''
         msgs.push(`🔄 ${prior?.title ?? 'Task'} updated: ${changes.join(', ')}${extra}`)
         if (created.length) msgs.push(`+ ${created.length} new ✓`)
@@ -518,13 +520,41 @@ export default function App() {
     if (!current?.done && typeof event?.clientX === 'number') {
       burstConfetti(event.clientX, event.clientY)
     }
-    setTasks((prev) =>
-      prev.map((t) =>
+    const markingDone = !current?.done
+    setTasks((prev) => {
+      let next = prev.map((t) =>
         t.id === id
           ? { ...t, done: !t.done, completedAt: !t.done ? Date.now() : null }
           : t,
-      ),
-    )
+      )
+      if (markingDone && current?.repeat && current.dueDate) {
+        // 🔁 Repeating deadline: rolling a fresh copy onto the radar the moment
+        // you tick it off, so "har Friday" always shows the next real Friday.
+        const coming = nextOccurrence(current.dueDate)
+        const waiting =
+          coming &&
+          next.some((t) => !t.done && t.rolledFrom === current.id && t.dueDate === coming)
+        if (coming && !waiting) {
+          next = [
+            ...next,
+            {
+              ...current,
+              id: crypto.randomUUID(),
+              done: false,
+              completedAt: null,
+              dueDate: coming,
+              effortMin: null,
+              createdAt: Date.now(),
+              rolledFrom: current.id,
+            },
+          ]
+        }
+      } else if (!markingDone && current) {
+        // Undo: pull back the copy that this tick-off created (still pending).
+        next = next.filter((t) => !(t.rolledFrom === current.id && !t.done))
+      }
+      return next
+    })
   }
   const deleteTask = (id) => {
     const index = tasks.findIndex((t) => t.id === id)

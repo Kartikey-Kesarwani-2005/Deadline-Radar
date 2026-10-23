@@ -2,7 +2,7 @@
  * Unit tests for the offline extractor — the fallback that keeps the app working
  * with zero setup. Plus backup parser tests (restore path). Run with:  npm test
  */
-import { extractLocal, extractManyLocal, reconcile } from '../src/lib/extract.js'
+import { extractLocal, extractManyLocal, nextOccurrence, reconcile } from '../src/lib/extract.js'
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
@@ -449,6 +449,40 @@ check(
 check(
   'title: no double commas after field removal',
   extractLocal('DBMS assignment 1 ki last date 31/10/2026 hai, 25 marks, moodle pe submit karna').title.includes(',,'),
+  false,
+)
+
+// --- 🔁 recurring weekly deadlines ---
+check('repeat: "every Friday" marks the task weekly', extractLocal('DBMS lab report every Friday, 10 marks').repeat, 'weekly')
+check('repeat: "har somvar" marks the task weekly', extractLocal('har somvar lab record dena hai').repeat, 'weekly')
+check('repeat: bare "weekly" marks the task weekly', extractLocal('weekly viva due Monday').repeat, 'weekly')
+check('repeat: one-off tasks stay one-off', extractLocal('DBMS quiz due 2026-11-02, 10 marks').repeat, null)
+check('repeat: "alternate Friday" stays one-off (no bi-weekly in V1)', extractLocal('DBMS lab alternate Friday').repeat, null)
+check('repeat: title drops the "every Friday" words', extractLocal('DBMS lab report every Friday').title, 'DBMS lab report')
+check('repeat: rollover = +7 from the due date', nextOccurrence(shift(-3)), shift(4))
+check('repeat: due today rolls to next week', nextOccurrence(key(today)), shift(7))
+check(
+  'repeat: a very late tick-off steps to the next future week',
+  nextOccurrence(shift(-20)),
+  shift(1),
+)
+const bkRepeat = parseBackup(JSON.stringify([{ title: 'OS lab record', dueDate: '2026-10-30', repeat: 'weekly' }]))
+check('backup restore keeps the weekly flag', bkRepeat[0].repeat, 'weekly')
+const rcRep = reconcile(
+  [{ id: 'r1', title: 'OS lab record', dueDate: '2026-10-30', marks: 10, link: null, done: false, repeat: null }],
+  [{ title: 'OS lab record', dueDate: '2026-10-30', marks: 10, link: null, repeat: 'weekly' }],
+)
+check('reconcile: a re-paste can add the weekly flag', rcRep.updates[0]?.repeat, 'weekly')
+const icsWeekly = buildICS(
+  [{ id: 'w1', title: 'OS lab', dueDate: '2026-10-30', repeat: 'weekly', done: false }],
+  new Date('2026-10-22T10:00:00Z'),
+)
+check('ics: weekly task exports a real RRULE (Friday)', icsWeekly.includes('RRULE:FREQ=WEEKLY;BYDAY=FR'), true)
+check(
+  'ics: one-off task gets no RRULE',
+  buildICS([{ id: 'w2', title: 'OS lab', dueDate: '2026-10-30', done: false }], new Date('2026-10-22T10:00:00Z')).includes(
+    'RRULE',
+  ),
   false,
 )
 

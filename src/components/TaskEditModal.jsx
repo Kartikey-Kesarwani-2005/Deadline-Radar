@@ -20,6 +20,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
     marks: task.marks ?? '',
     priority: task.priority || 'normal',
     link: task.link || '',
+    repeat: task.repeat === 'weekly' ? 'weekly' : null,
   })
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
       marks: Number.isFinite(marks) ? marks : null,
       priority: draft.priority,
       link: draft.link.trim() || null,
+      repeat: draft.repeat === 'weekly' ? 'weekly' : null,
     })
   }
 
@@ -136,6 +138,21 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
               className={inputCls}
             />
           </Field>
+
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-slate-300 transition hover:border-fuchsia-500/40">
+            <input
+              type="checkbox"
+              checked={draft.repeat === 'weekly'}
+              onChange={(e) => set({ repeat: e.target.checked ? 'weekly' : null })}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-fuchsia-500"
+            />
+            <span>
+              🔁 Repeat every week
+              <span className="block text-[11px] leading-snug text-slate-500">
+                Ticking it off rolls the next occurrence onto the radar automatically
+              </span>
+            </span>
+          </label>
 
           {task.source && (
             <div>

@@ -84,11 +84,14 @@ export function parseBackup(text) {
         typeof t.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) ? t.dueDate : null,
       marks: Number.isFinite(t.marks) && t.marks > 0 ? t.marks : null,
       priority: t.priority === 'high' ? 'high' : 'normal',
+      repeat: t.repeat === 'weekly' ? 'weekly' : null,
       done: Boolean(t.done),
       completedAt: Number.isFinite(t.completedAt) ? t.completedAt : null,
       // Focus-timer minutes — without this the pace model reset on every restore.
       effortMin: Number.isFinite(t.effortMin) && t.effortMin > 0 ? t.effortMin : null,
       createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
+      // Links the auto-rolled copy back to the task it came from (undo chain).
+      rolledFrom: typeof t.rolledFrom === 'string' ? t.rolledFrom : null,
       source: typeof t.source === 'string' ? t.source.slice(0, 600) : '',
       link:
         typeof t.link === 'string' && /^https?:\/\//i.test(t.link) ? t.link.slice(0, 500) : null,

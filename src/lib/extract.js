@@ -143,7 +143,7 @@ function findDate(text) {
   // Full spellings first — Saturday/Wednesday don't end in "…sday", and the old
   // list didn't even contain "Sunday".
   m = text.match(
-    /\b(?:on|by|before|next|this)?\s*\b(sundays?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|sun|mon|tues?|weds?|thur?s?|fri|sat)\b/i,
+    /\b(?:on|by|before|next|this|every|each)?\s*\b(sundays?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|sun|mon|tues?|weds?|thur?s?|fri|sat)\b/i,
   )
   if (m) {
     const target = WEEKDAYS[m[1].toLowerCase().replace(/s$/, '')]
@@ -171,7 +171,7 @@ function findDate(text) {
   }
 
   m = text.match(
-    /\b(pichhla|pichhle|pichle|pichla|agle|agla|agli)?\s*(ravivar|ravivaar|somvar|somvaar|somavar|mangalvar|mangalvaar|mangalwaar|budhvar|budhvaar|budhwaar|guruvar|guruvaar|guruwaar|brhaspativar|shukravar|shukravaar|shanivar|shanivaar)\b/i,
+    /\b(pichhla|pichhle|pichle|pichla|agle|agla|agli|har)?\s*(ravivar|ravivaar|somvar|somvaar|somavar|mangalvar|mangalvaar|mangalwaar|budhvar|budhvaar|budhwaar|guruvar|guruvaar|guruwaar|brhaspativar|shukravar|shukravaar|shanivar|shanivaar)\b/i,
   )
   if (m) {
     const target = HI_WEEKDAYS[m[2].toLowerCase()]
@@ -300,6 +300,47 @@ function priorityFor(dueDate, marks) {
   return 'normal'
 }
 
+/* ------------------------------------------------------------------ *
+ * 🔁 Repeating weekly deadlines — "every Friday", "har somvar",
+ * "weekly". The due date carries the weekday anchor; on tick-off the
+ * next occurrence is rolled forward (nextOccurrence).
+ * ------------------------------------------------------------------ */
+
+function detectRepeat(text) {
+  if (/\bevery\s+week\b|\beach\s+week\b|\bweekly\b|\bhar\s+hafte\b/i.test(text)) return 'weekly'
+  if (
+    /\b(?:every|each)\s+(?:sundays?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|sun|mon|tues?|weds?|thur?s?|fri|sat)\b/i.test(
+      text,
+    )
+  )
+    return 'weekly'
+  if (
+    /\bhar\s+(?:ravivar|ravivaar|somvar|somvaar|somavar|mangalvar|mangalvaar|mangalwaar|budhvar|budhvaar|budhwaar|guruvar|guruvaar|guruwaar|brhaspativar|shukravar|shukravaar|shanivar|shanivaar)\b/i.test(
+      text,
+    )
+  )
+    return 'weekly'
+  return null
+}
+
+/**
+ * 🔁 Next occurrence of a weekly task: one week after its due date, stepped
+ * forward until it is in the future (ticking off a very late lab record must
+ * land on the next real deadline, not last month's).
+ */
+export function nextOccurrence(dueDate, from = new Date()) {
+  if (typeof dueDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) return null
+  const [y, m, d] = dueDate.split('-').map(Number)
+  const today = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+  let step = new Date(y, m - 1, d + 7)
+  let guard = 0
+  while (step <= today && guard < 260) {
+    step = new Date(step.getFullYear(), step.getMonth(), step.getDate() + 7)
+    guard += 1
+  }
+  return keyOf(step)
+}
+
 export function extractLocal(raw) {
   const full = raw.trim().replace(/\s+/g, ' ')
   // Pull the submission link out FIRST — it must not leak into the title
@@ -317,6 +358,7 @@ export function extractLocal(raw) {
     marks: marks ? marks.value : null,
     priority: priorityFor(dueDate, marks?.value),
     link,
+    repeat: detectRepeat(text),
   }
 }
 
@@ -379,7 +421,7 @@ function stripFences(s) {
   return s.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
 }
 
-function normEntry(parsed, raw) {
+function normEntry(parsed, raw, repeatText) {
   const fallback = extractLocal(raw)
   return {
     title:
@@ -399,6 +441,9 @@ function normEntry(parsed, raw) {
       (typeof parsed.link === 'string' && /^https?:\/\//i.test(parsed.link)
         ? parsed.link.slice(0, 500)
         : null) || fallback.link,
+    // The AI schema has no repeat field — stamp it from the text itself
+    // (per entry in bulk mode so one "every Friday" doesn't infect a notice).
+    repeat: detectRepeat(repeatText ?? raw),
   }
 }
 
@@ -498,7 +543,7 @@ async function extractWithAIMany(raw, settings) {
   const out = list
     .filter((e) => e && typeof e.title === 'string' && e.title.trim())
     .slice(0, 20)
-    .map((e) => normEntry(e, raw))
+    .map((e) => normEntry(e, raw, list.length === 1 ? raw : `${e.title} ${e.subject || ''}`))
   if (!out.length) throw new Error('Bad AI JSON')
   return out
 }
@@ -540,6 +585,9 @@ export function reconcile(existing, parsed) {
     if (p.dueDate && p.dueDate !== prior.dueDate) patch.dueDate = p.dueDate
     if (p.marks != null && p.marks !== prior.marks) patch.marks = p.marks
     if (p.link && p.link !== prior.link) patch.link = p.link
+    // A re-paste can also ADD the weekly flag ("…every Friday" after a plain
+    // one-off); never clears an existing flag — deleting the task does that.
+    if (p.repeat && p.repeat !== prior.repeat) patch.repeat = p.repeat
     if (Object.keys(patch).length) {
       updates.push({
         id: prior.id,
