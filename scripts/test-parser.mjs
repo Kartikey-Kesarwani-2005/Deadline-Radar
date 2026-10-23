@@ -3,6 +3,7 @@
  * with zero setup. Plus backup parser tests (restore path). Run with:  npm test
  */
 import { extractLocal, extractManyLocal, nextOccurrence, reconcile } from '../src/lib/extract.js'
+import { parseCommand } from '../src/lib/commands.js'
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
@@ -485,6 +486,45 @@ check(
   ),
   false,
 )
+
+// --- 🎤 Voice commands — orders vs questions (parseCommand) ---
+const vcTasks = [
+  { id: 'v1', title: 'DBMS SQL worksheet — joins and subqueries', subject: 'DBMS', dueDate: '2026-10-24', done: false },
+  { id: 'v2', title: 'Operating Systems lab record — experiments 4 and 5', subject: 'Operating Systems', dueDate: '2026-10-28', done: false },
+  { id: 'v3', title: 'Submit group presentation slides', subject: 'Software Engineering', dueDate: '2026-10-30', done: false },
+  { id: 'v4', title: 'DBMS normalisation tutorial — 3NF problems', subject: 'DBMS', dueDate: '2026-10-26', done: false },
+  { id: 'v5', title: 'Workshop registration form', subject: null, dueDate: '2026-10-20', done: true },
+]
+const cmd1 = parseCommand('mark DBMS worksheet done', vcTasks)
+check('cmd: "mark DBMS worksheet done" ticks the right card', cmd1?.type === 'done' && cmd1.task?.id === 'v1', true)
+const cmd2 = parseCommand('OS lab record ho gaya', vcTasks)
+check('cmd: Hinglish "ho gaya" marks done', cmd2?.type === 'done' && cmd2.task?.id === 'v2', true)
+const cmd3 = parseCommand('finish worksheet', vcTasks)
+check('cmd: one distinctive word ("worksheet") is enough', cmd3?.type === 'done' && cmd3.task?.id === 'v1', true)
+const cmd4 = parseCommand('tick off presentation slides', vcTasks)
+check('cmd: "tick off …" ticks done', cmd4?.type === 'done' && cmd4.task?.id === 'v3', true)
+check('cmd: "delete presentation slides" deletes', parseCommand('delete presentation slides', vcTasks)?.task?.id, 'v3')
+check(
+  'cmd: "… delete kar do" (verb at the end) still deletes',
+  parseCommand('presentation slides delete kar do', vcTasks)?.task?.id,
+  'v3',
+)
+check('cmd: "SE presentation hata do" — Hinglish remove', parseCommand('SE presentation hata do', vcTasks)?.task?.id, 'v3')
+check('cmd: "add OS viva Friday" captures the phrase', parseCommand('add OS viva Friday', vcTasks)?.text, 'OS viva Friday')
+check('cmd: "capture DBMS viva Friday" also captures', parseCommand('capture DBMS viva Friday', vcTasks)?.text, 'DBMS viva Friday')
+check('cmd: "ab kya karun" is a question, not an order', parseCommand('ab kya karun', vcTasks), null)
+check('cmd: "kitne marks risk me" stays a question', parseCommand('kitne marks risk me', vcTasks), null)
+check('cmd: "what is late" stays a question', parseCommand('what is late', vcTasks), null)
+check('cmd: "should I mark DBMS done?" is a question', parseCommand('should I mark DBMS done?', vcTasks), null)
+const cmdTie = parseCommand('mark DBMS done', vcTasks)
+check('cmd: two equal DBMS hits → clarify, not a guess', cmdTie?.type, 'clarify')
+check('cmd: clarify lists the earlier-deadline option first', cmdTie?.options?.[0], 'DBMS SQL worksheet — joins and subqueries')
+const cmdVague = parseCommand('mark it done', vcTasks)
+check('cmd: vague "mark it done" asks which one', cmdVague?.type, 'clarify')
+check('cmd: vague clarify carries no options', 'options' in (cmdVague || {}), false)
+check('cmd: already-done work is never re-ticked', parseCommand('mark workshop form done', vcTasks)?.type, 'clarify')
+check('cmd: a plain statement is not an order', parseCommand('dbms assignment friday tak submit karna hai', vcTasks), null)
+check('cmd: empty input → null', parseCommand('', vcTasks), null)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

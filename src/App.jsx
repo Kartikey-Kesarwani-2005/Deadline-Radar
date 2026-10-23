@@ -3,6 +3,7 @@ import { extractMany, extractManyLocal, nextOccurrence, reconcile } from './lib/
 import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
 import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
+import { parseCommand } from './lib/commands'
 import { addDays, dayDiff, formatDue, formatLongToday, toDateKey, todayKey } from './lib/dates'
 import {
   exportTasks,
@@ -431,7 +432,7 @@ export default function App() {
             ? 'That one is already done ✓ — tick it off again if it came back to life.'
             : 'Already on the radar — nothing new in that text.',
         })
-        return
+        return 0
       }
       if (updates.length) {
         const byId = new Map(tasks.map((t) => [t.id, t]))
@@ -465,7 +466,7 @@ export default function App() {
         msgs.push(`🔄 ${prior?.title ?? 'Task'} updated: ${changes.join(', ')}${extra}`)
         if (created.length) msgs.push(`+ ${created.length} new ✓`)
         setFlash({ msg: msgs.join('  ·  ') })
-        return
+        return created.length + updates.length
       }
       setTasks((prev) => [...created, ...prev])
       const where = via ? ` ${via}` : created.length > 1 ? ' from one paste' : ''
@@ -474,9 +475,11 @@ export default function App() {
           ? { msg: `Captured ${created.length} deadlines${where} ✓` }
           : { msg: `Captured: ${created[0].title} · ${formatDue(created[0].dueDate)}` },
       )
+      return created.length
     } catch (err) {
       console.error('[Deadline Radar] capture failed:', err)
       setFlash({ msg: `Could not read that text — ${err?.message || 'try again'}` })
+      return 0
     } finally {
       setBusy(false)
     }
@@ -723,12 +726,47 @@ export default function App() {
   const pace = useMemo(() => paceModel(tasks), [tasks])
   const canAsk = canListen()
 
-  // 🎙️ "Ask the radar" — one spoken question, spoken answer.
+  // 🎙️ "Ask the radar" — one spoken question, spoken answer. Orders
+  // ("mark DBMS done", "delete OS lab", "add viva Friday") execute instead.
   async function askRadar() {
     if (!canAsk || listening || busy) return
     setListening(true)
     try {
       const q = await listenOnce()
+      const cmd = parseCommand(q, tasks)
+      if (cmd?.type === 'clarify') {
+        // Order heard, target unclear — never tick the wrong card.
+        const a = cmd.options?.length
+          ? `Kaunsa — ${cmd.options[0]}, ya ${cmd.options[1]}? Subject ya title bol do.`
+          : 'Kaun sa task? Subject ya title bol do.'
+        setAskCard({ q, a })
+        speak(a)
+        return
+      }
+      if (cmd?.type === 'done') {
+        toggleTask(cmd.task.id)
+        const a = `Done: ${cmd.task.title}.`
+        setAskCard({ q, a })
+        speak(a)
+        return
+      }
+      if (cmd?.type === 'delete') {
+        deleteTask(cmd.task.id)
+        const a = `Deleted: ${cmd.task.title}`
+        setAskCard({ q, a })
+        speak(a)
+        return
+      }
+      if (cmd?.type === 'add') {
+        const n = await addTask(cmd.text, 'by voice')
+        const a =
+          n > 0
+            ? `Captured ${n > 1 ? `${n} deadlines` : 'it'} — radar pe aa gaya.`
+            : 'Woh radar pe pehle se hai ya padh nahi paaya.'
+        setAskCard({ q, a })
+        speak(a)
+        return
+      }
       const { text } = answerQuery(q, { tasks, stats })
       setAskCard({ q, a: text })
       speak(text)
@@ -918,7 +956,7 @@ export default function App() {
         <div className="rise mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2 text-xs text-violet-200">
           <span className="font-bold text-violet-100">✨ Demo mode — try:</span>
           <span>🔊 Briefing — the radar speaks your day</span>
-          <span>🎙️ Ask → “ab kya karun?”</span>
+          <span>🎙️ Ask → “ab kya karun?” · “mark DBMS done” ✅</span>
           <span>▶️ focus timer · ⛈️ storm day</span>
           <button
             type="button"

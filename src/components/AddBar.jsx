@@ -53,7 +53,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
               type="button"
               onClick={onAsk}
               disabled={busy || listening}
-              title="Ask the radar — say “aaj kya hai”, “kitne marks risk me”, “what's late”…"
+              title="Ask the radar — say “aaj kya hai”, “kitne marks risk me”, or just order it: “mark DBMS done”, “delete OS lab”, “add viva Friday”"
               className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
                 listening
                   ? 'animate-pulse border-violet-400 bg-violet-500/20 text-violet-200'

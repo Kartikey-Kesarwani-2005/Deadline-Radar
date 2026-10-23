@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-102%2F102%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-122%2F122%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -90,7 +90,10 @@ replacing anything you captured).
   rhythm — how often you're on time and how early/late you usually submit — and every card gets
   an honest chip like *"🧠 Usually 2.0d late — start by Wed"*.
 - **🎙️ Ask the radar** — press 🎙️ Ask and speak: *"aaj kya hai"*, *"kitne marks risk me"*,
-  *"what's late"* — it answers **out loud** (Chrome/Edge).
+  *"what's late"* — it answers **out loud** (Chrome/Edge). And it takes **orders** too:
+  say *"mark DBMS done"* and the card **ticks itself**, *"delete OS lab"* removes it,
+  *"add viva Friday"* captures it — same mic, no hands. Ambiguous? It asks *"kaunsa?"*
+  instead of guessing the wrong card.
 - **🔊 Radar Samachaar (spoken briefing)** — one tap and the radar *speaks your whole day*:
   what's already late, what's due today and tomorrow, your on-time rate, and the single
   best next move. A voice-first product for a voice-first workflow.
@@ -178,6 +181,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # offline extractor + bulk + backup parser (102 checks)
+npm test       # offline extractor + bulk + backup parser + voice commands (122 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

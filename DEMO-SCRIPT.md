@@ -48,6 +48,9 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   (late → today → tomorrow → on-time rate → "ab kya karun" pick). Then press
   **🎙️ Ask** and say *"ab kya karun?"* → the radar
   **speaks the pick** ("Start now: SE slides… about 1.3h") + on-screen card. **(10s)**
+- **Then order it, don't just ask it:** press **🎙️ Ask** again and say *"mark DBMS done"*
+  → the **card ticks itself** with a spoken "Done: DBMS worksheet" (+3s). Say
+  *"delete OS lab"* and it's gone with an undo flash. One button — questions *and* orders.
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
   your on-time score. It counts marks at risk, learns my own rhythm from history — the
   six-week arc shows that rhythm actually improving, weekly labs roll themselves into next
