@@ -866,7 +866,7 @@ export default function App() {
   return (
     <div
       className={`mx-auto w-full px-4 pb-16 pt-8 sm:pt-12 ${
-        isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl 2xl:max-w-7xl' : 'max-w-2xl'
+        isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
       {/* Header */}
@@ -1137,10 +1137,10 @@ export default function App() {
       )}
 
       {/* Dashboard grid — on wide screens the radar sections sit beside the stat
-          rail; on very wide (2xl) a live countdown + subject-load rail fills the
-          right edge so the middle column stops stretching into dead space. */}
+          rail; from xl up a live countdown + subject-load rail fills the right
+          edge so the middle column stops stretching into dead space. */}
       <div
-        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-6 lg:items-start' : ''}`}
+        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-6 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div
@@ -1327,10 +1327,10 @@ export default function App() {
           )}
         </div>
 
-        {/* Right edge (2xl only): live countdown + subject load — keeps the
+        {/* Right edge (xl and up): live countdown + subject load — keeps the
             middle column from stretching into empty space on big monitors */}
         {isWide && (
-          <div className="hidden 2xl:block">
+          <div className="hidden xl:block">
             <LiveRail tasks={tasks} activeSubject={subjectFilter} onPickSubject={(s) => setSubjectFilter((cur) => (cur === s ? null : s))} />
           </div>
         )}
