@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { extractMany, extractManyLocal, nextOccurrence, reconcile } from './lib/extract'
+import { extractMany, looksLikeDeadline, nextOccurrence, reconcile } from './lib/extract'
 import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
 import { downloadICS } from './lib/calendar'
 import { canListen, listenOnce, speak } from './lib/voice'
@@ -336,7 +336,9 @@ export default function App() {
     try {
       const text = ((await navigator.clipboard?.readText?.()) || '').trim()
       if (text.length < 15 || text === lastClipRef.current) return
-      if (!extractManyLocal(text).length) return
+      // Require a real date + task noun/marks — a random sentence must never
+      // trigger the "looks like a deadline" prompt.
+      if (!looksLikeDeadline(text)) return
       setClipSuggest((prev) => (prev?.text === text ? prev : { text }))
     } catch {
       /* clipboard permission denied or unsupported — stay quiet */
@@ -393,13 +395,19 @@ export default function App() {
       } else if (e.key === '?') {
         setShortcutsOpen((v) => !v)
       } else if (e.key === 'Escape') {
-        setShortcutsOpen(false)
+        // "Esc — close anything": peel off the topmost layer.
+        if (editingId) setEditingId(null)
+        else if (settingsOpen) setSettingsOpen(false)
+        else if (reportOpen) setReportOpen(false)
+        else if (shortcutsOpen) setShortcutsOpen(false)
+        else if (askCard) setAskCard(null)
+        else if (clipSuggest) setClipSuggest(null)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm when tasks/busy change (briefing closure)
-  }, [tasks, busy])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm when tasks/busy change (briefing closure) and when modal layers change (Esc peeling)
+  }, [tasks, busy, editingId, settingsOpen, reportOpen, shortcutsOpen, askCard, clipSuggest])
 
   // Chrome/Edge "install app" prompt (satisfied by the manifest + service worker).
   useEffect(() => {
@@ -481,7 +489,9 @@ export default function App() {
     } catch (err) {
       console.error('[Deadline Radar] capture failed:', err)
       setFlash({ msg: `Could not read that text — ${err?.message || 'try again'}` })
-      return 0
+      // null = failure (distinct from 0 = "nothing new") so callers like the
+      // AddBar can restore the user's pasted text instead of losing it.
+      return null
     } finally {
       setBusy(false)
     }
@@ -565,6 +575,13 @@ export default function App() {
     const index = tasks.findIndex((t) => t.id === id)
     if (index === -1) return
     const removed = tasks[index]
+    // ⏱️ Never leave a zombie focus timer: if the deleted task is being
+    // focused, bank the minutes and stop the interval first.
+    if (focus?.taskId === id) {
+      const minutes = Math.round((Date.now() - focus.startedAt) / 60000)
+      if (minutes >= 1) removed.effortMin = (removed.effortMin || 0) + minutes
+      setFocus(null)
+    }
     setTasks((prev) => prev.filter((t) => t.id !== id))
     setFlash({
       msg: `Deleted: ${removed.title}`,
@@ -972,7 +989,11 @@ export default function App() {
       )}
 
       {flash && (
-        <div className="rise mt-2 flex items-center gap-3 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 shadow-[0_10px_30px_-18px_rgba(16,185,129,0.8)]">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rise mt-2 flex items-center gap-3 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 shadow-[0_10px_30px_-18px_rgba(16,185,129,0.8)]"
+        >
           <span className="min-w-0 flex-1 break-words">✓ {flash.msg}</span>
           {flash.action && (
             <button

@@ -147,12 +147,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 @media (prefers-reduced-motion: reduce) {
   .rise,
   .radar-sweep,
-  .animate-ping {
+  .animate-ping,
+  .animate-pulse {
     animation: none !important;
   }
   .donow::before {
     animation: none !important;
     background: linear-gradient(135deg, rgba(52, 211, 153, 0.55), rgba(56, 189, 248, 0.3));
+  }
+}
+
+/* Touch devices have no hover — card actions must always be visible. */
+@media (hover: none) {
+  .task-actions {
+    opacity: 1;
   }
 }
 

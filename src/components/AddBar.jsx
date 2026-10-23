@@ -6,8 +6,11 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
   async function submit() {
     const value = text.trim()
     if (!value || busy) return
+    // Clear only after capture succeeds — a failed parse (addTask → null)
+    // keeps the pasted text so the user can retry instead of re-pasting.
+    const result = await onAdd(value)
+    if (result === null) return
     setText('')
-    await onAdd(value)
   }
 
   return (

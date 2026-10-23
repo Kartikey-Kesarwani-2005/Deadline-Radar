@@ -2,7 +2,7 @@
  * Unit tests for the offline extractor — the fallback that keeps the app working
  * with zero setup. Plus backup parser tests (restore path). Run with:  npm test
  */
-import { extractLocal, extractManyLocal, nextOccurrence, reconcile } from '../src/lib/extract.js'
+import { extractLocal, extractManyLocal, looksLikeDeadline, nextOccurrence, reconcile } from '../src/lib/extract.js'
 import { parseCommand } from '../src/lib/commands.js'
 import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
@@ -540,6 +540,14 @@ check('countdown: past deadline → "over"', cdLate.late, true)
 check('countdown: late keeps day/hour magnitude', cdLate.label, '2d 10h over')
 check('countdown: null date → null', countdownTo(null, NOW), null)
 check('countdown: undefined date → null', countdownTo(undefined, NOW), null)
+
+// --- 📋 Clipboard sniff (looksLikeDeadline) — false positives must die ---
+check('clip: a real notice (date + noun) is a deadline', looksLikeDeadline('DBMS assignment due 25 Oct, submit on portal'), true)
+check('clip: Hinglish notice counts', looksLikeDeadline('OS lab record somvar tak submit karna hai 20 marks'), true)
+check('clip: a random sentence is NOT a deadline', looksLikeDeadline('hey bro are you coming to the party tonight'), false)
+check('clip: a copied code snippet is NOT a deadline', looksLikeDeadline('const fetchData = async () => { return await response.json() }'), false)
+check('clip: date alone without task noun is NOT enough', looksLikeDeadline('meeting on 25-10 at the cafe'), false)
+check('clip: empty input is NOT a deadline', looksLikeDeadline(''), false)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

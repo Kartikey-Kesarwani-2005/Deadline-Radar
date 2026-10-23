@@ -381,6 +381,15 @@ function tasksFrom(chunk) {
   return [task]
 }
 
+/**
+ * 📋 Clipboard sniff — does this text REALLY look like a deadline notice?
+ * Uses the same bar as bulk capture (a date + a task noun or marks) so a
+ * random sentence copied from anywhere never triggers the "add it?" prompt.
+ */
+export function looksLikeDeadline(text) {
+  return tasksFrom(String(text || '').trim()).length > 0
+}
+
 function splitSubs(line) {
   return line
     .split(/\s*[•●▪]\s+|\s+[.!?;]\s+|\s+(?:and|aur)\s+(?:bhi\s+)?/i)

@@ -382,11 +382,16 @@ export function answerQuery(query, { tasks, stats }) {
         : 'No marks at risk right now. The radar is clear.',
     }
   }
-  if (/(on ?time|score|percentage|result)/.test(s) && (stats.rated ?? stats.done)) {
-    // Denominator = only scoreable finishes (dated + timestamped), matching the dial.
-    const denom = stats.rated || stats.done
+  if (/(on ?time|score|percentage|result)/.test(s)) {
+    // Only scoreable finishes (dated + timestamped) count — same bar as the
+    // dial. With none yet, say so honestly instead of counting undated work.
+    if (!stats.rated) {
+      return {
+        text: 'No dated, timestamped finishes yet — so there is no on-time score to report. Finish one deadline and it starts counting.',
+      }
+    }
     return {
-      text: `${stats.onTime} of ${denom} finished tasks were on time — ${Math.round((stats.onTime / denom) * 100)} percent.`,
+      text: `${stats.onTime} of ${stats.rated} finished tasks were on time — ${Math.round((stats.onTime / stats.rated) * 100)} percent.`,
     }
   }
   if (/late|overdue|pichhle/.test(s)) {

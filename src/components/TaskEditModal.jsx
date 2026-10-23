@@ -33,6 +33,17 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
 
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }))
 
+  // Mirror the parser's strictness: only real URLs survive. A bare domain gets
+  // https:// prefixed; anything else (e.g. "abc") is dropped so the card never
+  // renders a broken <a href>.
+  function normalizeLink(raw) {
+    const v = String(raw || '').trim()
+    if (!v) return null
+    if (/^https?:\/\//i.test(v)) return v
+    if (/^[^\s/]+\.[a-z]{2,}(\/.*)?$/i.test(v)) return `https://${v}`
+    return null
+  }
+
   function save() {
     const marks = draft.marks === '' ? null : Number(draft.marks)
     onSave({
@@ -41,7 +52,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
       dueDate: draft.dueDate || null,
       marks: Number.isFinite(marks) ? marks : null,
       priority: draft.priority,
-      link: draft.link.trim() || null,
+      link: normalizeLink(draft.link),
       repeat: draft.repeat === 'weekly' ? 'weekly' : null,
     })
   }

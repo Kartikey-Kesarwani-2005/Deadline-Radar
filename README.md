@@ -24,7 +24,7 @@ replacing anything you captured).
 ## ✨ Features
 
 - **Capture anything** — paste a messy assignment message, or hold your Wispr key and speak it
-  straight into the input box. Press <kbd>/</kbd> anywhere to jump back to it.
+  straight into the input box. Press <kbd>n</kbd> anywhere to jump to the input, <kbd>/</kbd> to search.
 - **Full editing** — ✏️ on any card fixes title, subject, marks, date and priority; original
   captured text stays visible for reference.
 - **Search + subject filter** — find any task instantly; subject chips filter the radar.
