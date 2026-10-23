@@ -19,6 +19,7 @@ import AddBar from './components/AddBar'
 import StatsBar from './components/StatsBar'
 import RadarDial from './components/RadarDial'
 import WeatherStrip from './components/WeatherStrip'
+import TrendSpark from './components/TrendSpark'
 import DoNowCard from './components/DoNowCard'
 import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
@@ -1071,6 +1072,7 @@ export default function App() {
                   )}
                 </p>
               )}
+              <TrendSpark weeks={trend.weeks} />
               <WeatherStrip
                 days={forecast}
                 active={dateFilter}

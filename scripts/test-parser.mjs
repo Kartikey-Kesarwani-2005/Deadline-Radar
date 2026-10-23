@@ -260,6 +260,7 @@ const tr = weeklyTrend(
     { id: 'w2', done: true, completedAt: nowT - 9 * DAY_MS, dueDate: '2099-01-01', effortMin: 60 },
     { id: 'w3', done: true, completedAt: nowT - DAY_MS, dueDate: '2026-01-01', effortMin: 30 },
     { id: 'w4', done: false, completedAt: null },
+    { id: 'w5', done: true, completedAt: nowT - 29 * DAY_MS, dueDate: '2099-01-01', effortMin: 45 },
   ],
   nowT,
 )
@@ -272,6 +273,17 @@ check(
   'trend: focus minutes tracked per week',
   tr.thisWeek.focusMin === 120 && tr.lastWeek.focusMin === 60,
   true,
+)
+check('trend: 6-week arc present, oldest first', tr.weeks.length, 6)
+check(
+  'trend: arc tails match thisWeek / lastWeek',
+  { now: tr.weeks[5].finished, prev: tr.weeks[4].finished },
+  { now: 2, prev: 1 },
+)
+check(
+  'trend: older week buckets correctly (W-4)',
+  { n: tr.weeks[1].finished, onTime: tr.weeks[1].onTime, focus: tr.weeks[1].focusMin },
+  { n: 1, onTime: 1, focus: 45 },
 )
 
 // --- On-time streak ---

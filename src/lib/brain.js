@@ -239,7 +239,7 @@ export function startAlerts(tasks, today = todayKey()) {
     .sort((a, b) => a.daysLeft - b.daysLeft || a.fitsDays - b.fitsDays)
 }
 
-/** 📈 This week vs last week — from completed timestamps only, injected clock. */
+/** 📈 Finish trend — this week, last week, plus a 6-week arc from completed timestamps only (injected clock). */
 export function weeklyTrend(tasks, now = Date.now()) {
   const WEEK = 7 * 24 * 60 * 60 * 1000
   const bucket = (from, to) => {
@@ -253,10 +253,14 @@ export function weeklyTrend(tasks, now = Date.now()) {
       focusMin: list.reduce((a, t) => a + (t.effortMin || 0), 0),
     }
   }
-  return {
-    thisWeek: bucket(now - WEEK, now),
-    lastWeek: bucket(now - 2 * WEEK, now - WEEK),
-  }
+  const thisWeek = bucket(now - WEEK, now)
+  const lastWeek = bucket(now - 2 * WEEK, now - WEEK)
+  // Six-week history (oldest → newest) — the visual "real result" arc:
+  // the radar should show work habits improving over time, not just today.
+  const weeks = Array.from({ length: 6 }, (_, i) =>
+    bucket(now - (6 - i) * WEEK, now - (5 - i) * WEEK),
+  )
+  return { thisWeek, lastWeek, weeks }
 }
 
 /**
