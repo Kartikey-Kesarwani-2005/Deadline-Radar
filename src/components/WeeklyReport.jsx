@@ -15,6 +15,7 @@ function Row({ label, value, className = 'text-slate-100' }) {
 
 export default function WeeklyReport({ tasks, onClose }) {
   const [copied, setCopied] = useState(false)
+  const [copyErr, setCopyErr] = useState(false)
 
   const captured = tasks.filter((t) => t.createdAt && t.createdAt >= Date.now() - WEEK).length
   const finished = tasks.filter((t) => t.completedAt && t.completedAt >= Date.now() - WEEK)
@@ -55,9 +56,14 @@ export default function WeeklyReport({ tasks, onClose }) {
     try {
       await navigator.clipboard.writeText(reportText)
       setCopied(true)
+      setCopyErr(false)
       setTimeout(() => setCopied(false), 2500)
     } catch {
+      // Clipboard can be blocked (permissions / non-secure context) — tell the
+      // user instead of silently snapping the button back.
       setCopied(false)
+      setCopyErr(true)
+      setTimeout(() => setCopyErr(false), 3500)
     }
   }
 
@@ -206,9 +212,17 @@ export default function WeeklyReport({ tasks, onClose }) {
         <button
           type="button"
           onClick={copy}
-          className="mt-4 w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+          className={`mt-4 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+            copyErr
+              ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/40'
+              : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
+          }`}
         >
-          {copied ? '✓ Copied — paste it in your check-in post' : 'Copy check-in text for your post'}
+          {copied
+            ? '✓ Copied — paste it in your check-in post'
+            : copyErr
+              ? '⚠️ Clipboard blocked — select the text above and copy manually'
+              : 'Copy check-in text for your post'}
         </button>
         <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-600">
           Paste in your weekly post with <span className="text-slate-500">#NoHandsChallenge</span>{' '}

@@ -240,6 +240,7 @@ export default function App() {
   const armedRef = useRef(false)
   const inputRef = useRef(null)
   const searchRef = useRef(null)
+  const resizeRef = useRef(null)
   const [installEvt, setInstallEvt] = useState(null)
   // Connectivity + screen size drive the offline banner and desktop / phone modes.
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -248,7 +249,12 @@ export default function App() {
   useEffect(() => {
     const on = () => setOnline(true)
     const off = () => setOnline(false)
-    const resize = () => setVw(window.innerWidth)
+    const resize = () => {
+      // Debounce — a window drag fires resize every pixel; re-rendering the
+      // whole app each time is wasteful.
+      clearTimeout(resizeRef.current)
+      resizeRef.current = setTimeout(() => setVw(window.innerWidth), 120)
+    }
     window.addEventListener('online', on)
     window.addEventListener('offline', off)
     window.addEventListener('resize', resize)
@@ -256,6 +262,7 @@ export default function App() {
       window.removeEventListener('online', on)
       window.removeEventListener('offline', off)
       window.removeEventListener('resize', resize)
+      clearTimeout(resizeRef.current)
     }
   }, [])
 
@@ -739,7 +746,10 @@ export default function App() {
   const brain = useMemo(() => computeBrain(tasks), [tasks])
   const risk = useMemo(() => marksAtRisk(tasks), [tasks])
   const forecast = useMemo(() => forecastWeather(tasks), [tasks])
-  const plan = useMemo(() => doNow(tasks), [tasks])
+  // Do-Now must match what's on screen: with a subject/day/search filter active,
+  // recommending a hidden task is a contradiction. `visible` === all tasks when
+  // no filter is set, so this is a no-op in the unfiltered view.
+  const plan = useMemo(() => doNow(visible), [visible])
   const startSoon = useMemo(() => startAlerts(tasks), [tasks])
   const trend = useMemo(() => weeklyTrend(tasks), [tasks])
   const pace = useMemo(() => paceModel(tasks), [tasks])

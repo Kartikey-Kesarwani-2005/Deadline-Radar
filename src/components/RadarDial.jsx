@@ -45,9 +45,21 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
             <g
               key={z.k}
               onClick={() => deg && jump(z.k)}
+              // Keyboard-first app: rings are focusable and Enter/Space-activatable,
+              // matching the visible focus ring used everywhere else.
+              tabIndex={deg ? 0 : -1}
+              role={deg ? 'button' : undefined}
+              aria-label={deg ? `${z.label}: ${c}. Jump to ${z.label}.` : undefined}
+              onKeyDown={(e) => {
+                if (!deg) return
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  jump(z.k)
+                }
+              }}
               style={{ cursor: deg ? 'pointer' : 'default' }}
             >
-              <title>{`${z.label}: ${c}${deg ? ' — click to jump there' : ''}`}</title>
+              <title>{`${z.label}: ${c}${deg ? ' — click or press Enter to jump there' : ''}`}</title>
               <circle
                 cx={110}
                 cy={110}
