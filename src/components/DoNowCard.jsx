@@ -40,8 +40,8 @@ export default function DoNowCard({ plan, cleared, onStart, focusId }) {
         <span className="stamp shrink-0">Do this first</span>
       </div>
 
-      <p className="highlight mt-3 font-serif text-[22px] leading-[1.2] font-semibold break-words text-ink">
-        {t.title}
+      <p className="mt-3 font-serif text-[22px] leading-[1.2] font-semibold break-words text-ink">
+        <span className="highlight">{t.title}</span>
       </p>
 
       <p className="mt-2 font-mono text-[10px] tracking-wide text-ink-2">

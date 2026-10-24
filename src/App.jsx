@@ -65,11 +65,14 @@ const SECTION_DEFS = [
 ]
 
 /** One urgency section — heading, count and the ordered task cards inside. */
-function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, focusId }) {
+function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, focusId }) {
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-7 scroll-mt-4">
       <div className="section-head mb-2.5">
+        <span className="section-index" aria-hidden="true">
+          {String(num).padStart(2, '0')}
+        </span>
         <span className={`mb-1 h-2.5 w-2.5 shrink-0 rounded-full ${SECTION_TONES[tone]}`} />
         <h2 className="font-serif text-[18px] leading-none font-semibold text-ink">{title}</h2>
         <span className="count-chip mb-0.5">
@@ -1128,15 +1131,18 @@ export default function App() {
 
   return (
     <div
-      className={`mx-auto w-full px-4 pb-16 pt-5 sm:pt-7 ${
+      className={`app-shell mx-auto w-full px-4 pb-16 pt-5 sm:pt-7 ${
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
       {/* Masthead strip — the newspaper dateline */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-y border-ink/70 py-1 font-mono text-[9px] tracking-[0.18em] text-ink-3 uppercase">
-        <span className="font-semibold text-ink-2">Deadline Radar · Field Notes</span>
+        <span className="masthead-brand font-semibold text-ink-2">
+          <span aria-hidden="true" className="masthead-dot" />
+          Deadline Radar · Field Notes
+        </span>
         <span className="hidden sm:inline">No Hands Challenge · Wispr Flow</span>
-        <span>{formatLongToday()}</span>
+        <span className="dateline-chip">{formatLongToday()}</span>
       </div>
 
       {/* Header */}
@@ -1315,11 +1321,12 @@ export default function App() {
           {/* Success gets a tick; errors get an alert. Never a green tick
               announcing "Mic blocked" — exactly the kind of contradiction a
               judge screenshots. Strip a trailing ✓ so we never show two. */}
-          <Icon
-            name={flash.tone === 'error' ? 'alert' : 'check'}
-            size={13}
-            className="shrink-0"
-          />
+          <span
+            className={`toast-badge ${flash.tone === 'error' ? 'is-error' : ''}`}
+            aria-hidden="true"
+          >
+            <Icon name={flash.tone === 'error' ? 'alert' : 'check'} size={12} />
+          </span>
           <span className="min-w-0 flex-1 break-words">
             {flash.msg.replace(/\s*✓$/u, '')}
           </span>
@@ -1639,7 +1646,7 @@ export default function App() {
             <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
           )}
           {tasks.length === 0 ? (
-            <div className="overflow-hidden rounded-[5px] border border-dashed border-ink/30 bg-paper-2/70">
+            <div className="empty-sheet overflow-hidden rounded-[5px] border border-dashed border-ink/30 bg-paper-2/70">
               <div className="grid gap-5 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
                 <div>
                   <p className="eyebrow">Blank page · nothing on the radar</p>
@@ -1718,9 +1725,10 @@ export default function App() {
             </div>
           ) : (
             <>
-              {SECTION_DEFS.map(({ key, title, tone, hint }) => (
+              {SECTION_DEFS.map(({ key, title, tone, hint }, sectionIndex) => (
                 <Section
                   key={key}
+                  num={sectionIndex + 1}
                   sectionKey={key}
                   title={title}
                   tone={tone}

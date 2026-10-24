@@ -59,7 +59,7 @@ export default function TaskCard({
       style={style}
       className={`rise task-card group ${
         task.done
-          ? 'border-done/25 bg-done-soft/40'
+          ? 'is-done border-done/25 bg-done-soft/40'
           : isLate
             ? 'border-late/35 hover:border-late/60'
             : diff === 0

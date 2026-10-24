@@ -8,7 +8,7 @@ import Icon from './Icon'
 function Tile({ label, value, tone = 'text-ink', note, icon, wide = false }) {
   return (
     <div
-      className={`rounded-[4px] border border-line bg-paper-2 px-2.5 py-2 ${
+      className={`stat-tile rounded-[4px] border border-line bg-paper-2 px-2.5 py-2 ${
         wide ? 'col-span-2 flex items-baseline justify-between gap-3' : ''
       }`}
     >

@@ -15,7 +15,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
   }
 
   return (
-    <div className="rise relative overflow-hidden rounded-[5px] border border-ink bg-paper-2 shadow-[3px_3px_0_var(--color-line-strong)]">
+    <div className="addbar-shell rise relative overflow-hidden rounded-[5px] border border-ink bg-paper-2 shadow-[3px_3px_0_var(--color-line-strong)]">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper px-3.5 py-1.5">
         <span className="eyebrow flex items-center gap-1.5">
           <Icon name="pencil" size={11} />

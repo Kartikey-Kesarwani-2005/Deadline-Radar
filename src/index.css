@@ -49,6 +49,9 @@
   --paper-shadow-stamp-lg: 3px 3px 0 var(--color-line-strong);
   --paper-shadow-sheet:
     8px 8px 0 rgba(29, 27, 22, 0.14), 0 28px 60px -34px rgba(29, 27, 22, 0.55);
+
+  /* A whisper of real paper fibre. Kept as a data URI so it works offline. */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
 }
 
 html {
@@ -64,11 +67,12 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   background-image:
+    var(--paper-grain),
     radial-gradient(900px 420px at 84% -10%, rgba(184, 58, 32, 0.07), transparent 70%),
     radial-gradient(720px 440px at -8% 4%, rgba(47, 86, 135, 0.06), transparent 70%),
     linear-gradient(rgba(29, 27, 22, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(29, 27, 22, 0.035) 1px, transparent 1px);
-  background-size: auto, auto, 26px 26px, 26px 26px;
+  background-size: 180px 180px, auto, auto, 26px 26px, 26px 26px;
   background-attachment: fixed;
 }
 
@@ -197,8 +201,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 }
 
+/* Every paper surface carries the same fibre: a grain layer over a very soft
+   top-down gradient, so panels read as sheets catching light — not flat divs. */
 .paper-panel {
-  background: linear-gradient(180deg, #fdfaf3 0%, var(--color-paper-2) 100%);
+  background-color: var(--color-paper-2);
+  background-image:
+    var(--paper-grain),
+    linear-gradient(180deg, #fdfaf3 0%, var(--color-paper-2) 100%);
+  background-size: 180px 180px, auto;
   border: 1px solid var(--color-line);
   border-radius: var(--paper-radius);
   box-shadow:
@@ -208,7 +218,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .paper-card {
-  background: var(--color-paper-2);
+  background-color: var(--color-paper-2);
+  background-image:
+    var(--paper-grain),
+    linear-gradient(180deg, #fffdf6 0%, var(--color-paper-2) 100%);
+  background-size: 180px 180px, auto;
   border: 1px solid var(--color-line);
   border-radius: var(--paper-radius);
   box-shadow:
@@ -219,10 +233,75 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* A dialog/sheet: slightly heavier border, a long soft shadow and the
    stamped offset that ties it to the rest of the paper system. */
 .sheet {
-  background: linear-gradient(180deg, #fdfaf3 0%, var(--color-paper-2) 100%);
+  background-color: var(--color-paper-2);
+  background-image:
+    var(--paper-grain),
+    linear-gradient(180deg, #fdfaf3 0%, var(--color-paper-2) 100%);
+  background-size: 180px 180px, auto;
   border: 1.5px solid var(--color-ink);
   border-radius: var(--paper-radius);
   box-shadow: var(--paper-shadow-sheet);
+}
+
+/* Masthead odds and ends: a red registration dot and a dateline chip. */
+.masthead-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.masthead-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-late);
+  box-shadow: 0 0 0 3px rgba(184, 58, 32, 0.12);
+}
+.dateline-chip {
+  padding: 0 0.3rem;
+  border: 1px solid rgba(29, 27, 22, 0.2);
+  border-radius: var(--paper-radius-xs);
+  background: rgba(251, 248, 239, 0.72);
+  color: var(--color-ink-2);
+}
+
+/* Letterpress title: a lit top edge, a weighted bottom edge. */
+.app-title {
+  letter-spacing: -0.022em;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7),
+    0 -1px 0 rgba(29, 27, 22, 0.16);
+}
+
+/* Product name on the capture card, printed rather than typed. */
+.addbar-shell {
+  background-color: var(--color-paper-2);
+  background-image:
+    var(--paper-grain),
+    linear-gradient(180deg, #fffdf7 0%, var(--color-paper-2) 100%);
+  background-size: 180px 180px, auto;
+  transition:
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+.addbar-shell:focus-within {
+  box-shadow: 5px 5px 0 var(--color-line-strong);
+  transform: translate(-1px, -1px);
+}
+
+/* Empty state reads as a fresh ruled page waiting for ink. */
+.empty-sheet {
+  background-color: var(--color-paper-2);
+  background-image:
+    var(--paper-grain),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      rgba(29, 27, 22, 0.045) 27px,
+      rgba(29, 27, 22, 0.045) 28px
+    ),
+    linear-gradient(180deg, #fdfaf3 0%, #f7f2e6 100%);
+  background-size: 180px 180px, auto, auto;
 }
 
 /* Hard offset shadow — the "stamped card" tell. */
@@ -398,12 +477,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .highlight {
   background-image: linear-gradient(
     180deg,
-    transparent 56%,
-    rgba(224, 177, 58, 0.42) 56%,
-    rgba(224, 177, 58, 0.42) 93%,
-    transparent 93%
+    transparent 54%,
+    rgba(224, 177, 58, 0.5) 54%,
+    rgba(224, 177, 58, 0.5) 94%,
+    transparent 94%
   );
   padding: 0 0.08em;
+  /* Two dry-brush streaks make the marker feel hand-drawn, not a block. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* ---------- Inputs ---------- */
@@ -531,6 +613,26 @@ select.field {
   box-shadow: 0 2px 0 rgba(29, 27, 22, 0.1);
 }
 
+/* Editorial section number — a small printed plate, like a chapter marker. */
+.section-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.2rem;
+  padding: 0 0.2rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--paper-radius-xs);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  box-shadow: 1px 1px 0 rgba(29, 27, 22, 0.2);
+}
+
 .count-chip {
   display: inline-flex;
   align-items: center;
@@ -639,7 +741,9 @@ select.field {
   padding: 0.62rem 0.7rem 0.62rem 0.85rem;
   border: 1px solid var(--color-line);
   border-radius: var(--paper-radius);
-  background: var(--color-paper-2);
+  background-color: var(--color-paper-2);
+  background-image: var(--paper-grain);
+  background-size: 180px 180px;
   transition:
     transform 0.14s ease,
     box-shadow 0.14s ease,
@@ -650,6 +754,12 @@ select.field {
     transform: translateY(-1px);
     box-shadow: 2px 2px 0 rgba(29, 27, 22, 0.16);
   }
+}
+
+/* Finished cards keep their soft sage wash. The base paper colour above is
+   unlayered CSS, so it would otherwise beat Tailwind's translucent utility. */
+.task-card.is-done {
+  background-color: #eff3e9;
 }
 
 .task-check {
@@ -764,6 +874,73 @@ select.field {
   transform: translateY(-0.25rem);
 }
 
+/* ---------- Small paper details ---------- */
+
+/* Ledger stat tiles: a lit sheet that lifts a hair on hover. */
+.stat-tile {
+  background-color: var(--color-paper-2);
+  background-image:
+    var(--paper-grain),
+    linear-gradient(180deg, #fffdf7 0%, var(--color-paper-2) 100%);
+  background-size: 180px 180px, auto;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    border-color 0.14s ease;
+}
+@media (hover: hover) {
+  .stat-tile:hover {
+    border-color: var(--color-ink);
+    transform: translateY(-1px);
+    box-shadow: 2px 2px 0 rgba(29, 27, 22, 0.14);
+  }
+}
+
+/* A strip of masking tape holds the "do this first" note to the page. */
+.donow {
+  background-image:
+    var(--paper-grain),
+    linear-gradient(180deg, #fffdf7 0%, var(--color-paper-2) 100%);
+  background-size: 180px 180px, auto;
+}
+.donow::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 72px;
+  height: 17px;
+  transform: translateX(-50%) rotate(-1.8deg);
+  background-image: linear-gradient(
+    180deg,
+    rgba(230, 210, 160, 0.9),
+    rgba(213, 189, 131, 0.72)
+  );
+  border-right: 1px solid rgba(29, 27, 22, 0.08);
+  border-left: 1px solid rgba(29, 27, 22, 0.08);
+  box-shadow: 0 1px 2px rgba(29, 27, 22, 0.12);
+  pointer-events: none;
+}
+
+/* Toast status badge — a stamped seal rather than a floating glyph. */
+.toast-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid rgba(43, 103, 74, 0.4);
+  border-radius: 999px;
+  background: rgba(251, 248, 239, 0.82);
+  color: var(--color-done);
+}
+.toast-badge.is-error {
+  border-color: rgba(173, 54, 32, 0.4);
+  color: var(--color-late);
+}
+
 /* ---------- Motion ---------- */
 
 @keyframes rise-in {
@@ -810,15 +987,47 @@ select.field {
   animation: stamp-in 0.22s ease-out both;
 }
 
+/* Ticking a card off should feel like a stamp landing, not a repo refresh. */
+@keyframes check-pop {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.55);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.14);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.task-check.is-done > svg {
+  animation: check-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rise,
   .stamp-in,
   .compass-needle,
   .compass-rotor,
   .live-dot::after,
+  .task-check.is-done > svg,
   .animate-ping,
   .animate-pulse {
     animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  .app-shell,
+  .addbar-shell:focus-within {
+    transform: none !important;
+  }
+  .task-card:hover,
+  .stat-tile:hover,
+  .btn:hover:not(:disabled) {
+    transform: none !important;
   }
 }
 
@@ -890,6 +1099,13 @@ select.field {
 }
 .phone-mode .app-title {
   font-size: 1.75rem;
+}
+
+/* Notched phones: keep the paper edge-to-edge but the ink out of the cutouts. */
+.app-shell {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
 }
 
 /* Print — a report should survive being sent to a printer. */
