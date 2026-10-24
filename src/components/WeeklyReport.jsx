@@ -4,14 +4,21 @@ import { marksAtRisk, onTimeStreak, paceRows, subjectLoad, weeklyTrend } from '.
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
-function Row({ label, value, className = 'text-slate-100' }) {
+function Row({ label, value, className = 'text-ink' }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-white/5 py-2 last:border-0">
-      <span className="text-[13px] text-slate-400">{label}</span>
-      <span className={`text-sm font-bold tabular-nums ${className}`}>{value}</span>
+    <div className="flex items-baseline gap-2 border-b border-dotted border-line py-1.5 last:border-0">
+      <span className="text-[12px] leading-snug text-ink-2">{label}</span>
+      <span aria-hidden="true" className="leader" />
+      <span className={`font-serif text-[17px] leading-none font-semibold tabular-nums ${className}`}>
+        {value}
+      </span>
     </div>
   )
 }
+
+const SectionLabel = ({ children }) => (
+  <p className="eyebrow mt-4 mb-1 border-b border-ink/25 pb-1">{children}</p>
+)
 
 export default function WeeklyReport({ tasks, onClose }) {
   const [copied, setCopied] = useState(false)
@@ -32,7 +39,7 @@ export default function WeeklyReport({ tasks, onClose }) {
   const streak = onTimeStreak(tasks)
   const load = subjectLoad(tasks)
   const delta = (now, before) =>
-    now > before ? 'text-emerald-300' : now < before ? 'text-red-400' : 'text-slate-100'
+    now > before ? 'text-done' : now < before ? 'text-late' : 'text-ink'
 
   const reportText = [
     'Deadline Radar — weekly check-in 📡',
@@ -69,178 +76,171 @@ export default function WeeklyReport({ tasks, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Weekly report"
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1424] p-5 shadow-2xl sm:max-w-lg"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)] sm:max-w-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-100">📊 Weekly report</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded p-1 text-slate-500 hover:bg-white/10 hover:text-slate-200"
-            aria-label="Close"
-          >
+        <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
+          <div>
+            <p className="eyebrow">Weekly edition · last 7 days</p>
+            <h2 className="font-serif text-2xl leading-tight font-semibold text-ink">📊 Weekly report</h2>
+          </div>
+          <button type="button" onClick={onClose} className="icon-btn mt-1" aria-label="Close report">
             ✕
           </button>
         </div>
 
-        <p className="mb-2 text-[11px] uppercase tracking-widest text-slate-600">Last 7 days</p>
-        <Row label="Captured" value={captured} />
-        <Row label="Finished" value={finished.length} className="text-emerald-300" />
-        <Row label="… of those finished on time" value={onTime} className="text-teal-300" />
-        <Row
-          label="🏆 On-time streak"
-          value={streak > 0 ? `${streak} in a row` : 'start it today'}
-          className={streak > 1 ? 'text-orange-300' : streak === 1 ? 'text-emerald-300' : 'text-slate-500'}
-        />
+        <div className="px-5 pt-4 pb-5">
+          <Row label="Captured" value={captured} />
+          <Row label="Finished" value={finished.length} className="text-done" />
+          <Row label="… of those finished on time" value={onTime} className="text-done" />
+          <Row
+            label="🏆 On-time streak"
+            value={streak > 0 ? `${streak} in a row` : 'start it today'}
+            className={streak > 1 ? 'text-today' : streak === 1 ? 'text-done' : 'text-ink-3'}
+          />
 
-        <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">
-          📈 Trend vs last week
-        </p>
-        <Row
-          label="Finished — last → this"
-          value={`${trend.lastWeek.finished} → ${trend.thisWeek.finished}`}
-          className={delta(trend.thisWeek.finished, trend.lastWeek.finished)}
-        />
-        <Row
-          label="On time — last → this"
-          value={`${trend.lastWeek.onTime} → ${trend.thisWeek.onTime}`}
-          className={delta(trend.thisWeek.onTime, trend.lastWeek.onTime)}
-        />
-        <Row
-          label="⏱ Focused (timer sessions)"
-          value={`${(trend.thisWeek.focusMin / 60).toFixed(1)}h`}
-          className="text-sky-300"
-        />
+          <SectionLabel>📈 Trend vs last week</SectionLabel>
+          <Row
+            label="Finished — last → this"
+            value={`${trend.lastWeek.finished} → ${trend.thisWeek.finished}`}
+            className={delta(trend.thisWeek.finished, trend.lastWeek.finished)}
+          />
+          <Row
+            label="On time — last → this"
+            value={`${trend.lastWeek.onTime} → ${trend.thisWeek.onTime}`}
+            className={delta(trend.thisWeek.onTime, trend.lastWeek.onTime)}
+          />
+          <Row
+            label="⏱ Focused (timer sessions)"
+            value={`${(trend.thisWeek.focusMin / 60).toFixed(1)}h`}
+            className="text-later"
+          />
 
-        <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">Overall</p>
-        <Row label="Pending with a deadline" value={pending} className="text-amber-300" />
-        <Row label="Late right now" value={late} className="text-red-400" />
-        <Row label="🎯 Marks at risk (late + this week)" value={risk.total} className="text-amber-300" />
-        <Row label="Total finished" value={doneEver} className="text-emerald-300" />
+          <SectionLabel>Overall</SectionLabel>
+          <Row label="Pending with a deadline" value={pending} className="text-today" />
+          <Row label="Late right now" value={late} className="text-late" />
+          <Row label="🎯 Marks at risk (late + this week)" value={risk.total} className="text-today" />
+          <Row label="Total finished" value={doneEver} className="text-done" />
 
-        {load.length > 0 && (
-          <>
-            <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">
-              📊 Pending load by subject (marks)
-            </p>
-            <div className="space-y-1.5">
-              {load.map((s) => {
-                const max = Math.max(1, load[0].marks)
-                const pct = Math.max(4, Math.round((s.marks / max) * 100))
-                return (
-                  <div key={s.label} className="flex items-center gap-2 text-[11px]">
-                    <span className="w-24 shrink-0 truncate text-slate-400" title={s.label}>
-                      {s.label}
-                    </span>
-                    <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-sky-500/70 to-violet-500/70"
-                        style={{ width: `${pct}%` }}
-                      />
+          {load.length > 0 && (
+            <>
+              <SectionLabel>📊 Pending load by subject (marks)</SectionLabel>
+              <div className="space-y-2">
+                {load.map((s) => {
+                  const max = Math.max(1, load[0].marks)
+                  const pct = Math.max(4, Math.round((s.marks / max) * 100))
+                  return (
+                    <div key={s.label} className="flex items-center gap-2 text-[11px]">
+                      <span className="w-24 shrink-0 truncate text-ink-2" title={s.label}>
+                        {s.label}
+                      </span>
+                      <div className="h-[6px] min-w-0 flex-1 overflow-hidden rounded-[1px] border border-line bg-paper">
+                        <div className="h-full bg-later/75" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-16 shrink-0 text-right font-mono text-[10px] tabular-nums text-ink-2">
+                        {s.marks}m · {s.count}
+                      </span>
                     </div>
-                    <span className="w-16 shrink-0 text-right font-medium tabular-nums text-slate-300">
-                      {s.marks}m · {s.count}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-            <p className="mt-1.5 text-[10px] text-slate-600">
-              Marks still pending per subject — heaviest first.
-            </p>
-          </>
-        )}
+                  )
+                })}
+              </div>
+              <p className="mt-1.5 font-mono text-[9px] text-ink-3">
+                Marks still pending per subject — heaviest first.
+              </p>
+            </>
+          )}
 
-        {pace.length > 0 && (
-          <>
-            <p className="mt-4 mb-2 text-[11px] uppercase tracking-widest text-slate-600">
-              🧠 Per-subject pace (worst first)
-            </p>
-            <div className="overflow-hidden rounded-lg border border-white/5">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr className="bg-white/[0.02] text-slate-500">
-                    <th className="px-2.5 py-1.5 text-left font-medium">Subject</th>
-                    <th className="px-2.5 py-1.5 text-right font-medium">On time</th>
-                    <th className="px-2.5 py-1.5 text-right font-medium">Buffer</th>
-                    <th className="px-2.5 py-1.5 text-right font-medium">min/mark</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pace.map((r) => (
-                    <tr key={r.key} className="border-t border-white/5">
-                      <td className="px-2.5 py-1.5 text-left font-medium text-slate-200">{r.label}</td>
-                      <td
-                        className={`px-2.5 py-1.5 text-right font-semibold tabular-nums ${
-                          r.onTimeRate >= 80
-                            ? 'text-emerald-300'
-                            : r.onTimeRate >= 50
-                              ? 'text-amber-300'
-                              : 'text-red-400'
-                        }`}
-                      >
-                        {r.onTimeRate}%
-                      </td>
-                      <td
-                        className={`px-2.5 py-1.5 text-right tabular-nums ${
-                          r.avgBuffer >= 0 ? 'text-teal-300' : 'text-red-400'
-                        }`}
-                      >
-                        {r.avgBuffer >= 0 ? '+' : ''}
-                        {r.avgBuffer.toFixed(1)}d
-                      </td>
-                      <td className="px-2.5 py-1.5 text-right tabular-nums text-slate-400">
-                        {r.minPerMark != null ? r.minPerMark : '—'}
-                      </td>
+          {pace.length > 0 && (
+            <>
+              <SectionLabel>🧠 Per-subject pace (worst first)</SectionLabel>
+              <div className="overflow-hidden rounded-[3px] border border-line">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="bg-paper text-ink-3">
+                      <th className="px-2.5 py-1.5 text-left font-mono text-[9px] font-medium tracking-[0.08em] uppercase">
+                        Subject
+                      </th>
+                      <th className="px-2.5 py-1.5 text-right font-mono text-[9px] font-medium tracking-[0.08em] uppercase">
+                        On time
+                      </th>
+                      <th className="px-2.5 py-1.5 text-right font-mono text-[9px] font-medium tracking-[0.08em] uppercase">
+                        Buffer
+                      </th>
+                      <th className="px-2.5 py-1.5 text-right font-mono text-[9px] font-medium tracking-[0.08em] uppercase">
+                        min/mark
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-600">
-              Buffer = days early (+) or late (−) you usually finish. min/mark is learned from your
-              focus-timer sessions.
-            </p>
-          </>
-        )}
+                  </thead>
+                  <tbody>
+                    {pace.map((r) => (
+                      <tr key={r.key} className="border-t border-line">
+                        <td className="px-2.5 py-1.5 text-left font-medium text-ink">{r.label}</td>
+                        <td
+                          className={`px-2.5 py-1.5 text-right font-semibold tabular-nums ${
+                            r.onTimeRate >= 80
+                              ? 'text-done'
+                              : r.onTimeRate >= 50
+                                ? 'text-today'
+                                : 'text-late'
+                          }`}
+                        >
+                          {r.onTimeRate}%
+                        </td>
+                        <td
+                          className={`px-2.5 py-1.5 text-right tabular-nums ${
+                            r.avgBuffer >= 0 ? 'text-done' : 'text-late'
+                          }`}
+                        >
+                          {r.avgBuffer >= 0 ? '+' : ''}
+                          {r.avgBuffer.toFixed(1)}d
+                        </td>
+                        <td className="px-2.5 py-1.5 text-right font-mono text-[10px] tabular-nums text-ink-3">
+                          {r.minPerMark != null ? r.minPerMark : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-1.5 font-mono text-[9px] leading-relaxed text-ink-3">
+                Buffer = days early (+) or late (−) you usually finish. min/mark is learned from
+                your focus-timer sessions.
+              </p>
+            </>
+          )}
 
-        {/* When the clipboard is blocked the old message said "select the text
-            above" but there was no text to select — show it so the instruction
-            actually works. */}
-        {copyErr && (
-          <pre className="mt-3 max-h-40 overflow-auto rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[11px] leading-relaxed whitespace-pre-wrap text-slate-300 select-text">
-            {reportText}
-          </pre>
-        )}
+          {/* When the clipboard is blocked, show the text so "select and copy"
+              is actually possible. */}
+          {copyErr && (
+            <pre className="mt-3 max-h-40 overflow-auto rounded-[3px] border border-late/35 bg-late-soft/50 p-3 font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-ink-2 select-text">
+              {reportText}
+            </pre>
+          )}
 
-        <button
-          type="button"
-          onClick={copy}
-          className={`mt-4 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-            copyErr
-              ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/40'
-              : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
-          }`}
-        >
-          {copied
-            ? '✓ Copied — paste it in your check-in post'
-            : copyErr
-              ? '⚠️ Clipboard blocked — select the text above and copy manually'
-              : 'Copy check-in text for your post'}
-        </button>
-        <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-600">
-          Paste in your weekly post with <span className="text-slate-500">#NoHandsChallenge</span>{' '}
-          and tag <span className="text-slate-500">WeMakeDevs</span> +{' '}
-          <span className="text-slate-500">Wispr Flow</span>
-        </p>
+          <button
+            type="button"
+            onClick={copy}
+            className={`btn mt-4 w-full ${
+              copyErr ? 'border-today text-today shadow-[2px_2px_0_var(--color-today)]' : 'btn-primary'
+            }`}
+          >
+            {copied
+              ? '✓ Copied — paste it in your check-in post'
+              : copyErr
+                ? '⚠️ Clipboard blocked — select the text above'
+                : 'Copy check-in text for your post'}
+          </button>
+          <p className="mt-2 text-center font-mono text-[9px] leading-relaxed tracking-wide text-ink-3">
+            Paste in your weekly post with #NoHandsChallenge · tag WeMakeDevs + Wispr Flow
+          </p>
+        </div>
       </div>
     </div>
   )

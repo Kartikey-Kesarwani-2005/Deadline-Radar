@@ -2,13 +2,9 @@ import { useEffect, useState } from 'react'
 import { countdownTo, dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
 import { fmtHours } from '../lib/brain'
 
-const chipBase =
-  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium'
-
 /**
- * ⏳ Live countdown chip — its own 30s tick so only this chip re-renders, not
- * the whole app. Shows time left to end-of-day ("2d 14h") on pending dated
- * cards; turns red once the deadline is over.
+ * ⏳ Live countdown tag — its own 30s tick so only this tag re-renders.
+ * Shows time left to end-of-day ("2d 14h") on pending dated cards.
  */
 function CountdownChip({ dueDate, done }) {
   const [now, setNow] = useState(() => Date.now())
@@ -26,12 +22,12 @@ function CountdownChip({ dueDate, done }) {
           ? 'Past the deadline — handle it now'
           : 'Live time left until end of the deadline day'
       }
-      className={`${chipBase} tabular-nums ${
+      className={`tag tabular-nums ${
         cd.late
-          ? 'border-red-500/40 bg-red-500/15 text-red-300'
+          ? 'border-late/40 bg-late-soft text-late'
           : cd.d === 0 && cd.h < 6
-            ? 'border-amber-400/40 bg-amber-400/15 text-amber-300'
-            : 'border-teal-500/25 bg-teal-500/10 text-teal-300/90'
+            ? 'border-today/45 bg-today-soft text-today'
+            : 'border-line bg-paper text-ink-2'
       }`}
     >
       ⏳ {cd.label}
@@ -59,22 +55,22 @@ export default function TaskCard({
     <div
       title={task.source}
       style={style}
-      className={`rise group relative flex items-start gap-3 rounded-xl border p-3 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 ${
+      className={`rise group relative flex items-start gap-2.5 rounded-[4px] border px-3 py-2.5 pl-3.5 transition hover:-translate-y-0.5 hover:shadow-[2px_2px_0_rgba(29,27,22,0.85)] ${
         task.done
-          ? 'border-emerald-500/20 bg-emerald-500/[0.05]'
+          ? 'border-done/25 bg-done-soft/45'
           : isLate
-            ? 'border-red-500/30 bg-red-500/[0.06]'
+            ? 'border-late/35 bg-paper-2 hover:border-late/60'
             : diff === 0
-              ? 'border-amber-500/25 bg-amber-500/[0.05]'
-              : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+              ? 'border-today/40 bg-paper-2 hover:border-today/60'
+              : 'border-line bg-paper-2 hover:border-ink/45'
       }`}
     >
-      {/* urgency rail — a left-edge tell for scanning: red = late, amber = today */}
+      {/* urgency rail — a left-edge tell for scanning: red = late, ochre = today */}
       {!task.done && (isLate || diff === 0) && (
         <span
           aria-hidden="true"
-          className={`absolute inset-y-3 left-0 w-[3px] rounded-full ${
-            isLate ? 'bg-red-400/80' : 'bg-amber-400/80'
+          className={`absolute inset-y-2 left-0 w-[3px] rounded-r-full ${
+            isLate ? 'bg-late' : 'bg-today'
           }`}
         />
       )}
@@ -83,10 +79,10 @@ export default function TaskCard({
         type="button"
         onClick={onToggle}
         aria-label={task.done ? 'Mark as not done' : 'Mark as done'}
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] transition ${
+        className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[3px] border-[1.5px] text-[11px] transition ${
           task.done
-            ? 'border-emerald-400 bg-emerald-400 text-slate-950'
-            : 'border-slate-500 text-transparent hover:border-emerald-400 hover:text-emerald-400'
+            ? 'border-done bg-done text-paper-2'
+            : 'border-ink/60 bg-paper text-transparent hover:border-done hover:text-done'
         }`}
       >
         ✓
@@ -94,8 +90,8 @@ export default function TaskCard({
 
       <div className="min-w-0 flex-1">
         <p
-          className={`text-sm leading-snug break-words ${
-            task.done ? 'text-slate-500 line-through' : 'text-slate-100'
+          className={`text-[13.5px] leading-snug break-words ${
+            task.done ? 'text-ink-3 line-through' : 'font-medium text-ink'
           }`}
         >
           {task.title}
@@ -103,19 +99,15 @@ export default function TaskCard({
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {task.subject && (
-            <span className={`${chipBase} border-sky-500/30 bg-sky-500/10 text-sky-300`}>
-              {task.subject}
-            </span>
+            <span className="tag border-later/30 bg-later-soft text-later">{task.subject}</span>
           )}
           {task.marks != null && (
-            <span className={`${chipBase} border-violet-500/30 bg-violet-500/10 text-violet-300`}>
-              {task.marks} marks
-            </span>
+            <span className="tag border-week/35 bg-week-soft text-week">{task.marks} marks</span>
           )}
           {task.repeat === 'weekly' && (
             <span
               title="Repeats weekly — ticking it off rolls the next occurrence onto the radar automatically"
-              className={`${chipBase} border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300`}
+              className="tag border-ink/25 bg-paper text-ink-2"
             >
               🔁 weekly
             </span>
@@ -127,26 +119,26 @@ export default function TaskCard({
                   ? 'Learned from your own focus-timer sessions'
                   : 'Estimate until you track it with the focus timer'
               }
-              className={`${chipBase} border-teal-500/30 bg-teal-500/10 text-teal-300`}
+              className="tag border-done/30 bg-done-soft text-done"
             >
               ⏱ ≈{fmtHours(estimate.minutes)}
               {estimate.learned ? ' 🧠' : ''}
             </span>
           )}
-          <span className={`${chipBase} ${dueTone(task)}`}>📅 {formatDue(task.dueDate)}</span>
+          <span className={`tag ${dueTone(task)}`}>📅 {formatDue(task.dueDate)}</span>
           <CountdownChip dueDate={task.dueDate} done={task.done} />
           {task.priority === 'high' && !task.done && (
-            <span className={`${chipBase} border-red-500/40 bg-red-500/15 font-bold text-red-300`}>
-              HIGH
+            <span className="tag border-late bg-late font-semibold tracking-[0.08em] text-paper-2 uppercase">
+              High
             </span>
           )}
           {advice && (
             <span
               title="From your own submission history"
-              className={`${chipBase} ${
+              className={`tag ${
                 advice.tone === 'warn'
-                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
-                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                  ? 'border-today/40 bg-today-soft text-today'
+                  : 'border-done/30 bg-done-soft text-done'
               }`}
             >
               🧠 {advice.text}
@@ -159,19 +151,19 @@ export default function TaskCard({
               rel="noreferrer noopener"
               title={`Open submission portal — ${task.link}`}
               onClick={(e) => e.stopPropagation()}
-              className={`${chipBase} border-indigo-500/30 bg-indigo-500/10 text-indigo-300 transition hover:border-indigo-400/60 hover:text-indigo-200`}
+              className="tag border-later/35 bg-later-soft text-later transition hover:border-later hover:text-ink"
             >
               🔗 Portal
             </a>
           )}
 
-          <label className="flex items-center gap-1.5 text-[11px] text-slate-600">
+          <label className="flex items-center gap-1.5 font-mono text-[9px] text-ink-3 uppercase">
             <input
               type="date"
               value={task.dueDate || ''}
               onChange={(e) => onDateChange(e.target.value || null)}
               aria-label={`Change due date for ${task.title}`}
-              className="rounded-md border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[11px] text-slate-400 focus:border-emerald-500/50 focus:outline-none"
+              className="rounded-[3px] border border-line bg-paper px-1 py-0.5 font-mono text-[10px] text-ink-2 focus:border-ink focus:outline-none"
             />
           </label>
         </div>
@@ -187,13 +179,13 @@ export default function TaskCard({
               ? 'Focus running — click to stop and save the minutes'
               : 'Start a focus timer — the radar learns your real pace'
           }
-          className={`mt-0.5 shrink-0 rounded p-1 transition ${
+          className={`task-actions mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] text-[11px] transition ${
             focusing
-              ? 'task-actions bg-emerald-500/15 text-emerald-300 opacity-100'
-              : 'task-actions text-slate-700 opacity-0 group-hover:opacity-100 hover:bg-white/10 hover:text-emerald-300 focus:opacity-100'
+              ? 'bg-done-soft text-done opacity-100 ring-1 ring-done/40'
+              : 'text-ink-3 opacity-0 group-hover:opacity-100 hover:bg-paper-3 hover:text-done focus:opacity-100'
           }`}
         >
-          {focusing ? '⏹' : '▶️'}
+          {focusing ? '⏹' : '▶'}
         </button>
       )}
 
@@ -202,7 +194,7 @@ export default function TaskCard({
         onClick={onShare}
         aria-label={`Copy share text for ${task.title}`}
         title="Copy for WhatsApp / group"
-        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
+        className="task-actions mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] text-[11px] text-ink-3 opacity-0 transition group-hover:opacity-100 hover:bg-paper-3 hover:text-ink focus:opacity-100"
       >
         📤
       </button>
@@ -211,7 +203,7 @@ export default function TaskCard({
         type="button"
         onClick={onEdit}
         aria-label={`Edit ${task.title}`}
-        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-slate-300 focus:opacity-100"
+        className="task-actions mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] text-[11px] text-ink-3 opacity-0 transition group-hover:opacity-100 hover:bg-paper-3 hover:text-ink focus:opacity-100"
       >
         ✏️
       </button>
@@ -220,7 +212,7 @@ export default function TaskCard({
         type="button"
         onClick={onDelete}
         aria-label={`Delete ${task.title}`}
-        className="mt-0.5 shrink-0 rounded p-1 text-slate-700 task-actions opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus:opacity-100"
+        className="task-actions mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] text-[11px] text-ink-3 opacity-0 transition group-hover:opacity-100 hover:bg-late-soft hover:text-late focus:opacity-100"
       >
         ✕
       </button>

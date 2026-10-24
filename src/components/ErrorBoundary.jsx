@@ -22,27 +22,23 @@ export default class ErrorBoundary extends Component {
     if (this.state.error) {
       return (
         <div className="mx-auto max-w-md px-4 pt-24 text-center">
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.06] p-6">
-            <p className="text-3xl">📡</p>
-            <h1 className="mt-2 text-lg font-bold text-slate-100">Radar lost the signal</h1>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              Something went wrong, but your tasks are safe in this browser. Reload to get back
-              on track.
+          <div className="paper-card border-late/40 p-6">
+            <span className="stamp">Signal lost</span>
+            <p className="mt-4 text-3xl">📡</p>
+            <h1 className="mt-2 font-serif text-xl font-semibold text-ink">Radar lost the signal</h1>
+            <p className="mt-2 text-sm leading-relaxed text-ink-2">
+              Something went wrong, but your tasks are safe in this browser. Reload to get back on
+              track.
             </p>
-            <p className="mt-2 break-words font-mono text-[10px] text-slate-600">
+            <p className="mt-2 rounded-[3px] border border-line bg-paper px-2 py-1 font-mono text-[10px] break-words text-ink-3">
               {String(this.state.error?.message || this.state.error)}
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
-              >
-                Reload
+              <button type="button" onClick={() => window.location.reload()} className="btn btn-primary">
+                Reload radar
               </button>
               {/* Escape hatch: if stored data itself is what's crashing the app,
-                  Reload just re-crashes. This clears the tasks and reloads so the
-                  judge is never stuck in an unrecoverable loop. */}
+                  Reload just re-crashes. Clearing tasks breaks the loop. */}
               <button
                 type="button"
                 onClick={() => {
@@ -53,7 +49,7 @@ export default class ErrorBoundary extends Component {
                   }
                   window.location.reload()
                 }}
-                className="rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+                className="btn btn-quiet"
               >
                 Reset tasks &amp; reload
               </button>

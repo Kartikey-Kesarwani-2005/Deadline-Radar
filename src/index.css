@@ -1,27 +1,67 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ *
+ * Deadline Radar — "Field Notes" design system
+ * Warm paper, ink, rubber stamps and editorial serif type.
+ * Replaces the old dark-glass dashboard look.
+ * ------------------------------------------------------------------ */
+
+@theme {
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* paper */
+  --color-paper: #f3eee1;
+  --color-paper-2: #fbf8ef;
+  --color-paper-3: #e9e1cf;
+  --color-paper-4: #ded3bd;
+
+  /* ink */
+  --color-ink: #1d1b16;
+  --color-ink-2: #4b463b;
+  --color-ink-3: #6e6757;
+  --color-line: #d7cdb8;
+  --color-line-strong: #2a271f;
+
+  /* status inks */
+  --color-late: #ad3620;
+  --color-late-soft: #f7e0d7;
+  --color-today: #8d5d08;
+  --color-today-soft: #f8e9c6;
+  --color-week: #5c6a24;
+  --color-week-soft: #e9edd3;
+  --color-later: #2f5687;
+  --color-later-soft: #e0e8f4;
+  --color-done: #2b674a;
+  --color-done-soft: #dcebe0;
+}
+
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   min-height: 100vh;
-  background-color: #070b16;
-  color: #e2e8f0;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
   background-image:
-    radial-gradient(1100px 550px at 85% -10%, rgba(16, 185, 129, 0.13), transparent),
-    radial-gradient(900px 500px at -10% 8%, rgba(56, 189, 248, 0.10), transparent),
-    radial-gradient(820px 620px at 50% 118%, rgba(139, 92, 246, 0.10), transparent),
-    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1.4px);
-  background-size: auto, auto, auto, 26px 26px;
+    radial-gradient(900px 420px at 84% -10%, rgba(184, 58, 32, 0.07), transparent 70%),
+    radial-gradient(720px 440px at -8% 4%, rgba(47, 86, 135, 0.06), transparent 70%),
+    linear-gradient(rgba(29, 27, 22, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 27, 22, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 26px 26px, 26px 26px;
   background-attachment: fixed;
 }
 
 /* Keyboard-first: a visible, on-brand focus ring everywhere. */
 *:focus-visible {
-  outline: 2px solid rgba(52, 211, 153, 0.55);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
 
@@ -31,139 +71,319 @@ body {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.18);
+  background: rgba(29, 27, 22, 0.2);
   border-radius: 8px;
-  border: 2px solid #070b16;
+  border: 2px solid var(--color-paper);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.32);
+  background: rgba(29, 27, 22, 0.34);
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* Tactile press on every button. */
-button:not(:disabled):active {
-  transform: translateY(1px) scale(0.985);
+::selection {
+  background: rgba(184, 58, 32, 0.18);
 }
 
 kbd {
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid var(--color-line-strong);
   border-bottom-width: 2px;
-  border-radius: 5px;
+  border-radius: 3px;
   padding: 0 5px;
-  font-size: 11px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: #cbd5e1;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-ink);
+  background: var(--color-paper-2);
 }
 
 input[type="date"] {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.75);
   cursor: pointer;
+  opacity: 0.55;
 }
 
-::selection {
-  background: rgba(16, 185, 129, 0.35);
+/* ---------- Reusable paper furniture ---------- */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
 }
 
-/* Rotating scan line inside the header logo — the "radar is live" tell. */
-.radar-sweep {
-  position: absolute;
-  inset: -30%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(16, 185, 129, 0.45) 36deg,
-    transparent 66deg
+.paper-panel {
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-line);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 14px 30px -28px rgba(29, 27, 22, 0.6);
+}
+
+.paper-card {
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-line);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 10px 20px -20px rgba(29, 27, 22, 0.65);
+}
+
+/* Hard offset shadow — the "stamped card" tell. */
+.stamp-shadow {
+  box-shadow: 3px 3px 0 var(--color-line-strong);
+}
+.stamp-shadow-sm {
+  box-shadow: 2px 2px 0 var(--color-line-strong);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: 4px;
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  padding: 0.42rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--color-line-strong);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.btn:hover:not(:disabled) {
+  background: #fffdf7;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-line-strong);
+}
+.btn:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--color-line-strong);
+}
+.btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn-primary {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #353027;
+  color: #fffdf7;
+}
+.btn-accent {
+  background: var(--color-late);
+  color: #fff8ee;
+  border-color: var(--color-ink);
+}
+.btn-accent:hover:not(:disabled) {
+  background: #a3321a;
+}
+.btn-quiet {
+  border-color: var(--color-line);
+  box-shadow: none;
+  background: transparent;
+  color: var(--color-ink-2);
+}
+.btn-quiet:hover:not(:disabled) {
+  background: var(--color-paper-3);
+  box-shadow: none;
+  transform: none;
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+/* Small square icon button in the masthead / card actions. */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.15rem;
+  width: 2.15rem;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  transition:
+    border-color 0.12s ease,
+    background-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.12s ease;
+}
+.icon-btn:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+  transform: translateY(-1px);
+}
+
+/* ---------- Stamps & tags ---------- */
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.55;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.stamp {
+  display: inline-block;
+  border: 1.5px solid var(--color-late);
+  border-radius: 2px;
+  padding: 2px 7px;
+  color: var(--color-late);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+  opacity: 0.9;
+}
+
+.highlight {
+  background-image: linear-gradient(
+    180deg,
+    transparent 56%,
+    rgba(224, 177, 58, 0.42) 56%,
+    rgba(224, 177, 58, 0.42) 93%,
+    transparent 93%
   );
-  animation: radar-spin 3.2s linear infinite;
+  padding: 0 0.08em;
 }
 
-@keyframes radar-spin {
-  to {
-    transform: rotate(360deg);
-  }
+/* ---------- Inputs ---------- */
+
+.field {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  background: #fffdf6;
+  padding: 0.5rem 0.65rem;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.field::placeholder {
+  color: var(--color-ink-3);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--color-ink);
+  box-shadow: 2px 2px 0 rgba(29, 27, 22, 0.12);
 }
 
-/* Cards glide in with a small stagger; disabled under reduced motion. */
+/* Notebook rule inside the capture box. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    rgba(29, 27, 22, 0.1) 27px,
+    rgba(29, 27, 22, 0.1) 28px
+  );
+  line-height: 28px;
+}
+
+/* Dotted leader used in ledger rows. */
+.leader {
+  flex: 1 1 auto;
+  min-width: 1.25rem;
+  border-bottom: 1px dotted var(--color-line);
+  transform: translateY(-0.25rem);
+}
+
+/* ---------- Motion ---------- */
+
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(7px);
   }
   to {
     opacity: 1;
     transform: none;
   }
 }
-
 .rise {
-  animation: rise-in 0.35s ease-out both;
+  animation: rise-in 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
 
-/* The "Ab kya karun?" hero card: a slow radar sweep of light runs its border. */
-@property --donow-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-.donow {
-  position: relative;
-}
-.donow::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: conic-gradient(
-    from var(--donow-angle),
-    transparent 0 62deg,
-    rgba(52, 211, 153, 0.85) 112deg,
-    rgba(56, 189, 248, 0.55) 152deg,
-    transparent 210deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  animation: donow-sweep 7s linear infinite;
-  pointer-events: none;
-}
-@keyframes donow-sweep {
+/* Slow compass needle — replaces the old neon radar sweep. */
+@keyframes needle-spin {
   to {
-    --donow-angle: 360deg;
+    transform: rotate(360deg);
   }
+}
+.compass-needle {
+  animation: needle-spin 16s linear infinite;
+  transform-origin: bottom center;
+}
+.compass-rotor {
+  animation: needle-spin 22s linear infinite;
+  transform-origin: center;
+}
+
+/* Soft stamp-in for the toast. */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.985) translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.stamp-in {
+  animation: stamp-in 0.22s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .rise,
-  .radar-sweep,
+  .stamp-in,
+  .compass-needle,
+  .compass-rotor,
   .animate-ping,
   .animate-pulse {
     animation: none !important;
   }
-  .donow::before {
-    animation: none !important;
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.55), rgba(56, 189, 248, 0.3));
-  }
 }
 
-/* Touch devices have no hover — card actions must always be visible.
-   The resting slate-700 is near-invisible on the dark card, so when we force
-   them visible we also lift the color to a readable slate. */
+/* Touch devices have no hover — card actions must always be visible. */
 @media (hover: none) {
   .task-actions {
     opacity: 1;
-    color: #64748b; /* slate-500 */
+    color: var(--color-ink-3);
   }
 }
 
@@ -171,11 +391,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* Phone mode — compact, thumb-friendly, no hover-only affordances. */
 .phone-mode .task-actions {
   opacity: 1;
-  color: #64748b; /* slate-500 */
+  color: var(--color-ink-3);
 }
 .phone-mode .radar-dial {
-  width: 150px;
-  height: 150px;
+  width: 156px;
+  height: 156px;
 }
 .phone-mode .stats-row {
   flex-direction: column;
@@ -185,12 +405,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.phone-mode .weekly-btn {
-  width: 100%;
-}
-.phone-mode .export-btn {
-  width: 100%;
-}
+.phone-mode .weekly-btn,
+.phone-mode .export-btn,
 .phone-mode .share-week-btn {
   width: 100%;
 }
@@ -210,5 +426,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
 }
 .phone-mode .app-title {
-  font-size: 1.05rem;
+  font-size: 1.75rem;
+}
+
+/* Print — a report should survive being sent to a printer. */
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
 }

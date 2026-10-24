@@ -30,19 +30,19 @@ import WeeklyReport from './components/WeeklyReport'
 import TaskEditModal from './components/TaskEditModal'
 
 const SECTION_TONES = {
-  red: 'bg-red-500',
-  amber: 'bg-amber-400',
-  yellow: 'bg-yellow-400',
-  sky: 'bg-sky-400',
-  slate: 'bg-slate-500',
-  green: 'bg-emerald-400',
+  red: 'bg-late',
+  amber: 'bg-today',
+  yellow: 'bg-week',
+  sky: 'bg-later',
+  slate: 'bg-ink-3',
+  green: 'bg-done',
 }
 
 function chipCls(active) {
-  return `rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+  return `rounded-[3px] border px-2 py-1 font-mono text-[10px] tracking-[0.06em] uppercase transition ${
     active
-      ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300'
-      : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:text-slate-200'
+      ? 'border-ink bg-ink text-paper'
+      : 'border-line bg-paper-2 text-ink-2 hover:border-ink hover:text-ink'
   }`
 }
 
@@ -74,13 +74,15 @@ function byUrgency(a, b) {
 function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, focusId }) {
   if (!tasks.length) return null
   return (
-    <section id={`radar-${sectionKey}`} className="mb-6 scroll-mt-4">
-      <div className="mb-2.5 flex items-center gap-2 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
-        <span className={`h-2 w-2 shrink-0 rounded-full ${SECTION_TONES[tone]}`} />
-        {title}
-        <span className="font-medium text-slate-500">· {tasks.length}</span>
-        <span aria-hidden="true" className="h-px min-w-8 flex-1 bg-gradient-to-r from-white/12 to-transparent" />
-        {hint && <span className="shrink-0 font-normal normal-case tracking-normal text-slate-500">{hint}</span>}
+    <section id={`radar-${sectionKey}`} className="mb-7 scroll-mt-4">
+      <div className="mb-2.5 flex flex-wrap items-end gap-x-2 gap-y-1 border-b border-ink/25 pb-1.5">
+        <span className={`mb-1 h-2.5 w-2.5 shrink-0 rounded-full ${SECTION_TONES[tone]}`} />
+        <h2 className="font-serif text-[18px] leading-none font-semibold text-ink">{title}</h2>
+        <span className="mb-0.5 font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
+          {tasks.length} {tasks.length === 1 ? 'item' : 'items'}
+        </span>
+        <span className="flex-1" />
+        {hint && <span className="font-mono text-[9px] tracking-wide text-ink-3">{hint}</span>}
       </div>
       <div className="space-y-2">
         {tasks.map((task, index) => (
@@ -906,43 +908,55 @@ export default function App() {
 
   return (
     <div
-      className={`mx-auto w-full px-4 pb-16 pt-8 sm:pt-12 ${
+      className={`mx-auto w-full px-4 pb-16 pt-5 sm:pt-7 ${
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
+      {/* Masthead strip — the newspaper dateline */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-y border-ink/70 py-1 font-mono text-[9px] tracking-[0.18em] text-ink-3 uppercase">
+        <span className="font-semibold text-ink-2">Deadline Radar · Field Notes</span>
+        <span className="hidden sm:inline">No Hands Challenge · Wispr Flow</span>
+        <span>{formatLongToday()}</span>
+      </div>
+
       {/* Header */}
-      <header className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-emerald-500/15 text-lg shadow-[0_0_22px_-6px_rgba(16,185,129,0.65)] ring-1 ring-emerald-500/40">
-              <span aria-hidden="true" className="radar-sweep" />
-              <span className="relative">📡</span>
+      <header className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
+              <span
+                aria-hidden="true"
+                className="compass-needle absolute bottom-1/2 left-1/2 h-[15px] w-[2px] -translate-x-1/2 rounded-full bg-late"
+              />
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-ink bg-paper" />
             </span>
             <div>
-              <h1 className="app-title bg-gradient-to-r from-emerald-200 via-sky-200 to-slate-100 bg-clip-text text-lg font-extrabold tracking-tight text-transparent">
-                Deadline Radar
+              <p className="eyebrow">Field notes · {stats.total} on the radar</p>
+              <h1 className="app-title font-serif text-[2rem] leading-none font-semibold tracking-tight text-ink sm:text-[2.3rem]">
+                Deadline Radar<span className="text-late">.</span>
               </h1>
-              <p className="text-xs text-slate-500">{formatLongToday()}</p>
             </div>
           </div>
-          <p className="mt-3 max-w-md text-[13px] leading-relaxed text-slate-400 lg:max-w-lg">
+          <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-ink-2">
             Assignments arrive in WhatsApp groups and notes — nothing stays in one place.
-            <span className="text-slate-300"> Paste or speak them here</span>, and always know
-            what is due <span className="text-amber-300">today</span> and what is getting{' '}
-            <span className="text-red-400">late</span>.
+            <span className="font-medium text-ink"> Paste or speak them here</span>, and always know
+            what is due <span className="font-semibold text-today">today</span> and what is getting{' '}
+            <span className="font-semibold text-late">late</span>.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="ms-auto flex flex-wrap items-center justify-end gap-1.5">
           {focusTask && (
             <button
               type="button"
               onClick={stopFocus}
               title="Stop focus — the minutes train your pace estimate"
               aria-label="Stop focus timer"
-              className="flex items-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-2.5 py-2 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25"
+              className="btn border-done bg-done-soft text-done shadow-[2px_2px_0_var(--color-done)] hover:bg-done-soft"
             >
               <span aria-hidden="true">⏱</span>
-              <span className="hidden max-w-[150px] truncate sm:inline">{focusTask.title}</span>
+              <span className="hidden max-w-[130px] truncate tracking-normal normal-case sm:inline">
+                {focusTask.title}
+              </span>
               <span key={focusTick} className="tabular-nums">
                 {fmtElapsed(Date.now() - focus.startedAt)}
               </span>
@@ -955,12 +969,10 @@ export default function App() {
               onClick={() => setShortcutsOpen(true)}
               title="Keyboard shortcuts — / search · n new · b briefing · w report"
               aria-label="Show keyboard shortcuts"
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-slate-400 transition hover:border-violet-400/40 hover:text-violet-300"
+              className="icon-btn w-auto gap-1 px-2"
             >
               <span aria-hidden="true">⌨️</span>
-              <kbd className="rounded border border-white/15 bg-white/[0.06] px-1 font-mono text-[11px] leading-relaxed">
-                ?
-              </kbd>
+              <kbd>?</kbd>
             </button>
           )}
           {installEvt && (
@@ -969,7 +981,7 @@ export default function App() {
               onClick={installApp}
               title="Install Deadline Radar on this device"
               aria-label="Install app"
-              className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-2 text-sky-300 transition hover:bg-sky-500/20"
+              className="icon-btn"
             >
               ⬇️
             </button>
@@ -979,11 +991,7 @@ export default function App() {
             onClick={toggleReminders}
             title={perm === 'granted' ? 'Daily reminders on — click to test' : 'Enable daily reminders'}
             aria-label="Toggle reminders"
-            className={`rounded-lg border p-2 transition ${
-              perm === 'granted'
-                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:text-slate-200'
-            }`}
+            className={`icon-btn ${perm === 'granted' ? 'border-done bg-done-soft text-done' : ''}`}
           >
             {perm === 'granted' ? '🔔' : '🔕'}
           </button>
@@ -991,7 +999,7 @@ export default function App() {
             type="button"
             onClick={() => setSettingsOpen(true)}
             aria-label="Open settings"
-            className="rounded-lg border border-white/10 bg-white/[0.03] p-2 text-slate-400 transition hover:border-white/25 hover:text-slate-200"
+            className="icon-btn"
           >
             ⚙️
           </button>
@@ -1000,11 +1008,12 @@ export default function App() {
 
       {/* Offline mode — everything below keeps working without a connection */}
       {!online && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-200">
+        <div className="rise mb-4 flex items-start gap-2.5 rounded-[4px] border border-today/40 bg-today-soft px-3 py-2.5 text-xs leading-relaxed text-ink-2">
           <span aria-hidden="true">📴</span>
           <p>
-            <b>You are offline — the radar keeps working.</b> Capture, parsing, reminders and your
-            data all live in this browser. AI extract falls back to the built-in offline parser.
+            <b className="font-semibold text-ink">You are offline — the radar keeps working.</b>{' '}
+            Capture, parsing, reminders and your data all live in this browser. AI extract falls back
+            to the built-in offline parser.
           </p>
         </div>
       )}
@@ -1023,16 +1032,18 @@ export default function App() {
 
       {/* Demo mode — a one-line tour for judges opening ?demo=1 cold */}
       {isDemo && !hintsClosed && (
-        <div className="rise mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2 text-xs text-violet-200">
-          <span className="font-bold text-violet-100">✨ Demo mode — try:</span>
+        <div className="rise mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[4px] border border-later/35 bg-later-soft px-3.5 py-2 text-xs text-ink-2">
+          <span className="font-mono text-[9px] font-semibold tracking-[0.14em] text-later uppercase">
+            ✨ Demo mode — try
+          </span>
           <span>🔊 Briefing — the radar speaks your day</span>
           <span>🎙️ Ask → “ab kya karun?” · “mark DBMS done” ✅</span>
-          <span>▶️ focus timer · 🔁 weekly tasks roll over</span>
+          <span>▶ focus timer · 🔁 weekly tasks roll over</span>
           <button
             type="button"
             onClick={() => setHintsClosed(true)}
             aria-label="Dismiss tips"
-            className="ml-auto rounded p-0.5 text-violet-300/70 transition hover:text-violet-100"
+            className="ml-auto rounded-[3px] p-0.5 text-later transition hover:bg-later/10"
           >
             ✕
           </button>
@@ -1043,10 +1054,10 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className={`rise mt-2 flex items-center gap-3 rounded-xl border px-3 py-2 text-xs font-medium shadow-[0_10px_30px_-18px_rgba(16,185,129,0.8)] ${
+          className={`stamp-in mt-2 flex items-center gap-3 rounded-[4px] border px-3 py-2 text-xs font-medium ${
             flash.tone === 'error'
-              ? 'border-red-500/40 bg-red-500/10 text-red-300'
-              : 'border-emerald-500/35 bg-emerald-500/10 text-emerald-300'
+              ? 'border-late/45 bg-late-soft text-late'
+              : 'border-done/40 bg-done-soft text-done'
           }`}
         >
           {/* Success gets a ✓; errors must NOT wear a checkmark (a green tick
@@ -1064,7 +1075,11 @@ export default function App() {
                 // (an undo re-inserting a task twice would duplicate its id).
                 setFlash(null)
               }}
-              className="shrink-0 rounded border border-emerald-400/40 px-2 py-0.5 text-[11px] font-bold text-emerald-200 transition hover:bg-emerald-500/20"
+              className={`btn !px-2 !py-0.5 !text-[10px] ${
+                flash.tone === 'error'
+                  ? 'border-late text-late shadow-[2px_2px_0_var(--color-late)] hover:bg-late-soft'
+                  : 'border-done bg-paper-2 text-done shadow-[2px_2px_0_var(--color-done)] hover:bg-done-soft'
+              }`}
             >
               {flash.action.label}
             </button>
@@ -1074,17 +1089,23 @@ export default function App() {
 
       {/* ⏳ Start window closing — "start now", not just "due soon" */}
       {startSoon.length > 0 && (
-        <div className="rise mt-2 rounded-xl border border-amber-400/30 bg-amber-500/[0.07] px-3.5 py-2 text-xs text-amber-200">
+        <div className="rise mt-2 rounded-[4px] border border-today/40 bg-today-soft px-3.5 py-2 text-xs text-ink-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="font-bold text-amber-100">⏳ Start window closing</span>
+            <span className="font-mono text-[9px] font-semibold tracking-[0.14em] text-today uppercase">
+              ⏳ Start window closing
+            </span>
             {startSoon.slice(0, 3).map((a) => (
-              <span key={a.task.id} className="rounded bg-amber-400/10 px-1.5 py-0.5">
+              <span key={a.task.id} className="rounded-[2px] border border-today/30 bg-paper-2/70 px-1.5 py-0.5">
                 {a.task.title.length > 36 ? `${a.task.title.slice(0, 35)}…` : a.task.title}
                 {' · '}
-                <b>{a.daysLeft === 0 ? 'aaj shuru!' : `${a.daysLeft}d fit hain`}</b>
+                <b className="font-semibold text-ink">
+                  {a.daysLeft === 0 ? 'aaj shuru!' : `${a.daysLeft}d fit hain`}
+                </b>
               </span>
             ))}
-            <span className="text-amber-300/70">— varna deadline se pehle fit nahi hoga</span>
+            <span className="font-mono text-[9px] tracking-wide text-ink-3">
+              — varna deadline se pehle fit nahi hoga
+            </span>
           </div>
         </div>
       )}
@@ -1092,25 +1113,33 @@ export default function App() {
       {/* ⌨️ Shortcuts card (desktop) */}
       {shortcutsOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[2px]"
           onClick={() => setShortcutsOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0d1424] p-5 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Keyboard shortcuts"
+            className="w-full max-w-sm rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-100">⌨️ Keyboard shortcuts</h2>
+            <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
+              <div>
+                <p className="eyebrow">Keyboard desk</p>
+                <h2 className="font-serif text-xl leading-tight font-semibold text-ink">
+                  ⌨️ Shortcuts
+                </h2>
+              </div>
               <button
                 type="button"
                 onClick={() => setShortcutsOpen(false)}
-                className="rounded p-1 text-slate-500 hover:bg-white/10 hover:text-slate-200"
-                aria-label="Close"
+                className="icon-btn mt-0.5"
+                aria-label="Close shortcuts"
               >
                 ✕
               </button>
             </div>
-            <div>
+            <div className="px-5 py-2">
               {[
                 ['/', 'Search the radar'],
                 ['n', 'Capture a new deadline'],
@@ -1121,16 +1150,14 @@ export default function App() {
               ].map(([key, label]) => (
                 <div
                   key={key}
-                  className="flex items-center justify-between gap-3 border-b border-white/5 py-2 last:border-0"
+                  className="flex items-center justify-between gap-4 border-b border-dotted border-line py-2 last:border-0"
                 >
-                  <kbd className="min-w-[3rem] rounded-md border border-white/15 bg-white/[0.06] px-2 py-0.5 text-center font-mono text-xs text-slate-200">
-                    {key}
-                  </kbd>
-                  <span className="flex-1 text-right text-[13px] text-slate-300">{label}</span>
+                  <kbd className="min-w-[3rem] text-center">{key}</kbd>
+                  <span className="flex-1 text-right text-[12px] text-ink-2">{label}</span>
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-500">
+            <p className="border-t border-line bg-paper px-5 py-2.5 text-center font-mono text-[9px] leading-relaxed tracking-wide text-ink-3">
               Desktop mode — hands stay on the keyboard, voice still runs the app.
             </p>
           </div>
@@ -1139,11 +1166,11 @@ export default function App() {
 
       {/* Clipboard auto-detect suggestion */}
       {clipSuggest && (
-        <div className="mt-2 flex items-center gap-3 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs text-slate-200">
+        <div className="mt-2 flex items-center gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2">
           <span aria-hidden="true">📋</span>
           <p className="min-w-0 flex-1 break-words">
-            <b>Clipboard check</b> — looks like a deadline notice. Add it?{' '}
-            <span className="text-slate-500">{clipSuggest.text.slice(0, 80)}…</span>
+            <b className="font-semibold text-ink">Clipboard check</b> — looks like a deadline notice.
+            Add it? <span className="text-ink-3">{clipSuggest.text.slice(0, 80)}…</span>
           </p>
           <button
             type="button"
@@ -1153,7 +1180,7 @@ export default function App() {
               setClipSuggest(null)
               addTask(t, 'from your clipboard')
             }}
-            className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 font-semibold text-slate-950 transition hover:bg-emerald-400"
+            className="btn btn-primary !px-2.5 !py-1 !text-[10px]"
           >
             ✓ Add
           </button>
@@ -1164,7 +1191,7 @@ export default function App() {
               setClipSuggest(null)
             }}
             aria-label="Dismiss clipboard suggestion"
-            className="shrink-0 rounded-lg border border-white/15 px-2.5 py-1.5 text-slate-400 transition hover:text-slate-200"
+            className="icon-btn h-7 w-7 text-[11px]"
           >
             ✕
           </button>
@@ -1177,19 +1204,19 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className="mt-2 flex items-start gap-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-slate-200"
+          className="mt-2 flex items-start gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2"
         >
           <span aria-hidden="true">🎙️</span>
           <p className="min-w-0 flex-1 leading-relaxed">
-            <span className="text-slate-400">“{askCard.q}”</span>
+            <span className="font-mono text-[10px] text-ink-3">“{askCard.q}”</span>
             <br />
-            {askCard.a}
+            <span className="text-ink">{askCard.a}</span>
           </p>
           <button
             type="button"
             onClick={() => setAskCard(null)}
             aria-label="Dismiss answer"
-            className="shrink-0 rounded-lg border border-white/15 px-2.5 py-1 text-slate-400 transition hover:text-slate-200"
+            className="icon-btn h-7 w-7 text-[11px]"
           >
             ✕
           </button>
@@ -1206,11 +1233,11 @@ export default function App() {
         <div
           className={`rail flex min-w-0 flex-col gap-4 ${
             isWide
-              ? 'rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto'
+              ? 'paper-panel p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto'
               : ''
           }`}
         >
-          {/* Stats + radar dial */}
+          {/* Stats + compass dial */}
           <div
             className={`stats-row flex items-stretch gap-3 ${isWide ? 'lg:flex-col lg:items-stretch' : ''}`}
           >
@@ -1226,13 +1253,11 @@ export default function App() {
               <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} focusH={(trend.thisWeek.focusMin / 60).toFixed(1)} />
               {risk.total > 0 && (
                 <p
-                  className="px-0.5 text-[11px] font-semibold text-amber-300/90"
+                  className="px-0.5 font-mono text-[10px] font-medium text-today"
                   title="Marks riding on late + this-week submissions"
                 >
                   🎯 {risk.total} marks at risk
-                  {risk.late > 0 && (
-                    <span className="font-medium text-red-300"> · {risk.late} already late</span>
-                  )}
+                  {risk.late > 0 && <span className="text-late"> · {risk.late} already late</span>}
                 </p>
               )}
               <TrendSpark weeks={trend.weeks} />
@@ -1244,25 +1269,28 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
-                className="weekly-btn mt-auto rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+                className="weekly-btn mt-auto flex items-center justify-between gap-2 rounded-[3px] border border-line bg-paper-2 px-3 py-2 text-left text-[11px] font-medium text-ink-2 transition hover:border-ink hover:text-ink"
               >
-                📊 Weekly report — real result + copy check-in post
+                <span>📊 Weekly report — real result + check-in post</span>
+                <span aria-hidden="true" className="font-mono text-ink-3">→</span>
               </button>
               <button
                 type="button"
                 onClick={() => downloadICS(tasks)}
                 title="Download an .ics file — opens in Google / Apple / Outlook calendar"
-                className="export-btn rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-sky-500/40 hover:text-sky-300"
+                className="export-btn flex items-center justify-between gap-2 rounded-[3px] border border-line bg-paper-2 px-3 py-2 text-left text-[11px] font-medium text-ink-2 transition hover:border-ink hover:text-ink"
               >
-                📅 Export deadlines to phone calendar (.ics)
+                <span>📅 Export deadlines to phone calendar (.ics)</span>
+                <span aria-hidden="true" className="font-mono text-ink-3">→</span>
               </button>
               <button
                 type="button"
                 onClick={shareWeek}
                 title="Native share sheet (phone) or clipboard copy — this week's deadlines for the group chat"
-                className="share-week-btn rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-violet-500/40 hover:text-violet-300"
+                className="share-week-btn flex items-center justify-between gap-2 rounded-[3px] border border-line bg-paper-2 px-3 py-2 text-left text-[11px] font-medium text-ink-2 transition hover:border-ink hover:text-ink"
               >
-                📤 Share this week to the group
+                <span>📤 Share this week to the group</span>
+                <span aria-hidden="true" className="font-mono text-ink-3">→</span>
               </button>
             </div>
           </div>
@@ -1271,7 +1299,7 @@ export default function App() {
           {tasks.length > 0 && (
             <div className="space-y-2">
               <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-500">
+                <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-ink-3">
                   🔍
                 </span>
                 <input
@@ -1280,7 +1308,7 @@ export default function App() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search tasks — or press / to jump here"
                   aria-label="Search tasks"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pr-3 pl-9 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none"
+                  className="field !py-2 !pl-8"
                 />
               </div>
               {(subjects.length > 0 || dateFilter) && (
@@ -1332,19 +1360,21 @@ export default function App() {
             <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
           )}
           {tasks.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
-              <p className="text-3xl">📡</p>
-              <p className="mt-2 text-sm font-semibold text-slate-200">No deadlines captured yet</p>
-              <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
-                Paste your most recent assignment WhatsApp message above — or hold your Wispr key and
-                describe it. The radar fills itself.
+            <div className="rounded-[5px] border border-dashed border-ink/30 bg-paper-2/60 p-8 text-center">
+              <p className="eyebrow">Nothing on the radar</p>
+              <p className="mx-auto mt-2 max-w-sm font-serif text-xl font-semibold text-ink">
+                No deadlines captured yet
+              </p>
+              <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-ink-3">
+                Paste your most recent assignment WhatsApp message above — or hold your Wispr key
+                and describe it. The radar fills itself.
               </p>
               <button
                 type="button"
                 onClick={() => setTasks(buildSampleTasks())}
-                className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+                className="btn btn-primary mt-4"
               >
-                Load sample data (see how it looks)
+                Load sample data →
               </button>
             </div>
           ) : (
@@ -1368,7 +1398,7 @@ export default function App() {
                 />
               ))}
               {visible.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
+                <div className="rounded-[4px] border border-dashed border-ink/30 bg-paper-2/60 p-6 text-center text-sm text-ink-2">
                   No tasks match this filter.{' '}
                   <button
                     type="button"
@@ -1377,7 +1407,7 @@ export default function App() {
                       setSubjectFilter(null)
                       setDateFilter(null)
                     }}
-                    className="font-semibold text-emerald-300 underline hover:text-emerald-200"
+                    className="font-semibold text-late underline decoration-late/40 underline-offset-2 hover:decoration-late"
                   >
                     Clear filters
                   </button>
@@ -1396,12 +1426,12 @@ export default function App() {
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="mt-12 border-t border-white/[0.07] pt-5 text-center text-[11px] leading-relaxed text-slate-500">
-        Built hands-free with <span className="text-slate-400">Wispr Flow</span> ·{' '}
-        <span className="text-slate-400">#NoHandsChallenge</span> · WeMakeDevs
-        <br />
-        All data stays in this browser (localStorage).
+      {/* Footer / colophon */}
+      <footer className="mt-12 border-t border-ink/25 pt-4 text-center font-mono text-[9px] leading-relaxed tracking-[0.14em] text-ink-3 uppercase">
+        <p>Built hands-free with Wispr Flow · #NoHandsChallenge · WeMakeDevs</p>
+        <p className="mt-1 tracking-normal normal-case">
+          Set in Fraunces &amp; IBM Plex Mono · all data stays in this browser
+        </p>
       </footer>
 
       {editingTask && (

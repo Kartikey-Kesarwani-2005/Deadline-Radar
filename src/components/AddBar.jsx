@@ -14,40 +14,48 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_10px_40px_-16px_rgba(16,185,129,0.5)] backdrop-blur transition focus-within:border-emerald-500/40 focus-within:shadow-[0_18px_55px_-20px_rgba(16,185,129,0.6)]">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent"
-      />
-      <textarea
-        rows={2}
-        ref={inputRef}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            submit()
-          }
-        }}
-        placeholder="Paste an assignment message… or hold your Wispr key, speak, and hit Enter"
-        aria-label="Add a deadline"
-        className="w-full resize-none bg-transparent px-2 py-1.5 text-[15px] leading-relaxed text-slate-100 caret-emerald-400 placeholder:text-slate-500 focus:outline-none"
-      />
-      <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-1">
-        <span className="wispr-hint inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-500">
+    <div className="rise relative overflow-hidden rounded-[5px] border border-ink bg-paper-2 shadow-[3px_3px_0_var(--color-line-strong)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper px-3.5 py-1.5">
+        <span className="eyebrow">✎ New entry</span>
+        <span className="font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
+          Enter files it · Shift+Enter = new line
+        </span>
+      </div>
+
+      <div className="relative px-4 py-2">
+        {/* the red margin line of a notebook page */}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-2 w-px bg-late/45" />
+        <textarea
+          rows={2}
+          ref={inputRef}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              submit()
+            }
+          }}
+          placeholder="Paste an assignment message… or hold your Wispr key, speak, and hit Enter"
+          aria-label="Add a deadline"
+          className="ruled w-full resize-none bg-transparent px-2 py-1.5 font-serif text-[16px] text-ink caret-late placeholder:font-sans placeholder:text-[13px] placeholder:text-ink-3 focus:outline-none"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-paper px-3 py-2">
+        <span className="wispr-hint inline-flex items-center gap-2 font-mono text-[9px] tracking-[0.08em] text-ink-3 uppercase">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-late opacity-60" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-late" />
           </span>
-          Hold your Wispr key and speak — the text lands right here
+          Hold Wispr · speak · the text lands here
         </span>
         <div className="add-row flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={onBrief}
             title="Radar Samachaar — hear your day spoken out loud"
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm whitespace-nowrap text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
+            className="btn btn-quiet"
           >
             🔊 Briefing
           </button>
@@ -57,20 +65,16 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
               onClick={onAsk}
               disabled={busy || listening}
               title="Ask the radar — say “aaj kya hai”, “kitne marks risk me”, or just order it: “mark DBMS done”, “delete OS lab”, “add viva Friday”"
-              className={`whitespace-nowrap rounded-lg border px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                listening
-                  ? 'animate-pulse border-violet-400 bg-violet-500/20 text-violet-200'
-                  : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-violet-500/40 hover:text-violet-300'
-              }`}
+              className={`btn ${listening ? 'btn-accent animate-pulse' : 'btn-quiet'}`}
             >
               {listening ? '🎧 sun raha hoon…' : '🎙️ Ask'}
             </button>
           )}
           <label
             title="Extract a task from a screenshot or photo"
-            className="cursor-pointer rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-slate-400 transition hover:border-sky-500/40 hover:text-sky-300"
+            className="btn btn-quiet cursor-pointer"
           >
-            📷
+            📷 Photo
             <input
               type="file"
               accept="image/*"
@@ -87,9 +91,9 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
             type="button"
             onClick={submit}
             disabled={!text.trim() || busy}
-            className="add-submit whitespace-nowrap rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-[0_8px_22px_-10px_rgba(16,185,129,0.85)] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="add-submit btn btn-primary"
           >
-            {busy ? 'Reading…' : 'Add to radar →'}
+            {busy ? 'Reading…' : 'File it →'}
           </button>
         </div>
       </div>

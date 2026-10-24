@@ -1,24 +1,17 @@
 import { doNowReason, fmtHours } from '../lib/brain'
 
 /**
- * 🎯 "Ab kya karun?" — the decision card. Instead of another list, the radar
- * names the ONE task to start right now (marks-per-hour ROI + latest-start),
- * with two runners-up. Start button wires the focus timer, which feeds the
- * effort model real minutes.
+ * 🎯 "Ab kya karun?" — the decision card, printed like a pinned note.
+ * It names the ONE task to start right now, with two runners-up.
  */
 export default function DoNowCard({ plan, cleared, onStart, focusId }) {
-  // Everything ticked off — celebrate the zero state instead of blinking out.
   if (!plan) {
     if (!cleared) return null
     return (
-      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-3.5 text-center">
-        <p className="text-[11px] font-bold tracking-widest text-emerald-300 uppercase">
-          🎯 Ab kya karun?
-        </p>
-        <p className="mt-1.5 text-sm font-semibold text-slate-100">
-          Nothing left — radar clear 🎉
-        </p>
-        <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+      <div className="rise rounded-[5px] border border-done/40 bg-done-soft p-4 text-center">
+        <p className="font-mono text-[10px] tracking-[0.2em] text-done uppercase">🎯 Ab kya karun?</p>
+        <p className="mt-2 font-serif text-lg font-semibold text-ink">Nothing left — radar clear 🎉</p>
+        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink-2">
           Every task is done. Paste or speak the next deadline and the radar picks it back up.
         </p>
       </div>
@@ -29,23 +22,34 @@ export default function DoNowCard({ plan, cleared, onStart, focusId }) {
   const running = focusId === t.id
 
   return (
-    <div className="donow rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/[0.08] to-transparent p-3.5">
-      <p className="text-[11px] font-bold tracking-widest text-emerald-300 uppercase">
-        🎯 Ab kya karun?
-      </p>
-      <div className="mt-1.5 flex items-start gap-2.5">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm leading-snug font-semibold break-words text-slate-100">{t.title}</p>
-          <p className="mt-1 text-[11px] text-slate-400">
-            ≈ {fmtHours(pick.minutes)} · {Math.round(pick.roi)} marks/hr
-            {pick.learned ? (
-              <span className="text-emerald-300"> · pace from your own focus sessions</span>
-            ) : (
-              <span className="text-slate-500"> · estimate until you track it</span>
-            )}
+    <div className="donow relative rounded-[5px] border border-ink bg-paper-2 p-4 shadow-[4px_4px_0_var(--color-ink)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-late uppercase">
+            🎯 Ab kya karun?
           </p>
-          <p className="mt-0.5 text-[11px] text-amber-300/90">{doNowReason(pick)}</p>
+          <p className="mt-1 font-mono text-[9px] tracking-[0.14em] text-ink-3 uppercase">
+            The one thing · start now
+          </p>
         </div>
+        <span className="stamp shrink-0">Do this first</span>
+      </div>
+
+      <p className="highlight mt-3 font-serif text-[22px] leading-[1.2] font-semibold break-words text-ink">
+        {t.title}
+      </p>
+
+      <p className="mt-2 font-mono text-[10px] tracking-wide text-ink-2">
+        ≈ {fmtHours(pick.minutes)} · {Math.round(pick.roi)} marks/hr
+        {pick.learned ? (
+          <span className="text-done"> · pace from your focus sessions</span>
+        ) : (
+          <span className="text-ink-3"> · estimate until you track it</span>
+        )}
+      </p>
+      <p className="mt-1.5 text-[12px] leading-relaxed text-late italic">{doNowReason(pick)}</p>
+
+      <div className="mt-3 flex items-center gap-2">
         <button
           type="button"
           onClick={() => onStart(t.id)}
@@ -55,18 +59,28 @@ export default function DoNowCard({ plan, cleared, onStart, focusId }) {
               ? 'Focus running — click the header timer to stop'
               : 'Start a focus timer — the radar learns your real pace'
           }
-          className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-emerald-950 transition hover:bg-emerald-400 disabled:opacity-70"
+          className="btn btn-accent"
         >
-          {running ? '▶️ Running' : '▶️ Start'}
+          {running ? '▶️ Running' : '▶ Start focus'}
         </button>
+        {t.marks != null && <span className="tag border-line bg-paper text-ink-2">{t.marks} marks</span>}
+        {t.subject && <span className="tag border-line bg-paper text-ink-2">{t.subject}</span>}
       </div>
+
       {next.length > 0 && (
-        <ul className="mt-2.5 space-y-1 border-t border-white/10 pt-2">
+        <ul className="mt-3 border-t border-dashed border-line pt-2.5">
           {next.map((n) => (
-            <li key={n.task.id} className="flex items-baseline gap-1.5 text-[11px] text-slate-400">
-              <span className="shrink-0 text-slate-600">→</span>
-              <span className="min-w-0 truncate">{n.task.title}</span>
-              <span className="shrink-0 tabular-nums text-slate-500">≈{fmtHours(n.minutes)}</span>
+            <li
+              key={n.task.id}
+              className="flex items-baseline gap-2 border-b border-dotted border-line py-1.5 text-[11px] last:border-0"
+            >
+              <span aria-hidden="true" className="font-mono text-[10px] text-ink-3">
+                →
+              </span>
+              <span className="min-w-0 flex-1 truncate text-ink-2">{n.task.title}</span>
+              <span className="shrink-0 font-mono text-[10px] tabular-nums text-ink-3">
+                ≈{fmtHours(n.minutes)}
+              </span>
             </li>
           ))}
         </ul>

@@ -3,15 +3,39 @@ import { useState } from 'react'
 function Field({ label, hint, children }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="font-mono text-[10px] font-medium tracking-[0.14em] text-ink-2 uppercase">
+        {label}
+      </span>
       <div className="mt-1.5">{children}</div>
-      {hint && <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] leading-relaxed text-ink-3">{hint}</p>}
     </label>
   )
 }
 
-const inputCls =
-  'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/60 focus:outline-none'
+function Toggle({ on, onClick, label }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={onClick}
+      className={`relative h-6 w-11 shrink-0 rounded-full border transition ${
+        on ? 'border-ink bg-done' : 'border-line bg-paper-3'
+      }`}
+    >
+      <span
+        className={`absolute top-[2px] h-[18px] w-[18px] rounded-full border border-ink bg-paper-2 shadow-sm transition-all ${
+          on ? 'left-[22px]' : 'left-[2px]'
+        }`}
+      />
+    </button>
+  )
+}
+
+const Card = ({ children }) => (
+  <div className="rounded-[4px] border border-line bg-paper p-3">{children}</div>
+)
 
 // Free-tier keys have distinctive prefixes — sniff the provider so pasting a
 // Groq key auto-fills the right base URL + model. Without this, a user who
@@ -58,148 +82,138 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1424] p-5 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-100">Settings</h2>
+        <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
+          <div>
+            <p className="eyebrow">Control panel</p>
+            <h2 className="font-serif text-2xl leading-tight font-semibold text-ink">Settings</h2>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-slate-500 hover:bg-white/10 hover:text-slate-200"
-            aria-label="Close"
+            className="icon-btn mt-1"
+            aria-label="Close settings"
           >
             ✕
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-200">Smart extract with AI</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
-                OFF still works — a built-in parser handles dates, marks and subjects offline.
-                Turn ON for messier messages. Paste a Groq or Gemini key and the rest fills in
-                automatically.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={draft.aiEnabled}
-              aria-label="Smart extract with AI"
-              onClick={() => set({ aiEnabled: !draft.aiEnabled })}
-              className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                draft.aiEnabled ? 'bg-emerald-500' : 'bg-slate-700'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                  draft.aiEnabled ? 'left-[22px]' : 'left-0.5'
-                }`}
-              />
-            </button>
-          </div>
-
-          {draft.aiEnabled && (
-            <>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] text-slate-500">Quick fill:</span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    set({ baseUrl: 'https://api.groq.com/openai/v1', model: 'qwen/qwen3.8-27b' })
-                  }
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
-                >
-                  Groq (free)
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    set({
-                      baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-                      model: 'gemini-2.5-flash',
-                    })
-                  }
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-slate-400 transition hover:border-emerald-500/40 hover:text-emerald-300"
-                >
-                  Gemini (free)
-                </button>
-              </div>
-              <Field label="API key" hint="Stored only in this browser's localStorage. Never shared anywhere else.">
-                <input
-                  type="password"
-                  value={draft.apiKey}
-                  onChange={(e) => onKeyChange(e.target.value)}
-                  placeholder="sk-… / gsk_… / AIza…"
-                  className={inputCls}
-                />
-                {detected && (
-                  <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-emerald-400">
-                    <span aria-hidden="true">✓</span>
-                    {detected} detected — base URL &amp; model set automatically
-                  </p>
-                )}
-              </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Base URL">
-                  <input
-                    value={draft.baseUrl}
-                    onChange={(e) => set({ baseUrl: e.target.value })}
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="Model">
-                  <input
-                    value={draft.model}
-                    onChange={(e) => set({ model: e.target.value })}
-                    className={inputCls}
-                  />
-                </Field>
-              </div>
-            </>
-          )}
-
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="space-y-3 p-5">
+          <Card>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-slate-200">🧲 Clipboard auto-detect</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
-                  Copy an assignment message (WhatsApp, notes…), switch back to this tab — we
-                  check the clipboard and offer a one-tap capture. The text never leaves your
-                  browser. Allow clipboard access once when asked.
+                <p className="font-serif text-sm font-semibold text-ink">Smart extract with AI</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
+                  OFF still works — a built-in parser handles dates, marks and subjects offline. Turn
+                  ON for messier messages. Paste a Groq or Gemini key and the rest fills in
+                  automatically.
                 </p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={draft.clipDetect}
-                aria-label="Clipboard auto-detect"
-                onClick={() => set({ clipDetect: !draft.clipDetect })}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                  draft.clipDetect ? 'bg-emerald-500' : 'bg-slate-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                    draft.clipDetect ? 'left-[22px]' : 'left-0.5'
-                  }`}
-                />
-              </button>
+              <Toggle
+                on={draft.aiEnabled}
+                onClick={() => set({ aiEnabled: !draft.aiEnabled })}
+                label="Smart extract with AI"
+              />
             </div>
-          </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="text-sm font-semibold text-slate-200">🖥️ Display mode</p>
-            <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+            {draft.aiEnabled && (
+              <div className="mt-3 space-y-3 border-t border-dashed border-line pt-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
+                    Quick fill
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set({ baseUrl: 'https://api.groq.com/openai/v1', model: 'qwen/qwen3.8-27b' })
+                    }
+                    className="tag border-ink/25 bg-paper-2 text-ink-2 transition hover:border-ink hover:text-ink"
+                  >
+                    Groq (free)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set({
+                        baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+                        model: 'gemini-2.5-flash',
+                      })
+                    }
+                    className="tag border-ink/25 bg-paper-2 text-ink-2 transition hover:border-ink hover:text-ink"
+                  >
+                    Gemini (free)
+                  </button>
+                </div>
+
+                <Field
+                  label="API key"
+                  hint="Stored only in this browser's localStorage. Never shared anywhere else."
+                >
+                  <input
+                    type="password"
+                    value={draft.apiKey}
+                    onChange={(e) => onKeyChange(e.target.value)}
+                    placeholder="sk-… / gsk_… / AIza…"
+                    className="field"
+                  />
+                  {detected && (
+                    <p className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-done">
+                      <span aria-hidden="true">✓</span>
+                      {detected} detected — base URL &amp; model set automatically
+                    </p>
+                  )}
+                </Field>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Base URL">
+                    <input
+                      value={draft.baseUrl}
+                      onChange={(e) => set({ baseUrl: e.target.value })}
+                      className="field"
+                    />
+                  </Field>
+                  <Field label="Model">
+                    <input
+                      value={draft.model}
+                      onChange={(e) => set({ model: e.target.value })}
+                      className="field"
+                    />
+                  </Field>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-serif text-sm font-semibold text-ink">🧲 Clipboard auto-detect</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
+                  Copy an assignment message (WhatsApp, notes…), switch back to this tab — we check
+                  the clipboard and offer a one-tap capture. The text never leaves your browser.
+                  Allow clipboard access once when asked.
+                </p>
+              </div>
+              <Toggle
+                on={draft.clipDetect}
+                onClick={() => set({ clipDetect: !draft.clipDetect })}
+                label="Clipboard auto-detect"
+              />
+            </div>
+          </Card>
+
+          <Card>
+            <p className="font-serif text-sm font-semibold text-ink">🖥️ Display mode</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
               Auto picks the layout from your screen size. Phone mode: compact, big tap targets,
               card buttons always visible. Desktop: a wider radar dashboard.
             </p>
@@ -213,33 +227,29 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
                   key={value}
                   type="button"
                   onClick={() => set({ displayMode: value })}
-                  className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition ${
+                  className={
                     (draft.displayMode || 'auto') === value
-                      ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
-                      : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:text-slate-200'
-                  }`}
+                      ? 'btn btn-primary !px-2 !text-[10px]'
+                      : 'btn btn-quiet !px-2 !text-[10px]'
+                  }
                 >
                   {label}
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="text-sm font-semibold text-slate-200">Backup &amp; restore</p>
-            <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
-              Your tasks live only in this browser. Export a JSON backup before clearing site data
-              or moving to another device.
+          <Card>
+            <p className="font-serif text-sm font-semibold text-ink">Backup &amp; restore</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
+              Your tasks live only in this browser. Export a JSON backup before clearing site data or
+              moving to another device.
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={onExport}
-                className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
-              >
+              <button type="button" onClick={onExport} className="btn btn-quiet">
                 ⬇ Export tasks (.json)
               </button>
-              <label className="cursor-pointer rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-white/30 hover:text-slate-100">
+              <label className="btn btn-quiet cursor-pointer">
                 ⬆ Import backup
                 <input
                   type="file"
@@ -253,36 +263,28 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
                 />
               </label>
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-xl border border-red-500/20 bg-red-500/[0.05] p-3">
-            <p className="text-sm font-semibold text-red-300">Danger zone</p>
-            <p className="mt-0.5 text-[11px] text-slate-500">Deletes every captured task on this device.</p>
+          <div className="rounded-[4px] border border-late/35 bg-late-soft/60 p-3">
+            <p className="font-serif text-sm font-semibold text-late">Danger zone</p>
+            <p className="mt-1 text-[11px] text-ink-2">Deletes every captured task on this device.</p>
             <button
               type="button"
               onClick={() => (confirmClear ? onClearAll() : setConfirmClear(true))}
               onBlur={() => setConfirmClear(false)}
-              className="mt-2 rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/10"
+              className="btn mt-2 border-late text-late shadow-[2px_2px_0_var(--color-late)] hover:bg-late-soft"
             >
               {confirmClear ? 'Sure? Click again to delete all' : 'Clear all tasks'}
             </button>
           </div>
         </div>
 
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-slate-400 hover:bg-white/10"
-          >
+        <div className="flex justify-end gap-2 border-t border-line bg-paper px-5 py-3">
+          <button type="button" onClick={onClose} className="btn btn-quiet">
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={() => onSave(draft)}
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-          >
-            Save
+          <button type="button" onClick={() => onSave(draft)} className="btn btn-primary">
+            Save settings
           </button>
         </div>
       </div>

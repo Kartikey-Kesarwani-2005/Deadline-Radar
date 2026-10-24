@@ -1,63 +1,57 @@
 /**
- * 🌦️ Deadline Weather — the 7-day load forecast, told like a weather report.
+ * 🌦️ Deadline Weather — the 7-day load forecast, printed like a ticket strip.
  * Tap a day to filter the radar to that day's submissions.
  */
+
+const LEVEL_TONE = {
+  free: 'border-line bg-paper-2 text-ink-3',
+  light: 'border-later/35 bg-later-soft text-later',
+  heavy: 'border-today/40 bg-today-soft text-today',
+  storm: 'border-late/40 bg-late-soft text-late',
+}
 
 export default function WeatherStrip({ days, active, onPick }) {
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-bold tracking-widest text-slate-500 uppercase">
-        🌦️ 7-day forecast
-      </p>
+      <p className="eyebrow mb-1.5">🌦️ 7-day forecast</p>
       <div className="grid grid-cols-7 gap-1">
-        {days.map((d) => (
-          <button
-            key={d.key}
-            type="button"
-            onClick={() => onPick(d.key)}
-            title={
-              d.count
-                ? `${d.count} submission${d.count > 1 ? 's' : ''}, ${d.marks} marks — tap to filter`
-                : 'Clear day — tap to filter'
-            }
-            className={`flex flex-col items-center rounded-lg border px-0.5 py-1.5 transition ${
-              active === d.key
-                ? 'border-emerald-500/60 bg-emerald-500/10'
-                : d.isToday
-                  ? 'border-emerald-500/30 bg-emerald-500/[0.05] ring-1 ring-emerald-500/20'
-                  : d.level === 'storm'
-                  ? 'border-red-500/30 bg-red-500/[0.06] hover:border-red-400/50'
-                  : d.level === 'heavy'
-                    ? 'border-amber-500/30 bg-amber-500/[0.06] hover:border-amber-400/50'
-                    : 'border-white/10 bg-white/[0.03] hover:border-white/25'
-            }`}
-          >
-            <span
-              className={`text-[9px] font-semibold tracking-wider uppercase ${
-                d.isToday ? 'text-emerald-400' : 'text-slate-500'
+        {days.map((d) => {
+          const on = active === d.key
+          return (
+            <button
+              key={d.key}
+              type="button"
+              onClick={() => onPick(d.key)}
+              title={
+                d.count
+                  ? `${d.count} submission${d.count > 1 ? 's' : ''}, ${d.marks} marks — tap to filter`
+                  : 'Clear day — tap to filter'
+              }
+              className={`flex flex-col items-center rounded-[3px] border px-0.5 py-1.5 transition ${
+                on
+                  ? 'border-ink bg-ink text-paper'
+                  : d.isToday
+                    ? 'border-ink/70 bg-paper-2 ring-1 ring-ink/20'
+                    : LEVEL_TONE[d.level] || LEVEL_TONE.free
               }`}
             >
-              {d.isToday ? 'Today' : d.label}
-            </span>
-            <span className="my-0.5 text-base leading-none">{d.icon}</span>
-            <span
-              className={`text-[10px] font-bold tabular-nums ${
-                d.marks
-                  ? d.level === 'storm'
-                    ? 'text-red-300'
-                    : d.level === 'heavy'
-                      ? 'text-amber-300'
-                      : 'text-sky-300'
-                  : 'text-slate-600'
-              }`}
-            >
-              {d.count ? `${d.marks}` : '—'}
-            </span>
-          </button>
-        ))}
+              <span
+                className={`font-mono text-[8px] font-semibold tracking-[0.1em] uppercase ${
+                  on ? 'text-paper' : d.isToday ? 'text-ink' : 'text-ink-3'
+                }`}
+              >
+                {d.isToday ? 'Today' : d.label}
+              </span>
+              <span className="my-0.5 text-[13px] leading-none">{d.icon}</span>
+              <span className={`font-mono text-[10px] font-medium tabular-nums ${on ? 'text-paper' : ''}`}>
+                {d.count ? d.marks : '—'}
+              </span>
+            </button>
+          )
+        })}
       </div>
-      <p className="mt-1 text-[10px] leading-tight text-slate-600">
-        Marks due each day · tap a day to filter
+      <p className="mt-1 font-mono text-[9px] leading-tight tracking-wide text-ink-3">
+        Marks due each day · tap to filter
       </p>
     </div>
   )

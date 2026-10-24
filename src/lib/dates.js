@@ -90,13 +90,15 @@ export function formatLongToday() {
  * Tailwind classes for a due-date pill based on urgency.
  */
 export function dueTone(task) {
-  if (task.done) return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+  if (task.done) return 'border-done/35 bg-done-soft text-done'
   // `!task.dueDate` (not `=== null`) so an undefined dueDate can never slip
   // into the `diff <= 3` branch below and show as falsely urgent.
-  if (!task.dueDate) return 'border-slate-500/30 bg-slate-500/10 text-slate-400'
+  if (!task.dueDate) return 'border-line bg-paper-3 text-ink-3'
   const diff = dayDiff(todayKey(), task.dueDate)
-  if (diff < 0) return 'border-red-500/40 bg-red-500/15 text-red-300'
-  if (diff === 0) return 'border-amber-400/40 bg-amber-400/15 text-amber-300'
-  if (diff <= 3) return 'border-yellow-500/30 bg-yellow-500/10 text-yellow-200'
-  return 'border-sky-500/30 bg-sky-500/10 text-sky-300'
+  // An unreadable date (shouldn't happen now) must read as neutral, not urgent.
+  if (diff === null) return 'border-line bg-paper-3 text-ink-3'
+  if (diff < 0) return 'border-late/40 bg-late-soft text-late'
+  if (diff === 0) return 'border-today/45 bg-today-soft text-today'
+  if (diff <= 3) return 'border-week/40 bg-week-soft text-week'
+  return 'border-later/35 bg-later-soft text-later'
 }

@@ -1,21 +1,33 @@
 /**
- * The signature widget: concentric radar rings — one per urgency zone —
- * with a rotating sweep and the on-time percentage as a center ring.
- * Clicking a ring jumps to that section of the dashboard.
+ * The signature widget, redrawn as a paper compass:
+ * concentric ink arcs for Late / Due today / This week / Later, a rotating
+ * needle, and the on-time % in the centre. Clicking a ring jumps to its zone.
  */
 
 const ZONES = [
-  { k: 'late', label: 'Late', color: '#f87171' },
-  { k: 'today', label: 'Due today', color: '#fcd34d' },
-  { k: 'week', label: 'This week', color: '#facc15' },
-  { k: 'later', label: 'Later', color: '#38bdf8' },
+  { k: 'late', label: 'Late', color: '#b83a20' },
+  { k: 'today', label: 'Due today', color: '#a06b0c' },
+  { k: 'week', label: 'This week', color: '#68792b' },
+  { k: 'later', label: 'Later', color: '#2f5687' },
 ]
-const RADII = [92, 76, 60, 46]
+const RADII = [88, 74, 59, 46]
+
+const TICKS = Array.from({ length: 60 }, (_, i) => {
+  const a = (i / 60) * Math.PI * 2 - Math.PI / 2
+  const long = i % 5 === 0
+  const r1 = long ? 94 : 98.5
+  const r2 = 104.5
+  return {
+    x1: 110 + Math.cos(a) * r1,
+    y1: 110 + Math.sin(a) * r1,
+    x2: 110 + Math.cos(a) * r2,
+    y2: 110 + Math.sin(a) * r2,
+    long,
+  }
+})
 
 export default function RadarDial({ late, today, week, later, onTime, rated = 0 }) {
   const counts = { late, today, week, later }
-  // Only dated, timestamped finishes are scoreable — undated work has no
-  // deadline to miss, so it must not drag the percentage down.
   const pct = rated > 0 ? Math.round((onTime / rated) * 100) : null
   const ringDeg = (c) => (c > 0 ? (Math.min(c, 8) / 8) * 360 : 0)
 
@@ -27,17 +39,24 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
 
   return (
     <div
-      role="img"
-      aria-label={`Deadline radar: ${late} late, ${today} due today, ${week} this week, ${later} later. ${pct ?? 0} percent finished on time.`}
-      className="rise radar-dial relative h-[168px] w-[168px] shrink-0 self-center overflow-hidden rounded-full bg-[#0a1122] shadow-[0_0_55px_-14px_rgba(16,185,129,0.45)] ring-1 ring-white/15"
+      role="group"
+      aria-label={`Deadline compass: ${late} late, ${today} due today, ${week} this week, ${later} later. ${pct ?? 0} percent finished on time.`}
+      className="rise radar-dial relative h-[176px] w-[176px] shrink-0 self-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2 shadow-[3px_3px_0_rgba(29,27,22,0.18)]"
     >
-      <span aria-hidden="true" className="radar-sweep" />
-
       <svg viewBox="0 0 220 220" className="absolute inset-0 h-full w-full">
-        {/* instrument grid — outer bezel + crosshair */}
-        <circle cx="110" cy="110" r="103" fill="none" stroke="rgba(148,163,184,0.07)" strokeWidth="1" />
-        <line x1="110" y1="8" x2="110" y2="212" stroke="rgba(148,163,184,0.06)" strokeWidth="1" />
-        <line x1="8" y1="110" x2="212" y2="110" stroke="rgba(148,163,184,0.06)" strokeWidth="1" />
+        {TICKS.map((t, i) => (
+          <line
+            key={i}
+            x1={t.x1}
+            y1={t.y1}
+            x2={t.x2}
+            y2={t.y2}
+            stroke="rgba(29,27,22,0.38)"
+            strokeWidth={t.long ? 1.4 : 0.7}
+            strokeLinecap="round"
+          />
+        ))}
+
         {ZONES.map((z, i) => {
           const c = counts[z.k]
           const deg = ringDeg(c)
@@ -45,8 +64,6 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
             <g
               key={z.k}
               onClick={() => deg && jump(z.k)}
-              // Keyboard-first app: rings are focusable and Enter/Space-activatable,
-              // matching the visible focus ring used everywhere else.
               tabIndex={deg ? 0 : -1}
               role={deg ? 'button' : undefined}
               aria-label={deg ? `${z.label}: ${c}. Jump to ${z.label}.` : undefined}
@@ -65,8 +82,8 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
                 cy={110}
                 r={RADII[i]}
                 fill="none"
-                stroke="rgba(255,255,255,0.05)"
-                strokeWidth={11}
+                stroke="#e9e1cf"
+                strokeWidth={9}
               />
               {deg > 0 && (
                 <circle
@@ -75,34 +92,27 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
                   r={RADII[i]}
                   fill="none"
                   stroke={z.color}
-                  strokeWidth={11}
+                  strokeWidth={9}
                   strokeLinecap="round"
                   pathLength={360}
                   strokeDasharray={`${deg} 360`}
                   transform="rotate(-90 110 110)"
-                  opacity={0.92}
+                  opacity={0.95}
                 />
               )}
             </g>
           )
         })}
 
-        {/* center: on-time progress ring */}
+        {/* centre dial */}
+        <circle cx={110} cy={110} r={38} fill="#f3eee1" stroke="#1d1b16" strokeWidth={1.4} />
         <circle
           cx={110}
           cy={110}
-          r={34}
-          fill="rgba(7,11,22,0.78)"
-          stroke="rgba(255,255,255,0.08)"
-          strokeWidth={6}
-        />
-        <circle
-          cx={110}
-          cy={110}
-          r={34}
+          r={31}
           fill="none"
-          stroke="#34d399"
-          strokeWidth={6}
+          stroke="#2b674a"
+          strokeWidth={3.5}
           strokeLinecap="round"
           pathLength={360}
           strokeDasharray={`${pct ?? 0} 360`}
@@ -110,11 +120,23 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
         />
       </svg>
 
+      {/* Rotating needle sits above the rings but stops short of the centre so
+          it never crosses the on-time % text. */}
+      <span aria-hidden="true" className="compass-rotor pointer-events-none absolute inset-0">
+        <span className="absolute top-[6%] left-1/2 h-[25%] w-[2px] -translate-x-1/2 rounded-full bg-late/60" />
+      </span>
+
+      {/* hub on top of the dial — small ink dot the needle pivots on */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink bg-paper-2"
+      />
+
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-extrabold tabular-nums text-slate-50">
+        <span className="font-serif text-[24px] leading-none font-semibold tabular-nums text-ink">
           {pct === null ? '—' : `${pct}%`}
         </span>
-        <span className="text-[8px] font-bold tracking-[0.18em] text-emerald-400/80 uppercase">
+        <span className="mt-0.5 font-mono text-[6.5px] font-semibold tracking-[0.1em] text-done uppercase">
           on time
         </span>
       </div>

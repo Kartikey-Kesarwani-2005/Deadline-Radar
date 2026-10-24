@@ -60,18 +60,19 @@ replacing anything you captured).
   so phone calendars keep repeating it too.
 - **Radar dashboard** — sections ordered by urgency: `Late` → `Due today` → `This week` → `Later`
   → `No date` → `Done`.
-- **Radar dial** — the signature widget: concentric rings for Late / Due today / This week / Later
-  with a live rotating sweep and the **on-time % ring** in the centre. Tap a ring to jump to that
-  zone.
+- **Radar dial** — the signature widget: a paper compass with concentric ink rings for Late / Due
+  today / This week / Later, a slow rotating needle and the **on-time %** in the centre. Tap a ring
+  to jump to that zone.
 - **📈 6-week finish arc** — a six-bar sparkline in the rail: every bar is one week, green = on
   time, amber = late, with the running "N of M finished on time" score — the tool's *real result*
   over time, visible at a glance.
 - **Celebration confetti** — ticking a task done bursts colourful confetti right from the click.
-- **Premium feel** — cards glide in with a stagger, lift on hover, and the header logo glows;
+- **Premium feel** — a "Field Notes" design system: warm graph paper, editorial serif headlines,
+  rubber-stamp chips and hard offset shadows. Cards glide in with a stagger and lift on hover;
   every animation respects the OS reduced-motion setting.
 - **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
   phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1536px),
-  a glass side rail that sticks to the viewport while you scroll, and hover-reveal card actions.
+  a sticky paper side rail that holds position while you scroll, and hover-reveal card actions.
 - **⌨️ Desktop keyboard shortcuts** — `/` search · `n` new deadline · `b` spoken briefing ·
   `w` weekly report · `?` shortcuts card · `Esc` close. A ⌨️ chip in the header opens the card;
   shortcuts never fire while you're typing in a field.

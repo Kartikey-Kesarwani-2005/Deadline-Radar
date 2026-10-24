@@ -396,8 +396,8 @@ check('backup: effortMin (pace data) survives restore', bEff[0].effortMin, 55)
 check('backup: malformed dueDate downgraded to null', bEff[1].dueDate, null)
 
 // --- Audit round: due-date pill tone ---
-check('dueTone: undefined dueDate stays calm slate', dueTone({ done: false, dueDate: undefined }).includes('slate-400'), true)
-check('dueTone: missing dueDate key also slate (was falsely yellow)', dueTone({ done: false }).includes('slate-400'), true)
+check('dueTone: undefined dueDate stays calm neutral', dueTone({ done: false, dueDate: undefined }).includes('text-ink-3'), true)
+check('dueTone: missing dueDate key also neutral (was falsely yellow)', dueTone({ done: false }).includes('text-ink-3'), true)
 
 // --- Fuzz round: weekday spellings the old regex silently dropped ---
 check('Saturday parses (old regex missed it)', extractLocal('OS lab this Saturday, 10 marks').dueDate, nextWeekday(6))
