@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Modal from './Modal'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
 import { marksAtRisk, onTimeStreak, paceRows, subjectLoad, weeklyTrend } from '../lib/brain'
 
@@ -75,17 +76,11 @@ export default function WeeklyReport({ tasks, onClose }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[2px]"
-      onClick={onClose}
+    <Modal
+      label="Weekly report"
+      onClose={onClose}
+      panelClassName="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)] sm:max-w-lg"
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Weekly report"
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)] sm:max-w-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
           <div>
             <p className="eyebrow">Weekly edition · last 7 days</p>
@@ -241,7 +236,6 @@ export default function WeeklyReport({ tasks, onClose }) {
             Paste in your weekly post with #NoHandsChallenge · tag WeMakeDevs + Wispr Flow
           </p>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

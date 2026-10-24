@@ -28,6 +28,9 @@ import TaskCard from './components/TaskCard'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
 import TaskEditModal from './components/TaskEditModal'
+import CommandPalette from './components/CommandPalette'
+import Modal from './components/Modal'
+import { SORT_MODES, postponeDate, sortTasks } from './lib/sort'
 
 const SECTION_TONES = {
   red: 'bg-late',
@@ -60,18 +63,8 @@ const SECTION_DEFS = [
   { key: 'done', title: 'Done', tone: 'green' },
 ]
 
-/** Priority first, then nearest deadline, then higher marks, then newest. */
-function byUrgency(a, b) {
-  if (a.priority !== b.priority) return a.priority === 'high' ? -1 : 1
-  if (a.dueDate && b.dueDate && a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1
-  if (a.dueDate && !b.dueDate) return -1
-  if (!a.dueDate && b.dueDate) return 1
-  const marksDiff = (b.marks || 0) - (a.marks || 0)
-  if (marksDiff) return marksDiff
-  return b.createdAt - a.createdAt
-}
-
-function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, focusId }) {
+/** One urgency section — heading, count and the ordered task cards inside. */
+function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, focusId }) {
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-7 scroll-mt-4">
@@ -98,12 +91,27 @@ function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onTo
             onDateChange={(date) => onDateChange(task.id, date)}
             onShare={() => onShare(task.id)}
             onFocus={() => onFocus(task.id)}
+            onPostpone={() => onPostpone(task.id)}
             focusing={focusId === task.id}
           />
         ))}
       </div>
     </section>
   )
+}
+
+const SAMPLE_MESSAGES = [
+  'DBMS assignment due tomorrow, 20 marks — submit on the portal',
+  'OS lab record submission this Friday, 10 marks',
+  'SE viva next Monday, 15 marks',
+]
+
+/** Trims a title at a word boundary so toasts never end mid-word. */
+function shortTitle(text, max = 46) {
+  if (!text || text.length <= max) return text || ''
+  const cut = text.slice(0, max)
+  const space = cut.lastIndexOf(' ')
+  return `${(space > max * 0.55 ? cut.slice(0, space) : cut).trimEnd()}…`
 }
 
 function buildSampleTasks() {
@@ -226,6 +234,7 @@ export default function App() {
   const [dateFilter, setDateFilter] = useState(null)
   const [hintsClosed, setHintsClosed] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const isDemo = useMemo(() => new URLSearchParams(window.location.search).has('demo'), [])
   const [clipSuggest, setClipSuggest] = useState(null)
   const [askCard, setAskCard] = useState(null)
@@ -301,8 +310,16 @@ export default function App() {
   }, [])
 
   const displayMode = settings.displayMode || 'auto'
+  const sortBy = SORT_MODES.some((m) => m.value === settings.sortBy) ? settings.sortBy : 'smart'
   const isPhone = displayMode === 'phone' || (displayMode === 'auto' && vw < 640)
   const isWide = !isPhone && vw >= 1024
+
+  const setSort = (value) =>
+    setSettings((s) => {
+      const next = { ...s, sortBy: value }
+      saveSettings(next)
+      return next
+    })
 
   useEffect(() => saveTasks(tasks), [tasks])
 
@@ -400,6 +417,12 @@ export default function App() {
   // · ? help · Esc close. Never fires while typing in a field.
   useEffect(() => {
     function onKey(e) {
+      // ⌘K / Ctrl+K works everywhere — even while typing in the capture box.
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((v) => !v)
+        return
+      }
       const tag = e.target?.tagName
       const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return
@@ -417,7 +440,8 @@ export default function App() {
         setShortcutsOpen((v) => !v)
       } else if (e.key === 'Escape') {
         // "Esc — close anything": peel off the topmost layer.
-        if (editingId) setEditingId(null)
+        if (paletteOpen) setPaletteOpen(false)
+        else if (editingId) setEditingId(null)
         else if (settingsOpen) setSettingsOpen(false)
         else if (reportOpen) setReportOpen(false)
         else if (shortcutsOpen) setShortcutsOpen(false)
@@ -428,7 +452,7 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm when tasks/busy change (briefing closure) and when modal layers change (Esc peeling)
-  }, [tasks, busy, editingId, settingsOpen, reportOpen, shortcutsOpen, askCard, clipSuggest])
+  }, [tasks, busy, editingId, settingsOpen, reportOpen, shortcutsOpen, paletteOpen, askCard, clipSuggest])
 
   // Chrome/Edge "install app" prompt (satisfied by the manifest + service worker).
   useEffect(() => {
@@ -650,7 +674,7 @@ export default function App() {
     // throw away focus time when moving to another task.
     bankFocus()
     setFocus({ taskId: id, startedAt: Date.now() })
-    setFlash({ msg: `⏱ Focus: ${task.title.slice(0, 48)} — stop from the header when done.` })
+    setFlash({ msg: `⏱ Focus: ${shortTitle(task.title, 48)} — stop from the header when done.` })
   }
   const stopFocus = () => {
     if (!focus) return
@@ -666,7 +690,7 @@ export default function App() {
       prev.map((t) => (t.id === task.id ? { ...t, effortMin: (t.effortMin || 0) + minutes } : t)),
     )
     setFlash({
-      msg: `⏱ ${minutes} min added to "${task.title.slice(0, 36)}" — your pace estimate just got real.`,
+      msg: `⏱ ${minutes} min added to "${shortTitle(task.title, 36)}" — your pace estimate just got real.`,
     })
   }
 
@@ -692,6 +716,50 @@ export default function App() {
 
   const changeDate = (id, date) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, dueDate: date } : t)))
+
+  // ⏭ Push a deadline by a day without opening the edit sheet — undo lives in
+  // the toast, so a mis-click costs nothing.
+  const postponeTask = (id) => {
+    const task = tasks.find((t) => t.id === id)
+    if (!task) return
+    const previous = task.dueDate
+    const next = postponeDate(previous, 1)
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, dueDate: next } : t)))
+    setFlash({
+      msg: `📅 ${shortTitle(task.title, 44)} → ${formatDue(next)}`,
+      action: {
+        label: 'Undo',
+        run: () =>
+          setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, dueDate: previous } : t))),
+      },
+    })
+  }
+
+  // ⧉ A pending copy leaves the original untouched — handy for a re-submission
+  // or the same brief in another subject.
+  const duplicateTask = (id) => {
+    const source = tasks.find((t) => t.id === id)
+    if (!source) return
+    const copy = {
+      ...source,
+      id: uid(),
+      title: `${source.title} (copy)`,
+      done: false,
+      completedAt: null,
+      effortMin: null,
+      rolledFrom: null,
+      createdAt: Date.now(),
+    }
+    setTasks((prev) => [copy, ...prev])
+    setEditingId(null)
+    setFlash({ msg: `⧉ Duplicated — "${shortTitle(copy.title, 42)}" is pending.` })
+  }
+
+  const clearFilters = () => {
+    setQuery('')
+    setSubjectFilter(null)
+    setDateFilter(null)
+  }
 
   // 📤 copies a ready-to-paste line (plus the app link) for study groups.
   async function shareTask(id) {
@@ -739,20 +807,19 @@ export default function App() {
     const today = todayKey()
     const isDone = (t) => t.done
     const diffOf = (t) => (t.dueDate ? dayDiff(today, t.dueDate) : null)
+    const order = (list) => sortTasks(list, sortBy)
 
     return {
-      late: visible.filter((t) => !isDone(t) && t.dueDate && diffOf(t) < 0).sort(byUrgency),
-      today: visible.filter((t) => !isDone(t) && diffOf(t) === 0).sort(byUrgency),
-      week: visible
-        .filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 0 && diffOf(t) <= 7)
-        .sort(byUrgency),
-      later: visible
-        .filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 7)
-        .sort(byUrgency),
-      noDate: visible.filter((t) => !isDone(t) && !t.dueDate).sort(byUrgency),
+      late: order(visible.filter((t) => !isDone(t) && t.dueDate && diffOf(t) < 0)),
+      today: order(visible.filter((t) => !isDone(t) && diffOf(t) === 0)),
+      week: order(
+        visible.filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 0 && diffOf(t) <= 7),
+      ),
+      later: order(visible.filter((t) => !isDone(t) && diffOf(t) !== null && diffOf(t) > 7)),
+      noDate: order(visible.filter((t) => !isDone(t) && !t.dueDate)),
       done: visible.filter(isDone).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)),
     }
-  }, [visible])
+  }, [visible, sortBy])
 
   // "Real result" metric: tasks finished before their deadline.
   const onTime = tasks.filter(
@@ -906,6 +973,103 @@ export default function App() {
 
   const editingTask = tasks.find((t) => t.id === editingId) || null
 
+  const jumpSection = (key) =>
+    document.getElementById(`radar-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+  // ⌘K actions — each one is a real, already-supported capability, so the
+  // palette is a faster door to the app rather than a separate feature set.
+  const commands = [
+    {
+      id: 'new',
+      icon: '✎',
+      label: 'Capture a new deadline',
+      hint: 'N',
+      keywords: 'add new task paste message',
+      run: () => setTimeout(() => inputRef.current?.focus(), 80),
+    },
+    {
+      id: 'brief',
+      icon: '🔊',
+      label: 'Play the spoken briefing',
+      hint: 'B',
+      keywords: 'briefing speak samachaar day summary',
+      run: playBriefing,
+    },
+    {
+      id: 'report',
+      icon: '📊',
+      label: 'Open the weekly report',
+      hint: 'W',
+      keywords: 'weekly report stats check-in',
+      run: () => setReportOpen(true),
+    },
+    {
+      id: 'settings',
+      icon: '⚙️',
+      label: 'Open settings',
+      keywords: 'settings ai api key display backup',
+      run: () => setSettingsOpen(true),
+    },
+    {
+      id: 'export',
+      icon: '📅',
+      label: 'Export deadlines to calendar (.ics)',
+      keywords: 'ics export calendar phone google',
+      run: () => downloadICS(tasks),
+    },
+    {
+      id: 'share',
+      icon: '📤',
+      label: 'Share this week with the group',
+      keywords: 'share whatsapp group week plan',
+      run: shareWeek,
+    },
+    {
+      id: 'late',
+      icon: '🔴',
+      label: 'Jump to Late — handle now',
+      keywords: 'jump late overdue section',
+      run: () => setTimeout(() => jumpSection('late'), 90),
+    },
+    {
+      id: 'today',
+      icon: '🟠',
+      label: 'Jump to Due today',
+      keywords: 'jump today section',
+      run: () => setTimeout(() => jumpSection('today'), 90),
+    },
+    {
+      id: 'week',
+      icon: '🟡',
+      label: 'Jump to This week',
+      keywords: 'jump week section',
+      run: () => setTimeout(() => jumpSection('week'), 90),
+    },
+    {
+      id: 'filters',
+      icon: '🧹',
+      label: 'Clear search & filters',
+      keywords: 'clear reset filter search',
+      run: clearFilters,
+    },
+    {
+      id: 'shortcuts',
+      icon: '⌨️',
+      label: 'Show keyboard shortcuts',
+      hint: '?',
+      keywords: 'keyboard keys help shortcuts',
+      run: () => setShortcutsOpen(true),
+    },
+    ...SORT_MODES.map((m) => ({
+      id: `sort-${m.value}`,
+      icon: '↕',
+      label: `Sort: ${m.label}`,
+      keywords: `sort order ${m.label} ${m.value}`,
+      onlyWhenSearch: true,
+      run: () => setSort(m.value),
+    })),
+  ]
+
   return (
     <div
       className={`mx-auto w-full px-4 pb-16 pt-5 sm:pt-7 ${
@@ -963,6 +1127,16 @@ export default function App() {
               <span aria-hidden="true">⏹</span>
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            title="Command palette — Ctrl / ⌘ K"
+            aria-label="Open command palette"
+            className="icon-btn w-auto gap-1.5 px-2.5"
+          >
+            <span aria-hidden="true">🔍</span>
+            <kbd className="hidden sm:inline">⌘K</kbd>
+          </button>
           {isWide && (
             <button
               type="button"
@@ -1112,17 +1286,11 @@ export default function App() {
 
       {/* ⌨️ Shortcuts card (desktop) */}
       {shortcutsOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[2px]"
-          onClick={() => setShortcutsOpen(false)}
+        <Modal
+          label="Keyboard shortcuts"
+          onClose={() => setShortcutsOpen(false)}
+          panelClassName="w-full max-w-sm rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Keyboard shortcuts"
-            className="w-full max-w-sm rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
-            onClick={(e) => e.stopPropagation()}
-          >
             <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
               <div>
                 <p className="eyebrow">Keyboard desk</p>
@@ -1141,6 +1309,7 @@ export default function App() {
             </div>
             <div className="px-5 py-2">
               {[
+                ['⌘K', 'Command palette — every action'],
                 ['/', 'Search the radar'],
                 ['n', 'Capture a new deadline'],
                 ['b', '🔊 Briefing — Radar Samachaar'],
@@ -1158,10 +1327,9 @@ export default function App() {
               ))}
             </div>
             <p className="border-t border-line bg-paper px-5 py-2.5 text-center font-mono text-[9px] leading-relaxed tracking-wide text-ink-3">
-              Desktop mode — hands stay on the keyboard, voice still runs the app.
+              Ctrl/⌘ K opens the palette from anywhere — hands stay on the keyboard.
             </p>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Clipboard auto-detect suggestion */}
@@ -1311,6 +1479,24 @@ export default function App() {
                   className="field !py-2 !pl-8"
                 />
               </div>
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="sort-tasks" className="eyebrow">
+                  Order
+                </label>
+                <select
+                  id="sort-tasks"
+                  value={sortBy}
+                  onChange={(e) => setSort(e.target.value)}
+                  title="How tasks are ordered inside each section"
+                  className="field select-field !w-[168px] !py-1 !text-[11px]"
+                >
+                  {SORT_MODES.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {(subjects.length > 0 || dateFilter) && (
                 <div className="flex flex-wrap gap-1.5">
                   {subjects.length > 0 && (
@@ -1360,28 +1546,90 @@ export default function App() {
             <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
           )}
           {tasks.length === 0 ? (
-            <div className="rounded-[5px] border border-dashed border-ink/30 bg-paper-2/60 p-8 text-center">
-              <p className="eyebrow">Nothing on the radar</p>
-              <p className="mx-auto mt-2 max-w-sm font-serif text-xl font-semibold text-ink">
-                No deadlines captured yet
-              </p>
-              <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-ink-3">
-                Paste your most recent assignment WhatsApp message above — or hold your Wispr key
-                and describe it. The radar fills itself.
-              </p>
-              <button
-                type="button"
-                onClick={() => setTasks(buildSampleTasks())}
-                className="btn btn-primary mt-4"
-              >
-                Load sample data →
-              </button>
+            <div className="overflow-hidden rounded-[5px] border border-dashed border-ink/30 bg-paper-2/70">
+              <div className="grid gap-5 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
+                <div>
+                  <p className="eyebrow">Blank page · nothing on the radar</p>
+                  <p className="mt-2 font-serif text-[22px] leading-tight font-semibold text-ink">
+                    Your next deadline starts here.
+                  </p>
+                  <p className="mt-2 max-w-md text-xs leading-relaxed text-ink-2">
+                    Paste the assignment message from WhatsApp, hold your Wispr key and say it, or
+                    drop a screenshot. The radar parses the date, subject and marks by itself and
+                    files it under the right day.
+                  </p>
+                </div>
+                <svg
+                  viewBox="0 0 120 120"
+                  aria-hidden="true"
+                  className="mx-auto hidden h-24 w-24 sm:block"
+                >
+                  <circle cx="60" cy="60" r="52" fill="#fbf8ef" stroke="#1d1b16" strokeWidth="1.6" />
+                  <circle cx="60" cy="60" r="36" fill="none" stroke="#d7cdb8" strokeWidth="6" />
+                  <circle cx="60" cy="60" r="22" fill="#f3eee1" stroke="#1d1b16" strokeWidth="1.4" />
+                  <path d="M60 22 L67 60 L60 55 L53 60 Z" fill="#ad3620" />
+                  <circle cx="60" cy="60" r="4" fill="#1d1b16" />
+                  <circle cx="60" cy="60" r="1.4" fill="#f3eee1" />
+                </svg>
+              </div>
+
+              <div className="grid gap-2 border-t border-line px-6 py-4 sm:grid-cols-3 sm:px-8">
+                {[
+                  ['✎', 'Paste a message', 'WhatsApp, notes, email'],
+                  ['🎙', 'Hold & speak', 'Wispr types it for you'],
+                  ['📷', 'Drop a photo', 'Screenshot or portal shot'],
+                ].map(([icon, title, hint]) => (
+                  <div key={title} className="flex items-start gap-2">
+                    <span aria-hidden="true" className="text-sm">
+                      {icon}
+                    </span>
+                    <div>
+                      <p className="text-[12px] font-medium text-ink">{title}</p>
+                      <p className="font-mono text-[9px] tracking-wide text-ink-3">{hint}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-line bg-paper px-6 py-4 sm:px-8">
+                <p className="eyebrow">Try a sample message</p>
+                <div className="mt-2 flex flex-col gap-1.5">
+                  {SAMPLE_MESSAGES.map((message) => (
+                    <button
+                      key={message}
+                      type="button"
+                      onClick={() => addTask(message)}
+                      className="group flex items-start gap-2 rounded-[3px] border border-line bg-paper-2 px-2.5 py-1.5 text-left transition hover:border-ink hover:bg-paper-3"
+                    >
+                      <span aria-hidden="true" className="mt-0.5 font-mono text-[10px] text-ink-3">
+                        +
+                      </span>
+                      <span className="min-w-0 flex-1 text-[12px] leading-snug text-ink-2 group-hover:text-ink">
+                        “{message}”
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTasks(buildSampleTasks())}
+                    className="btn btn-quiet"
+                  >
+                    Load a full demo radar →
+                  </button>
+                  <span className="font-mono text-[9px] tracking-wide text-ink-3">
+                    or press <kbd>N</kbd> to start typing
+                  </span>
+                </div>
+              </div>
             </div>
           ) : (
             <>
               {SECTION_DEFS.map(({ key, title, tone, hint }) => (
                 <Section
                   key={key}
+                  sectionKey={key}
                   title={title}
                   tone={tone}
                   hint={key === 'done' ? `${onTime} finished on time${streak > 1 ? ` · 🔥 ${streak} in a row` : ''}` : hint}
@@ -1394,6 +1642,7 @@ export default function App() {
                   onDateChange={changeDate}
                   onShare={shareTask}
                   onFocus={startFocus}
+                  onPostpone={postponeTask}
                   focusId={focus?.taskId}
                 />
               ))}
@@ -1439,10 +1688,20 @@ export default function App() {
           task={editingTask}
           onClose={() => setEditingId(null)}
           onSave={(patch) => updateTask(editingTask.id, patch)}
+          onDuplicate={() => duplicateTask(editingTask.id)}
           onDelete={() => {
             deleteTask(editingTask.id)
             setEditingId(null)
           }}
+        />
+      )}
+
+      {paletteOpen && (
+        <CommandPalette
+          tasks={tasks}
+          commands={commands}
+          onClose={() => setPaletteOpen(false)}
+          onEditTask={(id) => setEditingId(id)}
         />
       )}
 

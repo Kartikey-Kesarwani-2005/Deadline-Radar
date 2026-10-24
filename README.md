@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-130%2F130%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-152%2F152%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -28,6 +28,18 @@ replacing anything you captured).
 - **Full editing** — ✏️ on any card fixes title, subject, marks, date and priority; original
   captured text stays visible for reference.
 - **Search + subject filter** — find any task instantly; subject chips filter the radar.
+- **⌘K command palette** — one box for everything: type to search your radar, or run an action
+  (new deadline, spoken briefing, weekly report, settings, export, jump to a section, sort).
+  <kbd>↑</kbd><kbd>↓</kbd> to move, <kbd>↵</kbd> to open, <kbd>Esc</kbd> to close. `Ctrl+K` on
+  Windows/Linux, the 🔍 chip in the header does the same.
+- **↕ Order control** — each section can be read five ways: **Smart** (priority → nearest
+  deadline → highest marks), **Due soonest**, **Marks high**, **Newest first** or **A → Z**.
+  The pick is saved with your settings, so the radar opens the way you left it.
+- **⏭ Postpone in one tap** — the ⏭ button on any pending card pushes the deadline one day and
+  offers **Undo** right in the toast; **⧉ Duplicate** in the edit sheet makes a pending copy for
+  a re-submission or the next round. Nothing needs a full edit trip.
+- **A real first-run page** — the empty state explains the three capture routes, offers three
+  tappable sample messages (parsed live) and a full demo radar, instead of a dead end.
 - **Screenshot capture** — 📷 button → pick a photo of a notice/syllabus/message → the task is
   read out of the image (needs any OpenAI-compatible vision key: Groq or Gemini free tiers work;
   presets are built into Settings).
@@ -73,9 +85,9 @@ replacing anything you captured).
 - **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
   phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1536px),
   a sticky paper side rail that holds position while you scroll, and hover-reveal card actions.
-- **⌨️ Desktop keyboard shortcuts** — `/` search · `n` new deadline · `b` spoken briefing ·
-  `w` weekly report · `?` shortcuts card · `Esc` close. A ⌨️ chip in the header opens the card;
-  shortcuts never fire while you're typing in a field.
+- **⌨️ Desktop keyboard shortcuts** — `⌘K` / `Ctrl+K` command palette · `/` search · `n` new
+  deadline · `b` spoken briefing · `w` weekly report · `?` shortcuts card · `Esc` close. A ⌨️
+  chip in the header opens the card; shortcuts never fire while you're typing in a field.
 - **🎯 Marks at risk** — the radar counts *marks*, not just tasks: how many marks are already
   late and how many ride on this week's submissions. Shown in the rail, the weekly report and
   the voice answers.
@@ -117,7 +129,9 @@ replacing anything you captured).
 - **On-time metric** — every tick records when you finished it, so the app shows *"N finished
   on time"* — the real result for your demo video — plus a **🏆 on-time streak** ("N in a row",
   stops at the first late finish), on the dashboard and in the weekly report.
-- **Urgency sorting** — each section orders itself: priority → nearest deadline → highest marks.
+- **Accessible dialogs** — every sheet (edit, settings, report, shortcuts, palette) shares one
+  shell: focus moves in, `Tab` stays trapped, `Esc` closes only the top layer, body scroll is
+  locked, and focus returns to the button you came from.
 - **Weekly report** — one tap shows your real result (captured / finished / on time) and copies a
   ready-made check-in text for your #NoHandsChallenge post. It now includes a **🧠 per-subject
   pace table** — on-time %, your usual buffer (days early/late) and learned minutes-per-mark,
@@ -172,6 +186,8 @@ output = `dist`) or Netlify (same settings).
 - [x] Screenshot → deadline (photo/notice extraction)
 - [x] Backup & restore (JSON export/import)
 - [x] Rich link preview (OG cover image)
+- [x] ⌘K command palette + five-way order control
+- [x] Postpone one day with undo + duplicate task
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
@@ -186,6 +202,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # offline extractor + bulk + backup parser + voice commands + countdown (130 checks)
+npm test       # parser + bulk + backup + voice commands + sort/postpone + countdown (152 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

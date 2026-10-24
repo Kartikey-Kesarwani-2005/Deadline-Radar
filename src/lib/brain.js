@@ -207,12 +207,13 @@ export function paceRows(tasks) {
   for (const t of done) {
     const key = (t.subject || '').trim().toLowerCase()
     if (!key) continue
-    ;(bySubject[key] ||= []).push(t)
+    const bucket = (bySubject[key] ||= { label: t.subject.trim(), list: [] })
+    bucket.list.push(t)
   }
   return Object.entries(bySubject)
-    .map(([key, list]) => ({
+    .map(([key, { label, list }]) => ({
       key,
-      label: key.charAt(0).toUpperCase() + key.slice(1),
+      label,
       ...statsFor(list),
       minPerMark: pace[key] != null ? Math.round(pace[key]) : null,
     }))

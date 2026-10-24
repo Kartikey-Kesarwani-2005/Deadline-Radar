@@ -302,6 +302,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: 2px 2px 0 rgba(29, 27, 22, 0.12);
 }
 
+/* Native select, dressed as a printed form control. */
+select.field {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 1.6rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%231d1b16' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 10px;
+  cursor: pointer;
+}
+
 /* Notebook rule inside the capture box. */
 .ruled {
   background-image: repeating-linear-gradient(

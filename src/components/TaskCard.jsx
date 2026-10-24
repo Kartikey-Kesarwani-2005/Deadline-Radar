@@ -46,6 +46,7 @@ export default function TaskCard({
   onDateChange,
   onShare,
   onFocus,
+  onPostpone,
   focusing = false,
 }) {
   const diff = task.dueDate ? dayDiff(todayKey(), task.dueDate) : null
@@ -186,6 +187,18 @@ export default function TaskCard({
           }`}
         >
           {focusing ? '⏹' : '▶'}
+        </button>
+      )}
+
+      {!task.done && (
+        <button
+          type="button"
+          onClick={onPostpone}
+          aria-label={`Postpone ${task.title} by one day`}
+          title="Push the deadline by one day — undo lives in the toast"
+          className="task-actions mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] text-[11px] text-ink-3 opacity-0 transition group-hover:opacity-100 hover:bg-paper-3 hover:text-today focus:opacity-100"
+        >
+          ⏭
         </button>
       )}
 

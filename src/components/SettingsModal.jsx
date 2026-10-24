@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Modal from './Modal'
 
 function Field({ label, hint, children }) {
   return (
@@ -81,17 +82,11 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[2px]"
-      onClick={onClose}
+    <Modal
+      label="Settings"
+      onClose={onClose}
+      panelClassName="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Settings"
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
           <div>
             <p className="eyebrow">Control panel</p>
@@ -287,7 +282,6 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
             Save settings
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

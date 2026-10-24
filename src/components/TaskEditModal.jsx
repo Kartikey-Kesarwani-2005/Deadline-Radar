@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Modal from './Modal'
 
 function Field({ label, children }) {
   return (
@@ -11,7 +12,7 @@ function Field({ label, children }) {
   )
 }
 
-export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
+export default function TaskEditModal({ task, onSave, onClose, onDelete, onDuplicate }) {
   const [draft, setDraft] = useState({
     title: task.title,
     subject: task.subject || '',
@@ -21,14 +22,6 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
     link: task.link || '',
     repeat: task.repeat === 'weekly' ? 'weekly' : null,
   })
-
-  useEffect(() => {
-    function onKey(e) {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }))
 
@@ -57,17 +50,11 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-[2px]"
-      onClick={onClose}
+    <Modal
+      label="Edit task"
+      onClose={onClose}
+      panelClassName="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Edit task"
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
           <div>
             <p className="eyebrow">Entry card</p>
@@ -87,6 +74,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
           <Field label="Task">
             <textarea
               rows={2}
+              data-autofocus
               value={draft.title}
               onChange={(e) => set({ title: e.target.value })}
               className="field resize-none !text-[14px]"
@@ -183,13 +171,25 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
         </div>
 
         <div className="flex items-center justify-between gap-2 border-t border-line bg-paper px-5 py-3">
-          <button
-            type="button"
-            onClick={onDelete}
-            className="btn border-late text-late shadow-[2px_2px_0_var(--color-late)] hover:bg-late-soft"
-          >
-            Delete
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="btn border-late text-late shadow-[2px_2px_0_var(--color-late)] hover:bg-late-soft"
+            >
+              Delete
+            </button>
+            {onDuplicate && (
+              <button
+                type="button"
+                onClick={onDuplicate}
+                title="Create a pending copy — useful for a re-submission or next week's round"
+                className="btn btn-quiet"
+              >
+                ⧉ Duplicate
+              </button>
+            )}
+          </div>
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="btn btn-quiet">
               Cancel
@@ -199,7 +199,6 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete }) {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

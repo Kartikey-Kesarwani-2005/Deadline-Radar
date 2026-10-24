@@ -8,6 +8,7 @@ import { parseBackup } from '../src/lib/store.js'
 import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS } from '../src/lib/calendar.js'
 import { dueTone, countdownTo, parseDateKey, dayDiff, todayKey } from '../src/lib/dates.js'
+import { postponeDate, sortTasks } from '../src/lib/sort.js'
 
 const today = new Date()
 const key = (d) =>
@@ -569,6 +570,21 @@ check('date: impossible 2026-04-31 is rejected', parseDateKey('2026-04-31'), nul
 check('date: valid 2026-02-28 parses', parseDateKey('2026-02-28') !== null, true)
 check('date: valid leap 2028-02-29 parses', parseDateKey('2028-02-29') !== null, true)
 check('date: non-leap 2027-02-29 is rejected', parseDateKey('2027-02-29'), null)
+
+// --- ↕ Sort order + postpone (rail control, ⌘K commands) ---
+const sTasks = [
+  { id: 'a', title: 'Zeta', dueDate: '2026-11-05', marks: 5, priority: 'normal', createdAt: 1 },
+  { id: 'b', title: 'Alpha', dueDate: '2026-10-26', marks: 20, priority: 'high', createdAt: 2 },
+  { id: 'c', title: 'Beta', dueDate: null, marks: 10, priority: 'normal', createdAt: 3 },
+]
+check('sort: due soonest puts the earliest date first', sortTasks(sTasks, 'due').map((t) => t.id), ['b', 'a', 'c'])
+check('sort: marks high first', sortTasks(sTasks, 'marks').map((t) => t.id), ['b', 'c', 'a'])
+check('sort: title A to Z', sortTasks(sTasks, 'title').map((t) => t.id), ['b', 'c', 'a'])
+check('sort: smart prefers the high-priority task', sortTasks(sTasks, 'smart')[0].id, 'b')
+check('sort: does not mutate the caller array', sTasks.map((t) => t.id), ['a', 'b', 'c'])
+check('postpone: undated task lands tomorrow', postponeDate(null, 1, '2026-10-24'), '2026-10-25')
+check('postpone: shifts across a month boundary', postponeDate('2026-10-31', 1, '2026-10-24'), '2026-11-01')
+check('postpone: one week later', postponeDate('2026-10-24', 7, '2026-10-24'), '2026-10-31')
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

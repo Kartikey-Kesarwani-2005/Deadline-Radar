@@ -34,6 +34,7 @@ export const defaultSettings = {
   baseUrl: 'https://api.openai.com/v1',
   model: 'gpt-4o-mini',
   clipDetect: true,
+  sortBy: 'smart',
 }
 
 export function loadTasks() {
