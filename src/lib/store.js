@@ -19,6 +19,15 @@ export function uid() {
   })
 }
 
+// Format AND validity: "2026-02-31" matches the pattern but isn't a real date
+// (it would render nowhere / read "Invalid Date"). Round-trip the Date.
+function isValidDateKey(key) {
+  if (typeof key !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return false
+  const [y, m, d] = key.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d
+}
+
 export const defaultSettings = {
   aiEnabled: false,
   apiKey: '',
@@ -42,8 +51,7 @@ export function loadTasks() {
         id: typeof t.id === 'string' && t.id ? t.id : uid(),
         title: String(t.title).slice(0, 300),
         subject: typeof t.subject === 'string' && t.subject ? t.subject.slice(0, 80) : null,
-        dueDate:
-          typeof t.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) ? t.dueDate : null,
+        dueDate: isValidDateKey(t.dueDate) ? t.dueDate : null,
         done: Boolean(t.done),
         priority: t.priority === 'high' ? 'high' : 'normal',
       }))
@@ -114,8 +122,7 @@ export function parseBackup(text) {
       id: typeof t.id === 'string' && t.id ? t.id : uid(),
       title: String(t.title).slice(0, 300),
       subject: typeof t.subject === 'string' && t.subject ? t.subject.slice(0, 80) : null,
-      dueDate:
-        typeof t.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate) ? t.dueDate : null,
+      dueDate: isValidDateKey(t.dueDate) ? t.dueDate : null,
       marks: Number.isFinite(t.marks) && t.marks > 0 ? t.marks : null,
       priority: t.priority === 'high' ? 'high' : 'normal',
       repeat: t.repeat === 'weekly' ? 'weekly' : null,
