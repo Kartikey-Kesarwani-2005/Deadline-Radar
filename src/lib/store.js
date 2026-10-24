@@ -35,6 +35,60 @@ export const defaultSettings = {
   model: 'gpt-4o-mini',
   clipDetect: true,
   sortBy: 'smart',
+  displayMode: 'auto',
+}
+
+/**
+ * The single gate every task passes through before it can be rendered —
+ * localStorage load, JSON import, or a hand-edited backup. Normalising in one
+ * place means a poisoned entry cannot smuggle a `javascript:` link, a NaN
+ * timestamp or a malformed date past one path but not the other.
+ * Returns null for anything that is not a usable task.
+ */
+export function normalizeTask(t) {
+  if (!t || typeof t !== 'object' || typeof t.title !== 'string' || !t.title.trim()) return null
+  // Numbers may arrive as strings from a hand-edited backup or an AI response.
+  const num = (v) => {
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+  }
+  const marks = num(t.marks)
+  const completedAt = num(t.completedAt)
+  const effortMin = num(t.effortMin)
+  const createdAt = num(t.createdAt)
+  return {
+    id: typeof t.id === 'string' && t.id ? t.id : uid(),
+    title: String(t.title).trim().slice(0, 300),
+    subject: typeof t.subject === 'string' && t.subject.trim() ? t.subject.trim().slice(0, 80) : null,
+    dueDate: isValidDateKey(t.dueDate) ? t.dueDate : null,
+    marks: marks != null && marks > 0 ? marks : null,
+    priority: t.priority === 'high' ? 'high' : 'normal',
+    repeat: t.repeat === 'weekly' ? 'weekly' : null,
+    done: Boolean(t.done),
+    completedAt: completedAt != null && completedAt > 0 ? completedAt : null,
+    // Focus-timer minutes — without this the pace model reset on every restore.
+    effortMin: effortMin != null && effortMin > 0 ? effortMin : null,
+    createdAt: createdAt != null && createdAt > 0 ? createdAt : Date.now(),
+    // Links the auto-rolled copy back to the task it came from (undo chain).
+    rolledFrom: typeof t.rolledFrom === 'string' ? t.rolledFrom : null,
+    source: typeof t.source === 'string' ? t.source.slice(0, 600) : '',
+    // Only real http(s) URLs — `javascript:` / `data:` must never reach an <a href>.
+    link: typeof t.link === 'string' && /^https?:\/\//i.test(t.link) ? t.link.slice(0, 500) : null,
+  }
+}
+
+/**
+ * Duplicate ids make toggle/update hit several tasks at once (a poisoned
+ * backup can contain the same id twice). Re-key the later copies instead of
+ * dropping real work.
+ */
+function uniqueIds(list) {
+  const seen = new Set()
+  for (const t of list) {
+    if (seen.has(t.id)) t.id = uid()
+    seen.add(t.id)
+  }
+  return list
 }
 
 export function loadTasks() {
@@ -43,19 +97,8 @@ export function loadTasks() {
     if (!Array.isArray(raw)) return []
     // Sanitize on load: a poisoned/legacy entry (null, missing title, wrong
     // types) must never reach render — previously `[null]` in storage crashed
-    // the app into an unrecoverable ErrorBoundary loop. This also guarantees
-    // every task has a stable id (so toggle/update can't hit many at once).
-    return raw
-      .filter((t) => t && typeof t === 'object' && typeof t.title === 'string' && t.title.trim())
-      .map((t) => ({
-        ...t,
-        id: typeof t.id === 'string' && t.id ? t.id : uid(),
-        title: String(t.title).slice(0, 300),
-        subject: typeof t.subject === 'string' && t.subject ? t.subject.slice(0, 80) : null,
-        dueDate: isValidDateKey(t.dueDate) ? t.dueDate : null,
-        done: Boolean(t.done),
-        priority: t.priority === 'high' ? 'high' : 'normal',
-      }))
+    // the app into an unrecoverable ErrorBoundary loop.
+    return uniqueIds(raw.map(normalizeTask).filter(Boolean))
   } catch {
     return []
   }
@@ -72,7 +115,29 @@ export function saveTasks(tasks) {
 export function loadSettings() {
   try {
     const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY))
-    return { ...defaultSettings, ...(raw || {}) }
+    const src = raw && typeof raw === 'object' ? raw : {}
+    // Same rule as tasks: only known-good shapes reach the app. A hand-edited
+    // `sortBy: {}` or `displayMode: 123` used to leak into render/API calls.
+    return {
+      ...defaultSettings,
+      aiEnabled: Boolean(src.aiEnabled),
+      apiKey: typeof src.apiKey === 'string' ? src.apiKey : '',
+      baseUrl:
+        typeof src.baseUrl === 'string' && src.baseUrl.trim()
+          ? src.baseUrl.trim()
+          : defaultSettings.baseUrl,
+      model:
+        typeof src.model === 'string' && src.model.trim()
+          ? src.model.trim()
+          : defaultSettings.model,
+      clipDetect: src.clipDetect !== false,
+      sortBy: ['smart', 'due', 'marks', 'newest', 'title'].includes(src.sortBy)
+        ? src.sortBy
+        : 'smart',
+      displayMode: ['auto', 'desktop', 'phone'].includes(src.displayMode)
+        ? src.displayMode
+        : 'auto',
+    }
   } catch {
     return defaultSettings
   }
@@ -117,27 +182,7 @@ export function parseBackup(text) {
   }
   const list = Array.isArray(data) ? data : data?.tasks
   if (!Array.isArray(list)) throw new Error('that file is not a Deadline Radar backup')
-  const cleaned = list
-    .filter((t) => t && typeof t === 'object' && typeof t.title === 'string' && t.title.trim())
-    .map((t) => ({
-      id: typeof t.id === 'string' && t.id ? t.id : uid(),
-      title: String(t.title).slice(0, 300),
-      subject: typeof t.subject === 'string' && t.subject ? t.subject.slice(0, 80) : null,
-      dueDate: isValidDateKey(t.dueDate) ? t.dueDate : null,
-      marks: Number.isFinite(t.marks) && t.marks > 0 ? t.marks : null,
-      priority: t.priority === 'high' ? 'high' : 'normal',
-      repeat: t.repeat === 'weekly' ? 'weekly' : null,
-      done: Boolean(t.done),
-      completedAt: Number.isFinite(t.completedAt) ? t.completedAt : null,
-      // Focus-timer minutes — without this the pace model reset on every restore.
-      effortMin: Number.isFinite(t.effortMin) && t.effortMin > 0 ? t.effortMin : null,
-      createdAt: Number.isFinite(t.createdAt) ? t.createdAt : Date.now(),
-      // Links the auto-rolled copy back to the task it came from (undo chain).
-      rolledFrom: typeof t.rolledFrom === 'string' ? t.rolledFrom : null,
-      source: typeof t.source === 'string' ? t.source.slice(0, 600) : '',
-      link:
-        typeof t.link === 'string' && /^https?:\/\//i.test(t.link) ? t.link.slice(0, 500) : null,
-    }))
+  const cleaned = list.map(normalizeTask).filter(Boolean)
   if (!cleaned.length) throw new Error('no tasks found inside that file')
-  return cleaned
+  return uniqueIds(cleaned)
 }

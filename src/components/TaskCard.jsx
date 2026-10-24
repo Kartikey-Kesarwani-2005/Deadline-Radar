@@ -159,15 +159,17 @@ export default function TaskCard({
             </a>
           )}
 
-          <label className="flex items-center font-mono text-[9px] text-ink-3 uppercase">
-            <input
-              type="date"
-              value={task.dueDate || ''}
-              onChange={(e) => onDateChange(e.target.value || null)}
-              aria-label={`Change due date for ${task.title}`}
-              className="task-date"
-            />
-          </label>
+          {!task.done && (
+            <label className="flex items-center font-mono text-[9px] text-ink-3 uppercase">
+              <input
+                type="date"
+                value={task.dueDate || ''}
+                onChange={(e) => onDateChange(e.target.value || null)}
+                aria-label={`Change due date for ${task.title}`}
+                className="task-date"
+              />
+            </label>
+          )}
         </div>
       </div>
 

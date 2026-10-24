@@ -1,4 +1,4 @@
-import { todayKey } from './dates.js'
+import { parseDateKey, todayKey } from './dates.js'
 
 /**
  * Read a screenshot/photo of a notice, message or syllabus and pull the
@@ -108,10 +108,15 @@ export async function extractFromImage(dataUrl, settings) {
     title: parsed.title.trim().slice(0, 110) || 'Task from image',
     subject: typeof parsed.subject === 'string' && parsed.subject.trim() ? parsed.subject.trim() : null,
     dueDate:
-      typeof parsed.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dueDate)
+      typeof parsed.dueDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(parsed.dueDate) &&
+      parseDateKey(parsed.dueDate)
         ? parsed.dueDate
         : null,
-    marks: Number.isFinite(parsed.marks) && parsed.marks > 0 ? parsed.marks : null,
+    marks:
+      Number.isFinite(Number(parsed.marks)) && Number(parsed.marks) > 0
+        ? Number(parsed.marks)
+        : null,
     priority: parsed.priority === 'high' ? 'high' : 'normal',
     link:
       typeof parsed.link === 'string' && /^https?:\/\//i.test(parsed.link)

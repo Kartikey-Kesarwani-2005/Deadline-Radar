@@ -72,7 +72,9 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
                   }`}
                 >
                   {cd.late
-                    ? `${cd.d}d ${cd.h}h`
+                    ? cd.d > 0
+                      ? `${cd.d}d ${cd.h}h`
+                      : `${cd.h}h ${cd.m}m`
                     : `${String(cd.d).padStart(2, '0')}:${String(cd.h).padStart(2, '0')}:${String(cd.m).padStart(2, '0')}:${String(cd.s).padStart(2, '0')}`}
                 </p>
                 {/* Label the 01:02:14:33 blocks so nobody has to guess which digit is days */}
@@ -169,6 +171,11 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
               )
             })}
           </ul>
+          {load.length > 6 && (
+            <p className="mt-2.5 border-t border-dotted border-line pt-2 font-mono text-[9px] text-ink-3">
+              Top 6 by marks · +{load.length - 6} more
+            </p>
+          )}
         </div>
       )}
     </aside>

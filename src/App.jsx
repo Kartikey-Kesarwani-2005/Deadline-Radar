@@ -221,6 +221,27 @@ function buildSampleTasks() {
   ]
 }
 
+/**
+ * Focus state survives refresh, but only if it is actually usable. A poisoned
+ * entry (missing id, string/NaN startedAt, a start time in the future) used to
+ * render `NaN:NaN` in the header and run a ghost interval forever.
+ */
+function loadFocus() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('dr_focus'))
+    if (!raw || typeof raw !== 'object') return null
+    const taskId = typeof raw.taskId === 'string' && raw.taskId ? raw.taskId : null
+    const startedAt = Number(raw.startedAt)
+    if (!taskId || !Number.isFinite(startedAt) || startedAt <= 0) return null
+    const now = Date.now()
+    // Clock skew / timezone edits must not show a negative timer.
+    if (startedAt > now + 60_000) return null
+    return { taskId, startedAt: Math.min(startedAt, now) }
+  } catch {
+    return null
+  }
+}
+
 export default function App() {
   const [tasks, setTasks] = useState(loadTasks)
   const [settings, setSettings] = useState(loadSettings)
@@ -241,14 +262,11 @@ export default function App() {
   const [askCard, setAskCard] = useState(null)
   const [listening, setListening] = useState(false)
   // ⏱️ Focus timer — { taskId, startedAt }; survives refresh via localStorage.
-  const [focus, setFocus] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('dr_focus'))
-    } catch {
-      return null
-    }
-  })
+  const [focus, setFocus] = useState(loadFocus)
   const [focusTick, setFocusTick] = useState(0)
+  // Date rollover: an app left open past midnight must move "today" buckets
+  // without needing a state change or reload.
+  const [dayKey, setDayKey] = useState(() => todayKey())
   const lastClipRef = useRef('')
   const armedRef = useRef(false)
   const inputRef = useRef(null)
@@ -289,6 +307,24 @@ export default function App() {
     const id = setInterval(() => setFocusTick((n) => n + 1), 1000)
     return () => clearInterval(id)
   }, [focus])
+  // A focus timer pointing at a deleted/imported-away task is a ghost: no card
+  // shows it, but the interval would tick forever and the stale state would be
+  // written back to localStorage on every reload. Drop it as soon as the task
+  // disappears (clear-all, delete, import replacing the list).
+  useEffect(() => {
+    if (!focus) return
+    if (!tasks.some((t) => t.id === focus.taskId)) setFocus(null)
+  }, [focus, tasks])
+  // Midnight rollover: re-render the sections once the calendar day changes.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setDayKey((cur) => {
+        const next = todayKey()
+        return next === cur ? cur : next
+      })
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [])
   const focusTask = focus ? tasks.find((t) => t.id === focus.taskId) || null : null
   const fmtElapsed = (ms) => {
     const s = Math.floor(ms / 1000)
@@ -418,15 +454,27 @@ export default function App() {
   // · ? help · Esc close. Never fires while typing in a field.
   useEffect(() => {
     function onKey(e) {
-      // ⌘K / Ctrl+K works everywhere — even while typing in the capture box.
+      const modalOpen = Boolean(
+        editingId || settingsOpen || reportOpen || shortcutsOpen || paletteOpen,
+      )
+      // ⌘K / Ctrl+K works everywhere — but must never stack the palette on top
+      // of another sheet, and should still close itself.
       if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        setPaletteOpen((v) => !v)
+        if (paletteOpen) setPaletteOpen(false)
+        else if (!modalOpen) setPaletteOpen(true)
         return
       }
       const tag = e.target?.tagName
       const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return
+      // While a sheet is open, only Esc (handled by Modal) and "?" (close help)
+      // are live. Otherwise `n`/`/` used to focus an input behind the dialog and
+      // `w`/`b` could stack a second modal on top.
+      if (modalOpen) {
+        if (e.key === '?' && shortcutsOpen) setShortcutsOpen(false)
+        return
+      }
       if (e.key === '/') {
         e.preventDefault()
         ;(searchRef.current || inputRef.current)?.focus()
@@ -438,15 +486,10 @@ export default function App() {
       } else if (e.key === 'w') {
         setReportOpen(true)
       } else if (e.key === '?') {
-        setShortcutsOpen((v) => !v)
+        setShortcutsOpen(true)
       } else if (e.key === 'Escape') {
         // "Esc — close anything": peel off the topmost layer.
-        if (paletteOpen) setPaletteOpen(false)
-        else if (editingId) setEditingId(null)
-        else if (settingsOpen) setSettingsOpen(false)
-        else if (reportOpen) setReportOpen(false)
-        else if (shortcutsOpen) setShortcutsOpen(false)
-        else if (askCard) setAskCard(null)
+        if (askCard) setAskCard(null)
         else if (clipSuggest) setClipSuggest(null)
       }
     }
@@ -614,8 +657,13 @@ export default function App() {
           ]
         }
       } else if (!markingDone && current) {
-        // Undo: pull back the copy that this tick-off created (still pending).
-        next = next.filter((t) => !(t.rolledFrom === current.id && !t.done))
+        // Undo: pull back only the copy THIS completion created. Older weekly
+        // copies (created before this task was ticked off) must stay — the old
+        // filter removed every pending copy in the chain.
+        const madeAt = current.completedAt || 0
+        next = next.filter(
+          (t) => !(t.rolledFrom === current.id && !t.done && (t.createdAt || 0) >= madeAt),
+        )
       }
       return next
     })
@@ -623,11 +671,16 @@ export default function App() {
   const deleteTask = (id) => {
     const index = tasks.findIndex((t) => t.id === id)
     if (index === -1) return
-    const removed = tasks[index]
+    // Copy, never mutate a task object that React state still references —
+    // the undo path would otherwise resurrect a silently modified card.
+    const removed = { ...tasks[index] }
     // ⏱️ Never leave a zombie focus timer: if the deleted task is being
     // focused, bank the minutes and stop the interval first.
     if (focus?.taskId === id) {
-      const minutes = Math.round((Date.now() - focus.startedAt) / 60000)
+      const minutes = Math.min(
+        Math.round((Date.now() - focus.startedAt) / 60000),
+        FOCUS_CAP_MIN,
+      )
       if (minutes >= 1) removed.effortMin = (removed.effortMin || 0) + minutes
       setFocus(null)
     }
@@ -744,7 +797,7 @@ export default function App() {
     const copy = {
       ...source,
       id: uid(),
-      title: `${source.title} (copy)`,
+      title: `${source.title.replace(/\s*\(copy\)$/i, '')} (copy)`,
       done: false,
       completedAt: null,
       effortMin: null,
@@ -805,7 +858,7 @@ export default function App() {
   }, [tasks, query, subjectFilter, dateFilter])
 
   const sections = useMemo(() => {
-    const today = todayKey()
+    const today = dayKey
     const isDone = (t) => t.done
     const diffOf = (t) => (t.dueDate ? dayDiff(today, t.dueDate) : null)
     const order = (list) => sortTasks(list, sortBy)
@@ -820,7 +873,7 @@ export default function App() {
       noDate: order(visible.filter((t) => !isDone(t) && !t.dueDate)),
       done: visible.filter(isDone).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)),
     }
-  }, [visible, sortBy])
+  }, [visible, sortBy, dayKey])
 
   // "Real result" metric: tasks finished before their deadline.
   const onTime = tasks.filter(
@@ -846,18 +899,19 @@ export default function App() {
   }
 
   // Radar Brain: personal rhythm from finished work + marks riding on pending work.
-  const brain = useMemo(() => computeBrain(tasks), [tasks])
-  const risk = useMemo(() => marksAtRisk(tasks), [tasks])
-  const forecast = useMemo(() => forecastWeather(tasks), [tasks])
+  // `dayKey` is in the deps so an app left open past midnight re-buckets.
+  const brain = useMemo(() => computeBrain(tasks), [tasks, dayKey])
+  const risk = useMemo(() => marksAtRisk(tasks), [tasks, dayKey])
+  const forecast = useMemo(() => forecastWeather(tasks), [tasks, dayKey])
   // Do-Now must match what's on screen: with a subject/day/search filter active,
   // recommending a hidden task is a contradiction. `visible` === all tasks when
   // no filter is set, so this is a no-op in the unfiltered view.
-  const plan = useMemo(() => doNow(visible), [visible])
+  const plan = useMemo(() => doNow(visible), [visible, dayKey])
   // True when every captured task is ticked off — the radar is genuinely clear.
   const cleared = useMemo(() => tasks.length > 0 && tasks.every((t) => t.done), [tasks])
-  const startSoon = useMemo(() => startAlerts(tasks), [tasks])
-  const trend = useMemo(() => weeklyTrend(tasks), [tasks])
-  const pace = useMemo(() => paceModel(tasks), [tasks])
+  const startSoon = useMemo(() => startAlerts(tasks), [tasks, dayKey])
+  const trend = useMemo(() => weeklyTrend(tasks), [tasks, dayKey])
+  const pace = useMemo(() => paceModel(tasks), [tasks, dayKey])
   const canAsk = canListen()
 
   // 🎙️ "Ask the radar" — one spoken question, spoken answer. Orders
@@ -1065,7 +1119,8 @@ export default function App() {
       id: `sort-${m.value}`,
       icon: 'sort',
       label: `Sort: ${m.label}`,
-      keywords: `sort order ${m.label} ${m.value}`,
+      hint: sortBy === m.value ? '✓' : undefined,
+      keywords: `sort order ${m.label} ${m.value}${sortBy === m.value ? ' current active' : ''}`,
       onlyWhenSearch: true,
       run: () => setSort(m.value),
     })),
@@ -1756,6 +1811,11 @@ export default function App() {
           onClearAll={() => {
             setTasks([])
             setFocus(null) // no zombie focus timer after wiping the list
+            setClipSuggest(null) // don't offer to re-add a wiped clipboard notice
+            setAskCard(null)
+            setQuery('')
+            setSubjectFilter(null)
+            setDateFilter(null)
             setSettingsOpen(false)
           }}
           onExport={() => {

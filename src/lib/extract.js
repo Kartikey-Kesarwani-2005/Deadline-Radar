@@ -1,4 +1,4 @@
-import { todayKey } from './dates.js'
+import { parseDateKey, todayKey } from './dates.js'
 
 /* ------------------------------------------------------------------ *
  * Local (offline) extractor — works with zero setup, no API key.
@@ -175,9 +175,14 @@ function findDate(text) {
     if (d) return { key: keyOf(rollDayOnly(d)), matchText: m[0] }
   }
 
-  // "due on the 26th" / "by 3rd" — an ordinal with no month name → this month
-  // (month-named forms like "5th November" are already caught in patterns 2/3).
-  m = text.match(/\b(?:the\s+|on\s+)?(\d{1,2})(?:st|nd|rd|th)\b/i)
+  // "due on the 26th" / "by 3rd" / "26th ko" — an ordinal needs a date cue,
+  // otherwise "1st internal exam" or "2nd unit test" would be read as the 1st
+  // and 2nd of this month (and the ordinal stripped from the title).
+  // Month-named forms like "5th November" are already caught in patterns 2/3.
+  m =
+    text.match(
+      /\b(?:on|by|before|till|until|due|deadline|the)\s+(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)\b/i,
+    ) || text.match(/\b(\d{1,2})(?:st|nd|rd|th)\s+(?:ko|tak)\b/i)
   if (m) {
     const now = new Date()
     const d = validDate(now.getFullYear(), now.getMonth(), Number(m[1]))
@@ -454,10 +459,15 @@ function normEntry(parsed, raw, repeatText) {
         ? parsed.subject.trim().slice(0, 80)
         : null,
     dueDate:
-      typeof parsed.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dueDate)
+      typeof parsed.dueDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(parsed.dueDate) &&
+      parseDateKey(parsed.dueDate)
         ? parsed.dueDate
         : null,
-    marks: Number.isFinite(parsed.marks) && parsed.marks > 0 ? parsed.marks : null,
+    marks:
+      Number.isFinite(Number(parsed.marks)) && Number(parsed.marks) > 0
+        ? Number(parsed.marks)
+        : null,
     priority: parsed.priority === 'high' ? 'high' : 'normal',
     // Link: prefer a valid one the AI read, else the one in the raw message.
     link:

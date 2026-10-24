@@ -159,6 +159,11 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete, onDupli
               <span className="block text-[11px] leading-snug text-ink-3">
                 Ticking it off rolls the next occurrence onto the radar automatically
               </span>
+              {draft.repeat === 'weekly' && !draft.dueDate && (
+                <span className="mt-1 block text-[11px] leading-snug font-medium text-today">
+                  Pick a due date first — its weekday is the anchor for the next repeat.
+                </span>
+              )}
             </span>
           </label>
 

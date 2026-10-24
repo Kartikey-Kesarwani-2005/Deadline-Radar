@@ -586,5 +586,49 @@ check('postpone: undated task lands tomorrow', postponeDate(null, 1, '2026-10-24
 check('postpone: shifts across a month boundary', postponeDate('2026-10-31', 1, '2026-10-24'), '2026-11-01')
 check('postpone: one week later', postponeDate('2026-10-24', 7, '2026-10-24'), '2026-10-31')
 
+// --- 🧹 Storage hygiene: poisoned/legacy entries are normalised on every path ---
+const poison = parseBackup(
+  JSON.stringify([
+    {
+      id: 'p1',
+      title: 'Poisoned link',
+      link: 'javascript:alert(1)',
+      marks: '20',
+      dueDate: '2026-02-31',
+      completedAt: 'yesterday',
+      createdAt: 'now',
+    },
+    { id: 'dup', title: 'First' },
+    { id: 'dup', title: 'Second' },
+  ]),
+)
+check('storage: javascript: link is dropped', poison[0].link, null)
+check('storage: numeric string marks become a number', poison[0].marks, 20)
+check('storage: impossible date becomes null', poison[0].dueDate, null)
+check(
+  'storage: bad timestamps become safe values',
+  [poison[0].completedAt, typeof poison[0].createdAt],
+  [null, 'number'],
+)
+check(
+  'storage: duplicate ids in one backup are re-keyed',
+  new Set(poison.map((t) => t.id)).size === poison.length,
+  true,
+)
+
+// --- 🔢 Ordinals only count as dates when a date cue is present ---
+check('ordinal: "1st internal exam" is not a date', extractLocal('1st internal exam').dueDate, null)
+check('ordinal: "2nd unit test" keeps its ordinal in the title', extractLocal('2nd unit test').title, '2nd unit test')
+check(
+  'ordinal: "26th ko" is still read as a date',
+  extractLocal('26th ko submit karna hai').dueDate !== null,
+  true,
+)
+check(
+  'ordinal: a real date later in the text still wins',
+  extractLocal('1st internal exam on 25th').dueDate !== null,
+  true,
+)
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)
