@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from './Modal'
+import Icon from './Icon'
 
 function Field({ label, children }) {
   return (
@@ -53,12 +54,12 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete, onDupli
     <Modal
       label="Edit task"
       onClose={onClose}
-      panelClassName="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
+      panelClassName="sheet max-h-[90vh] w-full max-w-md overflow-y-auto"
     >
         <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
           <div>
             <p className="eyebrow">Entry card</p>
-            <h2 className="font-serif text-2xl leading-tight font-semibold text-ink">✏️ Edit task</h2>
+            <h2 className="font-serif text-2xl leading-tight font-semibold text-ink">Edit task</h2>
           </div>
           <button
             type="button"
@@ -66,7 +67,7 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete, onDupli
             className="icon-btn mt-1"
             aria-label="Close edit dialog"
           >
-            ✕
+            <Icon name="x" size={14} />
           </button>
         </div>
 
@@ -151,7 +152,10 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete, onDupli
               className="mt-0.5 h-4 w-4 shrink-0 accent-done"
             />
             <span>
-              🔁 Repeat every week
+              <span className="flex items-center gap-1.5">
+                <Icon name="repeat" size={12} />
+                Repeat every week
+              </span>
               <span className="block text-[11px] leading-snug text-ink-3">
                 Ticking it off rolls the next occurrence onto the radar automatically
               </span>
@@ -170,8 +174,8 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete, onDupli
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-line bg-paper px-5 py-3">
-          <div className="flex gap-2">
+        <div className="edit-footer flex flex-wrap items-center justify-between gap-2 border-t border-line bg-paper px-5 py-3">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={onDelete}
@@ -186,11 +190,12 @@ export default function TaskEditModal({ task, onSave, onClose, onDelete, onDupli
                 title="Create a pending copy — useful for a re-submission or next week's round"
                 className="btn btn-quiet"
               >
-                ⧉ Duplicate
+                <Icon name="copy" size={12} />
+                Duplicate
               </button>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button type="button" onClick={onClose} className="btn btn-quiet">
               Cancel
             </button>

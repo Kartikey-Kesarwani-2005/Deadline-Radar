@@ -1,4 +1,5 @@
 import { doNowReason, fmtHours } from '../lib/brain'
+import Icon from './Icon'
 
 /**
  * 🎯 "Ab kya karun?" — the decision card, printed like a pinned note.
@@ -9,7 +10,10 @@ export default function DoNowCard({ plan, cleared, onStart, focusId }) {
     if (!cleared) return null
     return (
       <div className="rise rounded-[5px] border border-done/40 bg-done-soft p-4 text-center">
-        <p className="font-mono text-[10px] tracking-[0.2em] text-done uppercase">🎯 Ab kya karun?</p>
+        <p className="flex items-center justify-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-done uppercase">
+          <Icon name="target" size={12} />
+          Ab kya karun?
+        </p>
         <p className="mt-2 font-serif text-lg font-semibold text-ink">Nothing left — radar clear 🎉</p>
         <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink-2">
           Every task is done. Paste or speak the next deadline and the radar picks it back up.
@@ -25,8 +29,9 @@ export default function DoNowCard({ plan, cleared, onStart, focusId }) {
     <div className="donow relative rounded-[5px] border border-ink bg-paper-2 p-4 shadow-[4px_4px_0_var(--color-ink)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-late uppercase">
-            🎯 Ab kya karun?
+          <p className="flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.2em] text-late uppercase">
+            <Icon name="target" size={12} />
+            Ab kya karun?
           </p>
           <p className="mt-1 font-mono text-[9px] tracking-[0.14em] text-ink-3 uppercase">
             The one thing · start now
@@ -61,7 +66,15 @@ export default function DoNowCard({ plan, cleared, onStart, focusId }) {
           }
           className="btn btn-accent"
         >
-          {running ? '▶️ Running' : '▶ Start focus'}
+          {running ? (
+            <>
+              <Icon name="stop" size={11} /> Running
+            </>
+          ) : (
+            <>
+              <Icon name="play" size={11} /> Start focus
+            </>
+          )}
         </button>
         {t.marks != null && <span className="tag border-line bg-paper text-ink-2">{t.marks} marks</span>}
         {t.subject && <span className="tag border-line bg-paper text-ink-2">{t.subject}</span>}
@@ -74,8 +87,8 @@ export default function DoNowCard({ plan, cleared, onStart, focusId }) {
               key={n.task.id}
               className="flex items-baseline gap-2 border-b border-dotted border-line py-1.5 text-[11px] last:border-0"
             >
-              <span aria-hidden="true" className="font-mono text-[10px] text-ink-3">
-                →
+              <span aria-hidden="true" className="text-ink-3">
+                <Icon name="arrowRight" size={11} />
               </span>
               <span className="min-w-0 flex-1 truncate text-ink-2">{n.task.title}</span>
               <span className="shrink-0 font-mono text-[10px] tabular-nums text-ink-3">

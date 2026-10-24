@@ -1,3 +1,5 @@
+import Icon from './Icon'
+
 /**
  * 📈 Six-week finish arc — an ink bar chart on paper.
  * Green cap = finished on time, ochre body = finished late.
@@ -18,7 +20,10 @@ export default function TrendSpark({ weeks }) {
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
-        <p className="eyebrow">📈 Last 6 weeks</p>
+        <p className="eyebrow flex items-center gap-1.5">
+          <Icon name="chart" size={11} />
+          Last 6 weeks
+        </p>
         <p className="font-mono text-[9px] text-ink-3">weekly</p>
       </div>
       <div

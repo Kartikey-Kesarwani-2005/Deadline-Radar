@@ -1,3 +1,5 @@
+import Icon from './Icon'
+
 /**
  * 🌦️ Deadline Weather — the 7-day load forecast, printed like a ticket strip.
  * Tap a day to filter the radar to that day's submissions.
@@ -10,10 +12,20 @@ const LEVEL_TONE = {
   storm: 'border-late/40 bg-late-soft text-late',
 }
 
+const LEVEL_ICON = {
+  free: 'sun',
+  light: 'cloudSun',
+  heavy: 'rain',
+  storm: 'storm',
+}
+
 export default function WeatherStrip({ days, active, onPick }) {
   return (
     <div>
-      <p className="eyebrow mb-1.5">🌦️ 7-day forecast</p>
+      <p className="eyebrow mb-1.5 flex items-center gap-1.5">
+        <Icon name="cloudSun" size={11} />
+        7-day forecast
+      </p>
       <div className="grid grid-cols-7 gap-1">
         {days.map((d) => {
           const on = active === d.key
@@ -42,8 +54,15 @@ export default function WeatherStrip({ days, active, onPick }) {
               >
                 {d.isToday ? 'Today' : d.label}
               </span>
-              <span className="my-0.5 text-[13px] leading-none">{d.icon}</span>
-              <span className={`font-mono text-[10px] font-medium tabular-nums ${on ? 'text-paper' : ''}`}>
+              <Icon
+                name={LEVEL_ICON[d.level] || LEVEL_ICON.free}
+                size={13}
+                strokeWidth={1.5}
+                className="my-1"
+              />
+              <span
+                className={`font-mono text-[10px] font-medium tabular-nums ${on ? 'text-paper' : ''}`}
+              >
                 {d.count ? d.marks : '—'}
               </span>
             </button>

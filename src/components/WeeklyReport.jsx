@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from './Modal'
+import Icon from './Icon'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
 import { marksAtRisk, onTimeStreak, paceRows, subjectLoad, weeklyTrend } from '../lib/brain'
 
@@ -79,15 +80,15 @@ export default function WeeklyReport({ tasks, onClose }) {
     <Modal
       label="Weekly report"
       onClose={onClose}
-      panelClassName="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)] sm:max-w-lg"
+      panelClassName="sheet max-h-[90vh] w-full max-w-md overflow-y-auto sm:max-w-lg"
     >
         <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
           <div>
             <p className="eyebrow">Weekly edition · last 7 days</p>
-            <h2 className="font-serif text-2xl leading-tight font-semibold text-ink">📊 Weekly report</h2>
+            <h2 className="font-serif text-2xl leading-tight font-semibold text-ink">Weekly report</h2>
           </div>
           <button type="button" onClick={onClose} className="icon-btn mt-1" aria-label="Close report">
-            ✕
+            <Icon name="x" size={14} />
           </button>
         </div>
 
@@ -96,12 +97,12 @@ export default function WeeklyReport({ tasks, onClose }) {
           <Row label="Finished" value={finished.length} className="text-done" />
           <Row label="… of those finished on time" value={onTime} className="text-done" />
           <Row
-            label="🏆 On-time streak"
+            label="On-time streak"
             value={streak > 0 ? `${streak} in a row` : 'start it today'}
             className={streak > 1 ? 'text-today' : streak === 1 ? 'text-done' : 'text-ink-3'}
           />
 
-          <SectionLabel>📈 Trend vs last week</SectionLabel>
+          <SectionLabel>Trend vs last week</SectionLabel>
           <Row
             label="Finished — last → this"
             value={`${trend.lastWeek.finished} → ${trend.thisWeek.finished}`}
@@ -121,12 +122,12 @@ export default function WeeklyReport({ tasks, onClose }) {
           <SectionLabel>Overall</SectionLabel>
           <Row label="Pending with a deadline" value={pending} className="text-today" />
           <Row label="Late right now" value={late} className="text-late" />
-          <Row label="🎯 Marks at risk (late + this week)" value={risk.total} className="text-today" />
+          <Row label="Marks at risk (late + this week)" value={risk.total} className="text-today" />
           <Row label="Total finished" value={doneEver} className="text-done" />
 
           {load.length > 0 && (
             <>
-              <SectionLabel>📊 Pending load by subject (marks)</SectionLabel>
+              <SectionLabel>Pending load by subject (marks)</SectionLabel>
               <div className="space-y-2">
                 {load.map((s) => {
                   const max = Math.max(1, load[0].marks)
@@ -154,7 +155,7 @@ export default function WeeklyReport({ tasks, onClose }) {
 
           {pace.length > 0 && (
             <>
-              <SectionLabel>🧠 Per-subject pace (worst first)</SectionLabel>
+              <SectionLabel>Per-subject pace (worst first)</SectionLabel>
               <div className="overflow-hidden rounded-[3px] border border-line">
                 <table className="w-full text-[12px]">
                   <thead>
@@ -226,11 +227,19 @@ export default function WeeklyReport({ tasks, onClose }) {
               copyErr ? 'border-today text-today shadow-[2px_2px_0_var(--color-today)]' : 'btn-primary'
             }`}
           >
-            {copied
-              ? '✓ Copied — paste it in your check-in post'
-              : copyErr
-                ? '⚠️ Clipboard blocked — select the text above'
-                : 'Copy check-in text for your post'}
+            {copied ? (
+              <>
+                <Icon name="check" size={12} />
+                Copied — paste it in your check-in post
+              </>
+            ) : copyErr ? (
+              <>
+                <Icon name="alert" size={12} />
+                Clipboard blocked — select the text above
+              </>
+            ) : (
+              'Copy check-in text for your post'
+            )}
           </button>
           <p className="mt-2 text-center font-mono text-[9px] leading-relaxed tracking-wide text-ink-3">
             Paste in your weekly post with #NoHandsChallenge · tag WeMakeDevs + Wispr Flow

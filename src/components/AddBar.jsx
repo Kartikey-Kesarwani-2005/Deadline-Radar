@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Icon from './Icon'
 
 export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief, listening, canAsk }) {
   const [text, setText] = useState('')
@@ -16,7 +17,10 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
   return (
     <div className="rise relative overflow-hidden rounded-[5px] border border-ink bg-paper-2 shadow-[3px_3px_0_var(--color-line-strong)]">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper px-3.5 py-1.5">
-        <span className="eyebrow">✎ New entry</span>
+        <span className="eyebrow flex items-center gap-1.5">
+          <Icon name="pencil" size={11} />
+          New entry
+        </span>
         <span className="font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
           Enter files it · Shift+Enter = new line
         </span>
@@ -57,7 +61,8 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
             title="Radar Samachaar — hear your day spoken out loud"
             className="btn btn-quiet"
           >
-            🔊 Briefing
+            <Icon name="volume" size={12} />
+            Briefing
           </button>
           {canAsk && (
             <button
@@ -67,14 +72,16 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
               title="Ask the radar — say “aaj kya hai”, “kitne marks risk me”, or just order it: “mark DBMS done”, “delete OS lab”, “add viva Friday”"
               className={`btn ${listening ? 'btn-accent animate-pulse' : 'btn-quiet'}`}
             >
-              {listening ? '🎧 sun raha hoon…' : '🎙️ Ask'}
+              <Icon name="mic" size={12} />
+              {listening ? 'Sun raha hoon…' : 'Ask'}
             </button>
           )}
           <label
             title="Extract a task from a screenshot or photo"
             className="btn btn-quiet cursor-pointer"
           >
-            📷 Photo
+            <Icon name="camera" size={12} />
+            Photo
             <input
               type="file"
               accept="image/*"
@@ -93,7 +100,14 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
             disabled={!text.trim() || busy}
             className="add-submit btn btn-primary"
           >
-            {busy ? 'Reading…' : 'File it →'}
+            {busy ? (
+              'Reading…'
+            ) : (
+              <>
+                File it
+                <Icon name="arrowRight" size={12} />
+              </>
+            )}
           </button>
         </div>
       </div>

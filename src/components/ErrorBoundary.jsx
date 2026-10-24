@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import Icon from './Icon'
 
 /**
  * Keeps one bad render from taking the whole radar down — judges should
@@ -24,7 +25,9 @@ export default class ErrorBoundary extends Component {
         <div className="mx-auto max-w-md px-4 pt-24 text-center">
           <div className="paper-card border-late/40 p-6">
             <span className="stamp">Signal lost</span>
-            <p className="mt-4 text-3xl">📡</p>
+            <p className="mt-4 flex justify-center text-late">
+              <Icon name="wifiOff" size={28} strokeWidth={1.3} />
+            </p>
             <h1 className="mt-2 font-serif text-xl font-semibold text-ink">Radar lost the signal</h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-2">
               Something went wrong, but your tasks are safe in this browser. Reload to get back on
@@ -35,6 +38,7 @@ export default class ErrorBoundary extends Component {
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <button type="button" onClick={() => window.location.reload()} className="btn btn-primary">
+                <Icon name="repeat" size={12} />
                 Reload radar
               </button>
               {/* Escape hatch: if stored data itself is what's crashing the app,

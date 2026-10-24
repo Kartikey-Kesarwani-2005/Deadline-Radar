@@ -30,6 +30,7 @@ import WeeklyReport from './components/WeeklyReport'
 import TaskEditModal from './components/TaskEditModal'
 import CommandPalette from './components/CommandPalette'
 import Modal from './components/Modal'
+import Icon from './components/Icon'
 import { SORT_MODES, postponeDate, sortTasks } from './lib/sort'
 
 const SECTION_TONES = {
@@ -68,14 +69,14 @@ function Section({ sectionKey, title, tone, hint, tasks, getAdvice, getEst, onTo
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-7 scroll-mt-4">
-      <div className="mb-2.5 flex flex-wrap items-end gap-x-2 gap-y-1 border-b border-ink/25 pb-1.5">
+      <div className="section-head mb-2.5">
         <span className={`mb-1 h-2.5 w-2.5 shrink-0 rounded-full ${SECTION_TONES[tone]}`} />
         <h2 className="font-serif text-[18px] leading-none font-semibold text-ink">{title}</h2>
-        <span className="mb-0.5 font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
+        <span className="count-chip mb-0.5">
           {tasks.length} {tasks.length === 1 ? 'item' : 'items'}
         </span>
         <span className="flex-1" />
-        {hint && <span className="font-mono text-[9px] tracking-wide text-ink-3">{hint}</span>}
+        {hint && <span className="mb-0.5 font-mono text-[9px] tracking-wide text-ink-3">{hint}</span>}
       </div>
       <div className="space-y-2">
         {tasks.map((task, index) => (
@@ -674,7 +675,7 @@ export default function App() {
     // throw away focus time when moving to another task.
     bankFocus()
     setFocus({ taskId: id, startedAt: Date.now() })
-    setFlash({ msg: `⏱ Focus: ${shortTitle(task.title, 48)} — stop from the header when done.` })
+    setFlash({ msg: `Focus: ${shortTitle(task.title, 48)} — stop from the header when done.` })
   }
   const stopFocus = () => {
     if (!focus) return
@@ -726,7 +727,7 @@ export default function App() {
     const next = postponeDate(previous, 1)
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, dueDate: next } : t)))
     setFlash({
-      msg: `📅 ${shortTitle(task.title, 44)} → ${formatDue(next)}`,
+      msg: `${shortTitle(task.title, 44)} → ${formatDue(next)}`,
       action: {
         label: 'Undo',
         run: () =>
@@ -925,7 +926,7 @@ export default function App() {
       return
     }
     speak(briefingText(tasks))
-    setFlash({ msg: '🔊 Radar Samachaar — bol raha hoon…' })
+    setFlash({ msg: 'Radar Samachaar — bol raha hoon…' })
   }
 
   // 📤 One-tap week plan for the study group — native share sheet, clipboard fallback.
@@ -941,7 +942,7 @@ export default function App() {
     }
     try {
       await navigator.clipboard.writeText(text)
-      setFlash({ msg: '📤 Week plan copied — paste it in your group chat.' })
+      setFlash({ msg: 'Week plan copied — paste it in your group chat.' })
     } catch {
       setFlash({ msg: 'Sharing blocked by the browser — copy it from the weekly report instead.', tone: 'error' })
     }
@@ -960,7 +961,7 @@ export default function App() {
       notifyTest(stats.late, stats.dueToday)
       setFlash({ msg: 'Reminders on — one alert a day when something is late or due today.' })
     } else {
-      setFlash({ msg: 'Notifications blocked — allow them from the 🔒 icon in your address bar.', tone: 'error' })
+      setFlash({ msg: 'Notifications blocked — allow them from the lock icon in your address bar.', tone: 'error' })
     }
   }
 
@@ -981,7 +982,7 @@ export default function App() {
   const commands = [
     {
       id: 'new',
-      icon: '✎',
+      icon: 'pencil',
       label: 'Capture a new deadline',
       hint: 'N',
       keywords: 'add new task paste message',
@@ -989,7 +990,7 @@ export default function App() {
     },
     {
       id: 'brief',
-      icon: '🔊',
+      icon: 'volume',
       label: 'Play the spoken briefing',
       hint: 'B',
       keywords: 'briefing speak samachaar day summary',
@@ -997,7 +998,7 @@ export default function App() {
     },
     {
       id: 'report',
-      icon: '📊',
+      icon: 'chart',
       label: 'Open the weekly report',
       hint: 'W',
       keywords: 'weekly report stats check-in',
@@ -1005,56 +1006,56 @@ export default function App() {
     },
     {
       id: 'settings',
-      icon: '⚙️',
+      icon: 'settings',
       label: 'Open settings',
       keywords: 'settings ai api key display backup',
       run: () => setSettingsOpen(true),
     },
     {
       id: 'export',
-      icon: '📅',
+      icon: 'calendar',
       label: 'Export deadlines to calendar (.ics)',
       keywords: 'ics export calendar phone google',
       run: () => downloadICS(tasks),
     },
     {
       id: 'share',
-      icon: '📤',
+      icon: 'share',
       label: 'Share this week with the group',
       keywords: 'share whatsapp group week plan',
       run: shareWeek,
     },
     {
       id: 'late',
-      icon: '🔴',
+      icon: 'flame',
       label: 'Jump to Late — handle now',
       keywords: 'jump late overdue section',
       run: () => setTimeout(() => jumpSection('late'), 90),
     },
     {
       id: 'today',
-      icon: '🟠',
+      icon: 'clock',
       label: 'Jump to Due today',
       keywords: 'jump today section',
       run: () => setTimeout(() => jumpSection('today'), 90),
     },
     {
       id: 'week',
-      icon: '🟡',
+      icon: 'calendar',
       label: 'Jump to This week',
       keywords: 'jump week section',
       run: () => setTimeout(() => jumpSection('week'), 90),
     },
     {
       id: 'filters',
-      icon: '🧹',
+      icon: 'x',
       label: 'Clear search & filters',
       keywords: 'clear reset filter search',
       run: clearFilters,
     },
     {
       id: 'shortcuts',
-      icon: '⌨️',
+      icon: 'keyboard',
       label: 'Show keyboard shortcuts',
       hint: '?',
       keywords: 'keyboard keys help shortcuts',
@@ -1062,7 +1063,7 @@ export default function App() {
     },
     ...SORT_MODES.map((m) => ({
       id: `sort-${m.value}`,
-      icon: '↕',
+      icon: 'sort',
       label: `Sort: ${m.label}`,
       keywords: `sort order ${m.label} ${m.value}`,
       onlyWhenSearch: true,
@@ -1108,7 +1109,7 @@ export default function App() {
             <span className="font-semibold text-late">late</span>.
           </p>
         </div>
-        <div className="ms-auto flex flex-wrap items-center justify-end gap-1.5">
+        <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
           {focusTask && (
             <button
               type="button"
@@ -1117,73 +1118,83 @@ export default function App() {
               aria-label="Stop focus timer"
               className="btn border-done bg-done-soft text-done shadow-[2px_2px_0_var(--color-done)] hover:bg-done-soft"
             >
-              <span aria-hidden="true">⏱</span>
+              <Icon name="clock" size={13} />
               <span className="hidden max-w-[130px] truncate tracking-normal normal-case sm:inline">
                 {focusTask.title}
               </span>
               <span key={focusTick} className="tabular-nums">
                 {fmtElapsed(Date.now() - focus.startedAt)}
               </span>
-              <span aria-hidden="true">⏹</span>
+              <Icon name="stop" size={11} />
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setPaletteOpen(true)}
-            title="Command palette — Ctrl / ⌘ K"
-            aria-label="Open command palette"
-            className="icon-btn w-auto gap-1.5 px-2.5"
-          >
-            <span aria-hidden="true">🔍</span>
-            <kbd className="hidden sm:inline">⌘K</kbd>
-          </button>
-          {isWide && (
+
+          <div className="toolbar" role="group" aria-label="Quick actions">
             <button
               type="button"
-              onClick={() => setShortcutsOpen(true)}
-              title="Keyboard shortcuts — / search · n new · b briefing · w report"
-              aria-label="Show keyboard shortcuts"
-              className="icon-btn w-auto gap-1 px-2"
+              onClick={() => setPaletteOpen(true)}
+              title="Command palette — Ctrl / ⌘ K"
+              aria-label="Open command palette"
+              className="toolbar-btn"
             >
-              <span aria-hidden="true">⌨️</span>
-              <kbd>?</kbd>
+              <Icon name="search" size={16} />
+              <span className="kbd-chip hidden sm:inline-flex" aria-hidden="true">
+                ⌘K
+              </span>
             </button>
-          )}
-          {installEvt && (
+            {isWide && (
+              <button
+                type="button"
+                onClick={() => setShortcutsOpen(true)}
+                title="Keyboard shortcuts — / search · n new · b briefing · w report"
+                aria-label="Show keyboard shortcuts"
+                className="toolbar-btn"
+              >
+                <Icon name="keyboard" size={16} />
+                <span className="kbd-chip" aria-hidden="true">
+                  ?
+                </span>
+              </button>
+            )}
+            {installEvt && (
+              <button
+                type="button"
+                onClick={installApp}
+                title="Install Deadline Radar on this device"
+                aria-label="Install app"
+                className="toolbar-btn"
+              >
+                <Icon name="download" size={16} />
+              </button>
+            )}
             <button
               type="button"
-              onClick={installApp}
-              title="Install Deadline Radar on this device"
-              aria-label="Install app"
-              className="icon-btn"
+              onClick={toggleReminders}
+              title={
+                perm === 'granted' ? 'Daily reminders on — click to test' : 'Enable daily reminders'
+              }
+              aria-label="Toggle reminders"
+              className={`toolbar-btn ${perm === 'granted' ? 'is-on' : ''}`}
             >
-              ⬇️
+              <Icon name={perm === 'granted' ? 'bell' : 'bellOff'} size={16} />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={toggleReminders}
-            title={perm === 'granted' ? 'Daily reminders on — click to test' : 'Enable daily reminders'}
-            aria-label="Toggle reminders"
-            className={`icon-btn ${perm === 'granted' ? 'border-done bg-done-soft text-done' : ''}`}
-          >
-            {perm === 'granted' ? '🔔' : '🔕'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Open settings"
-            className="icon-btn"
-          >
-            ⚙️
-          </button>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Open settings"
+              title="Settings — AI key, display mode, backup"
+              className="toolbar-btn"
+            >
+              <Icon name="settings" size={16} />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Offline mode — everything below keeps working without a connection */}
       {!online && (
         <div className="rise mb-4 flex items-start gap-2.5 rounded-[4px] border border-today/40 bg-today-soft px-3 py-2.5 text-xs leading-relaxed text-ink-2">
-          <span aria-hidden="true">📴</span>
+          <Icon name="wifiOff" size={14} className="mt-0.5 text-today" />
           <p>
             <b className="font-semibold text-ink">You are offline — the radar keeps working.</b>{' '}
             Capture, parsing, reminders and your data all live in this browser. AI extract falls back
@@ -1207,19 +1218,31 @@ export default function App() {
       {/* Demo mode — a one-line tour for judges opening ?demo=1 cold */}
       {isDemo && !hintsClosed && (
         <div className="rise mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[4px] border border-later/35 bg-later-soft px-3.5 py-2 text-xs text-ink-2">
-          <span className="font-mono text-[9px] font-semibold tracking-[0.14em] text-later uppercase">
-            ✨ Demo mode — try
+          <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-later uppercase">
+            <Icon name="spark" size={11} />
+            Demo mode — try
           </span>
-          <span>🔊 Briefing — the radar speaks your day</span>
-          <span>🎙️ Ask → “ab kya karun?” · “mark DBMS done” ✅</span>
-          <span>▶ focus timer · 🔁 weekly tasks roll over</span>
+          <span className="flex items-center gap-1.5">
+            <Icon name="volume" size={11} className="text-ink-3" />
+            Briefing — the radar speaks your day
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Icon name="mic" size={11} className="text-ink-3" />
+            Ask → “ab kya karun?” · “mark DBMS done”
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Icon name="play" size={10} className="text-ink-3" />
+            focus timer ·
+            <Icon name="repeat" size={11} className="text-ink-3" />
+            weekly tasks roll over
+          </span>
           <button
             type="button"
             onClick={() => setHintsClosed(true)}
             aria-label="Dismiss tips"
-            className="ml-auto rounded-[3px] p-0.5 text-later transition hover:bg-later/10"
+            className="ml-auto rounded-[3px] p-1 text-later transition hover:bg-later/10"
           >
-            ✕
+            <Icon name="x" size={12} />
           </button>
         </div>
       )}
@@ -1234,11 +1257,16 @@ export default function App() {
               : 'border-done/40 bg-done-soft text-done'
           }`}
         >
-          {/* Success gets a ✓; errors must NOT wear a checkmark (a green tick
-              announcing "Mic blocked" is exactly the kind of contradiction a
-              judge screenshots). Strip a trailing ✓ so we never show two. */}
+          {/* Success gets a tick; errors get an alert. Never a green tick
+              announcing "Mic blocked" — exactly the kind of contradiction a
+              judge screenshots. Strip a trailing ✓ so we never show two. */}
+          <Icon
+            name={flash.tone === 'error' ? 'alert' : 'check'}
+            size={13}
+            className="shrink-0"
+          />
           <span className="min-w-0 flex-1 break-words">
-            {flash.tone === 'error' ? flash.msg : `✓ ${flash.msg.replace(/\s*✓$/u, '')}`}
+            {flash.msg.replace(/\s*✓$/u, '')}
           </span>
           {flash.action && (
             <button
@@ -1265,8 +1293,9 @@ export default function App() {
       {startSoon.length > 0 && (
         <div className="rise mt-2 rounded-[4px] border border-today/40 bg-today-soft px-3.5 py-2 text-xs text-ink-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="font-mono text-[9px] font-semibold tracking-[0.14em] text-today uppercase">
-              ⏳ Start window closing
+            <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-today uppercase">
+              <Icon name="clock" size={11} />
+              Start window closing
             </span>
             {startSoon.slice(0, 3).map((a) => (
               <span key={a.task.id} className="rounded-[2px] border border-today/30 bg-paper-2/70 px-1.5 py-0.5">
@@ -1289,13 +1318,13 @@ export default function App() {
         <Modal
           label="Keyboard shortcuts"
           onClose={() => setShortcutsOpen(false)}
-          panelClassName="w-full max-w-sm rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
+          panelClassName="sheet w-full max-w-sm"
         >
             <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
               <div>
                 <p className="eyebrow">Keyboard desk</p>
                 <h2 className="font-serif text-xl leading-tight font-semibold text-ink">
-                  ⌨️ Shortcuts
+                  Shortcuts
                 </h2>
               </div>
               <button
@@ -1304,7 +1333,7 @@ export default function App() {
                 className="icon-btn mt-0.5"
                 aria-label="Close shortcuts"
               >
-                ✕
+                <Icon name="x" size={14} />
               </button>
             </div>
             <div className="px-5 py-2">
@@ -1312,8 +1341,8 @@ export default function App() {
                 ['⌘K', 'Command palette — every action'],
                 ['/', 'Search the radar'],
                 ['n', 'Capture a new deadline'],
-                ['b', '🔊 Briefing — Radar Samachaar'],
-                ['w', '📊 Weekly report'],
+                ['b', 'Briefing — Radar Samachaar'],
+                ['w', 'Weekly report'],
                 ['?', 'This card'],
                 ['Esc', 'Close anything'],
               ].map(([key, label]) => (
@@ -1335,7 +1364,7 @@ export default function App() {
       {/* Clipboard auto-detect suggestion */}
       {clipSuggest && (
         <div className="mt-2 flex items-center gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2">
-          <span aria-hidden="true">📋</span>
+          <Icon name="clipboard" size={14} className="mt-0.5 text-later" />
           <p className="min-w-0 flex-1 break-words">
             <b className="font-semibold text-ink">Clipboard check</b> — looks like a deadline notice.
             Add it? <span className="text-ink-3">{clipSuggest.text.slice(0, 80)}…</span>
@@ -1350,7 +1379,8 @@ export default function App() {
             }}
             className="btn btn-primary !px-2.5 !py-1 !text-[10px]"
           >
-            ✓ Add
+            <Icon name="check" size={11} />
+            Add
           </button>
           <button
             type="button"
@@ -1359,9 +1389,9 @@ export default function App() {
               setClipSuggest(null)
             }}
             aria-label="Dismiss clipboard suggestion"
-            className="icon-btn h-7 w-7 text-[11px]"
+            className="icon-btn h-7 w-7"
           >
-            ✕
+            <Icon name="x" size={12} />
           </button>
         </div>
       )}
@@ -1374,7 +1404,7 @@ export default function App() {
           aria-live="polite"
           className="mt-2 flex items-start gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2"
         >
-          <span aria-hidden="true">🎙️</span>
+          <Icon name="mic" size={14} className="mt-0.5 text-later" />
           <p className="min-w-0 flex-1 leading-relaxed">
             <span className="font-mono text-[10px] text-ink-3">“{askCard.q}”</span>
             <br />
@@ -1384,9 +1414,9 @@ export default function App() {
             type="button"
             onClick={() => setAskCard(null)}
             aria-label="Dismiss answer"
-            className="icon-btn h-7 w-7 text-[11px]"
+            className="icon-btn h-7 w-7"
           >
-            ✕
+            <Icon name="x" size={12} />
           </button>
         </div>
       )}
@@ -1421,10 +1451,11 @@ export default function App() {
               <StatsBar total={stats.total} dueToday={stats.dueToday} late={stats.late} done={stats.done} focusH={(trend.thisWeek.focusMin / 60).toFixed(1)} />
               {risk.total > 0 && (
                 <p
-                  className="px-0.5 font-mono text-[10px] font-medium text-today"
+                  className="flex items-center gap-1 px-0.5 font-mono text-[10px] font-medium text-today"
                   title="Marks riding on late + this-week submissions"
                 >
-                  🎯 {risk.total} marks at risk
+                  <Icon name="target" size={11} />
+                  {risk.total} marks at risk
                   {risk.late > 0 && <span className="text-late"> · {risk.late} already late</span>}
                 </p>
               )}
@@ -1434,61 +1465,68 @@ export default function App() {
                 active={dateFilter}
                 onPick={(key) => setDateFilter((cur) => (cur === key ? null : key))}
               />
-              <button
-                type="button"
-                onClick={() => setReportOpen(true)}
-                className="weekly-btn mt-auto flex items-center justify-between gap-2 rounded-[3px] border border-line bg-paper-2 px-3 py-2 text-left text-[11px] font-medium text-ink-2 transition hover:border-ink hover:text-ink"
-              >
-                <span>📊 Weekly report — real result + check-in post</span>
-                <span aria-hidden="true" className="font-mono text-ink-3">→</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => downloadICS(tasks)}
-                title="Download an .ics file — opens in Google / Apple / Outlook calendar"
-                className="export-btn flex items-center justify-between gap-2 rounded-[3px] border border-line bg-paper-2 px-3 py-2 text-left text-[11px] font-medium text-ink-2 transition hover:border-ink hover:text-ink"
-              >
-                <span>📅 Export deadlines to phone calendar (.ics)</span>
-                <span aria-hidden="true" className="font-mono text-ink-3">→</span>
-              </button>
-              <button
-                type="button"
-                onClick={shareWeek}
-                title="Native share sheet (phone) or clipboard copy — this week's deadlines for the group chat"
-                className="share-week-btn flex items-center justify-between gap-2 rounded-[3px] border border-line bg-paper-2 px-3 py-2 text-left text-[11px] font-medium text-ink-2 transition hover:border-ink hover:text-ink"
-              >
-                <span>📤 Share this week to the group</span>
-                <span aria-hidden="true" className="font-mono text-ink-3">→</span>
-              </button>
+              <div className="mt-auto divide-y divide-line overflow-hidden rounded-[3px] border border-line bg-paper-2">
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(true)}
+                  title="Open the weekly report — captured, finished, on-time, plus a ready check-in post"
+                  className="rail-action weekly-btn"
+                >
+                  <Icon name="chart" size={14} className="text-ink-3" />
+                  <span className="min-w-0 flex-1 leading-snug">
+                    Weekly report — result + check-in post
+                  </span>
+                  <Icon name="arrowRight" size={13} className="text-ink-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadICS(tasks)}
+                  title="Download an .ics file — opens in Google / Apple / Outlook calendar"
+                  className="rail-action export-btn"
+                >
+                  <Icon name="calendar" size={14} className="text-ink-3" />
+                  <span className="min-w-0 flex-1 leading-snug">Export to phone calendar (.ics)</span>
+                  <Icon name="arrowRight" size={13} className="text-ink-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={shareWeek}
+                  title="Native share sheet (phone) or clipboard copy — this week's deadlines for the group chat"
+                  className="rail-action share-week-btn"
+                >
+                  <Icon name="share" size={14} className="text-ink-3" />
+                  <span className="min-w-0 flex-1 leading-snug">Share this week to the group</span>
+                  <Icon name="arrowRight" size={13} className="text-ink-3" />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Search + subject filters */}
           {tasks.length > 0 && (
             <div className="space-y-2">
-              <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-ink-3">
-                  🔍
-                </span>
+              <div className="search-wrap">
+                <Icon name="search" size={14} className="search-icon" />
                 <input
                   ref={searchRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search tasks — or press / to jump here"
+                  placeholder="Search tasks…"
                   aria-label="Search tasks"
-                  className="field !py-2 !pl-8"
+                  className="field search-input"
                 />
+                <span className="search-key kbd-chip" aria-hidden="true">
+                  /
+                </span>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <label htmlFor="sort-tasks" className="eyebrow">
-                  Order
-                </label>
+              <label htmlFor="sort-tasks" className="sort-row">
+                <span className="eyebrow shrink-0">Order</span>
                 <select
                   id="sort-tasks"
                   value={sortBy}
                   onChange={(e) => setSort(e.target.value)}
                   title="How tasks are ordered inside each section"
-                  className="field select-field !w-[168px] !py-1 !text-[11px]"
+                  className="sort-select"
                 >
                   {SORT_MODES.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -1496,7 +1534,7 @@ export default function App() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </label>
               {(subjects.length > 0 || dateFilter) && (
                 <div className="flex flex-wrap gap-1.5">
                   {subjects.length > 0 && (
@@ -1525,13 +1563,13 @@ export default function App() {
                       className={chipCls(true)}
                       title="Clear the day filter"
                     >
-                      📅{' '}
+                      <Icon name="calendar" size={11} />
                       {new Date(`${dateFilter}T00:00:00`).toLocaleDateString('en-IN', {
                         weekday: 'short',
                         day: 'numeric',
                         month: 'short',
-                      })}{' '}
-                      ✕
+                      })}
+                      <Icon name="x" size={11} />
                     </button>
                   )}
                 </div>
@@ -1575,14 +1613,12 @@ export default function App() {
 
               <div className="grid gap-2 border-t border-line px-6 py-4 sm:grid-cols-3 sm:px-8">
                 {[
-                  ['✎', 'Paste a message', 'WhatsApp, notes, email'],
-                  ['🎙', 'Hold & speak', 'Wispr types it for you'],
-                  ['📷', 'Drop a photo', 'Screenshot or portal shot'],
+                  ['pencil', 'Paste a message', 'WhatsApp, notes, email'],
+                  ['mic', 'Hold & speak', 'Wispr types it for you'],
+                  ['camera', 'Drop a photo', 'Screenshot or portal shot'],
                 ].map(([icon, title, hint]) => (
                   <div key={title} className="flex items-start gap-2">
-                    <span aria-hidden="true" className="text-sm">
-                      {icon}
-                    </span>
+                    <Icon name={icon} size={14} className="mt-0.5 text-ink-3" />
                     <div>
                       <p className="text-[12px] font-medium text-ink">{title}</p>
                       <p className="font-mono text-[9px] tracking-wide text-ink-3">{hint}</p>
@@ -1616,7 +1652,8 @@ export default function App() {
                     onClick={() => setTasks(buildSampleTasks())}
                     className="btn btn-quiet"
                   >
-                    Load a full demo radar →
+                    Load a full demo radar
+                    <Icon name="arrowRight" size={12} />
                   </button>
                   <span className="font-mono text-[9px] tracking-wide text-ink-3">
                     or press <kbd>N</kbd> to start typing
@@ -1632,7 +1669,7 @@ export default function App() {
                   sectionKey={key}
                   title={title}
                   tone={tone}
-                  hint={key === 'done' ? `${onTime} finished on time${streak > 1 ? ` · 🔥 ${streak} in a row` : ''}` : hint}
+                  hint={key === 'done' ? `${onTime} finished on time${streak > 1 ? ` · ${streak} in a row` : ''}` : hint}
                   tasks={sections[key]}
                   getAdvice={(task) => adviceFor(brain, task)}
                   getEst={(task) => estimateEffort(task, pace)}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Modal from './Modal'
+import Icon from './Icon'
 import { formatDue } from '../lib/dates'
 import { smartSort } from '../lib/sort'
 
@@ -16,23 +17,21 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
   const groups = useMemo(() => {
     const needle = q.trim().toLowerCase()
     const commandHits = commands
-      .filter((c) => !needle ? !c.onlyWhenSearch : `${c.label} ${c.keywords || ''}`.toLowerCase().includes(needle))
+      .filter((c) =>
+        !needle ? !c.onlyWhenSearch : `${c.label} ${c.keywords || ''}`.toLowerCase().includes(needle),
+      )
       .map((c) => ({ ...c, type: 'command' }))
 
     const pending = tasks
       .filter((t) => !t.done)
-      .filter(
-        (t) =>
-          !needle ||
-          `${t.title} ${t.subject || ''}`.toLowerCase().includes(needle),
-      )
+      .filter((t) => !needle || `${t.title} ${t.subject || ''}`.toLowerCase().includes(needle))
       .sort(smartSort)
       .slice(0, needle ? 8 : 5)
       .map((t) => ({
         id: `task-${t.id}`,
         type: 'task',
         task: t,
-        icon: '▢',
+        icon: 'square',
         label: t.title,
         meta: [
           t.subject,
@@ -66,9 +65,7 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
   }, [flat.length])
 
   useEffect(() => {
-    document
-      .getElementById(`cmd-option-${active}`)
-      ?.scrollIntoView({ block: 'nearest' })
+    document.getElementById(`cmd-option-${active}`)?.scrollIntoView({ block: 'nearest' })
   }, [active])
 
   function run(item) {
@@ -98,12 +95,10 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
       label="Command palette"
       onClose={onClose}
       align="top"
-      panelClassName="w-full max-w-xl overflow-hidden rounded-[5px] border border-ink bg-paper-2 shadow-[7px_7px_0_rgba(29,27,22,0.24)]"
+      panelClassName="sheet w-full max-w-xl overflow-hidden"
     >
-      <div className="flex items-center gap-2 border-b-2 border-ink px-3.5 py-2.5">
-        <span aria-hidden="true" className="text-sm text-ink-3">
-          🔍
-        </span>
+      <div className="flex items-center gap-2.5 border-b border-ink/75 px-3.5 py-2.5">
+        <Icon name="search" size={15} className="text-ink-3" />
         <input
           data-autofocus
           value={q}
@@ -120,17 +115,19 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
           placeholder="Search tasks, or type a command…"
           className="min-w-0 flex-1 bg-transparent font-serif text-[16px] text-ink caret-late placeholder:font-sans placeholder:text-[13px] placeholder:text-ink-3 focus:outline-none"
         />
-        <kbd>esc</kbd>
+        <span className="kbd-chip" aria-hidden="true">
+          esc
+        </span>
       </div>
 
       <div
         id="cmd-list"
         role="listbox"
         aria-label="Palette results"
-        className="max-h-[54vh] overflow-y-auto px-2 py-2"
+        className="max-h-[54vh] overflow-y-auto px-1.5 py-1.5"
       >
         {flat.length === 0 && (
-          <div className="px-3 py-6 text-center">
+          <div className="px-3 py-7 text-center">
             <p className="font-serif text-base font-semibold text-ink">No matches</p>
             <p className="mt-1 text-xs text-ink-3">
               Try a subject, a task title, or “weekly”, “settings”, “sort”.
@@ -140,7 +137,12 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
 
         {groups.map((group) => (
           <div key={group.heading} role="group" aria-label={group.heading}>
-            <p className="eyebrow px-2 pt-2 pb-1">{group.heading}</p>
+            <p className="flex items-baseline justify-between gap-2 px-2 pt-2.5 pb-1">
+              <span className="eyebrow">{group.heading}</span>
+              <span className="font-mono text-[9px] tabular-nums text-ink-3">
+                {group.items.length}
+              </span>
+            </p>
             {group.items.map((item) => {
               index += 1
               const i = index
@@ -157,17 +159,10 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
                     e.preventDefault()
                     run(item)
                   }}
-                  className={`flex cursor-pointer items-center gap-2.5 rounded-[3px] px-2 py-1.5 ${
-                    on ? 'bg-ink text-paper' : 'text-ink hover:bg-paper-3'
-                  }`}
+                  className={`cmd-row ${on ? 'is-on' : ''}`}
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`w-5 shrink-0 text-center text-[12px] ${
-                      on ? 'text-paper' : 'text-ink-3'
-                    }`}
-                  >
-                    {item.icon}
+                  <span className="cmd-icon" aria-hidden="true">
+                    <Icon name={item.icon} size={13} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[12.5px] leading-snug">{item.label}</span>
@@ -182,7 +177,9 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
                     )}
                   </span>
                   {item.hint && (
-                    <kbd className={on ? 'border-paper bg-ink text-paper' : ''}>{item.hint}</kbd>
+                    <span className={`kbd-chip ${on ? 'is-on' : ''}`} aria-hidden="true">
+                      {item.hint}
+                    </span>
                   )}
                 </div>
               )
@@ -192,18 +189,24 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-paper px-3.5 py-2 font-mono text-[9px] tracking-[0.1em] text-ink-3 uppercase">
-        <span className="flex items-center gap-2">
-          <span>
-            <kbd>↑</kbd> <kbd>↓</kbd> move
+        <span className="flex items-center gap-2.5">
+          <span className="flex items-center gap-1">
+            <span className="kbd-chip">↑</span>
+            <span className="kbd-chip">↓</span>
+            move
           </span>
-          <span>
-            <kbd>↵</kbd> open
+          <span className="flex items-center gap-1">
+            <span className="kbd-chip">↵</span>
+            open
           </span>
-          <span>
-            <kbd>esc</kbd> close
+          <span className="flex items-center gap-1">
+            <span className="kbd-chip">esc</span>
+            close
           </span>
         </span>
-        <span>{flat.length} result{flat.length === 1 ? '' : 's'}</span>
+        <span>
+          {flat.length} result{flat.length === 1 ? '' : 's'}
+        </span>
       </div>
     </Modal>
   )

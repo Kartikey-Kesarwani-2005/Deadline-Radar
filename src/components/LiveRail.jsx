@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { addDays, countdownTo, formatDue, toDateKey, todayKey } from '../lib/dates'
 import { onTimeStreak, subjectLoad } from '../lib/brain'
+import Icon from './Icon'
 
 /**
  * 🛰 Live rail (wide screens only) — the "mission control" column:
@@ -42,8 +43,14 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
       {/* ⏳ Next deadline, ticking live */}
       <div className="paper-panel p-4">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="eyebrow">⏳ Next deadline</p>
-          <span className="font-mono text-[9px] text-ink-3">live</span>
+          <p className="eyebrow flex items-center gap-1.5">
+            <Icon name="clock" size={11} />
+            Next deadline
+          </p>
+          <span className="live-tag">
+            <span className="live-dot" aria-hidden="true" />
+            live
+          </span>
         </div>
         {next ? (
           <>
@@ -54,24 +61,33 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
               {next.title}
             </p>
             {cd && (
-              <p
-                className={`mt-2 font-mono text-[26px] leading-none font-semibold tabular-nums ${
-                  cd.late ? 'text-late' : cd.d === 0 && cd.h < 6 ? 'text-today' : 'text-ink'
-                }`}
-              >
-                {cd.late
-                  ? `${cd.d}d ${cd.h}h over`
-                  : `${String(cd.d).padStart(2, '0')}:${String(cd.h).padStart(2, '0')}:${String(cd.m).padStart(2, '0')}:${String(cd.s).padStart(2, '0')}`}
-              </p>
+              <div className="mt-2.5">
+                <p
+                  className={`font-mono leading-none font-semibold tabular-nums ${
+                    cd.late
+                      ? 'text-[24px] text-late'
+                      : cd.d === 0 && cd.h < 6
+                        ? 'text-[26px] text-today'
+                        : 'text-[26px] text-ink'
+                  }`}
+                >
+                  {cd.late
+                    ? `${cd.d}d ${cd.h}h`
+                    : `${String(cd.d).padStart(2, '0')}:${String(cd.h).padStart(2, '0')}:${String(cd.m).padStart(2, '0')}:${String(cd.s).padStart(2, '0')}`}
+                </p>
+                {/* Label the 01:02:14:33 blocks so nobody has to guess which digit is days */}
+                <p
+                  className="mt-1.5 font-mono text-[8px] tracking-[0.14em] text-ink-3 uppercase"
+                  aria-hidden="true"
+                >
+                  {cd.late ? 'past the deadline' : 'days : hrs : min : sec'}
+                </p>
+              </div>
             )}
-            {/* Label the 01:02:14:33 blocks so nobody has to guess which digit is days */}
-            {cd && !cd.late && (
-              <p className="mt-1 font-mono text-[8px] tracking-[0.14em] text-ink-3 uppercase" aria-hidden="true">
-                days : hrs : min : sec
-              </p>
-            )}
-            <p className="mt-2 border-t border-dotted border-line pt-2 font-mono text-[10px] text-ink-3">
-              {next.subject ? `${next.subject} · ` : ''}📅 {formatDue(next.dueDate)}
+            <p className="mt-2.5 flex items-center gap-1.5 border-t border-dotted border-line pt-2 font-mono text-[10px] text-ink-3">
+              <Icon name="calendar" size={11} />
+              {next.subject ? `${next.subject} · ` : ''}
+              {formatDue(next.dueDate)}
             </p>
           </>
         ) : (
@@ -83,7 +99,10 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
 
       {/* 🔥 Momentum — on-time streak + a last-7-days finish strip */}
       <div className="paper-panel p-4">
-        <p className="eyebrow">🔥 Momentum</p>
+        <p className="eyebrow flex items-center gap-1.5">
+          <Icon name="flame" size={11} />
+          Momentum
+        </p>
         {streak > 0 ? (
           <p className="mt-2 flex items-baseline gap-2">
             <span className="font-serif text-3xl leading-none font-semibold text-done">{streak}</span>
@@ -105,13 +124,18 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
             />
           ))}
         </div>
-        <p className="mt-1.5 font-mono text-[9px] text-ink-3">last 7 days · filled = finished something</p>
+        <p className="mt-1.5 font-mono text-[9px] text-ink-3">
+          last 7 days · filled = finished something
+        </p>
       </div>
 
       {/* 📊 Load by subject — pending marks, heaviest first */}
       {load.length > 0 && (
         <div className="paper-panel p-4">
-          <p className="eyebrow">📊 Load by subject</p>
+          <p className="eyebrow flex items-center gap-1.5">
+            <Icon name="chart" size={11} />
+            Load by subject
+          </p>
           <ul className="mt-3 space-y-2.5">
             {load.slice(0, 6).map((s) => {
               const pct = Math.round(((s.marks || s.count) / maxMarks) * 100)

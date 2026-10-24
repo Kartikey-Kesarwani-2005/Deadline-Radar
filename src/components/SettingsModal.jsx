@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from './Modal'
+import Icon from './Icon'
 
 function Field({ label, hint, children }) {
   return (
@@ -85,7 +86,7 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
     <Modal
       label="Settings"
       onClose={onClose}
-      panelClassName="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] border border-ink bg-paper-2 shadow-[6px_6px_0_rgba(29,27,22,0.22)]"
+      panelClassName="sheet max-h-[90vh] w-full max-w-md overflow-y-auto"
     >
         <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
           <div>
@@ -98,7 +99,7 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
             className="icon-btn mt-1"
             aria-label="Close settings"
           >
-            ✕
+            <Icon name="x" size={14} />
           </button>
         </div>
 
@@ -162,7 +163,7 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
                   />
                   {detected && (
                     <p className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-done">
-                      <span aria-hidden="true">✓</span>
+                      <Icon name="check" size={11} />
                       {detected} detected — base URL &amp; model set automatically
                     </p>
                   )}
@@ -191,7 +192,10 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
           <Card>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-serif text-sm font-semibold text-ink">🧲 Clipboard auto-detect</p>
+                <p className="flex items-center gap-1.5 font-serif text-sm font-semibold text-ink">
+                  <Icon name="clipboard" size={13} className="text-ink-3" />
+                  Clipboard auto-detect
+                </p>
                 <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
                   Copy an assignment message (WhatsApp, notes…), switch back to this tab — we check
                   the clipboard and offer a one-tap capture. The text never leaves your browser.
@@ -207,17 +211,20 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
           </Card>
 
           <Card>
-            <p className="font-serif text-sm font-semibold text-ink">🖥️ Display mode</p>
+            <p className="flex items-center gap-1.5 font-serif text-sm font-semibold text-ink">
+              <Icon name="monitor" size={13} className="text-ink-3" />
+              Display mode
+            </p>
             <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
               Auto picks the layout from your screen size. Phone mode: compact, big tap targets,
               card buttons always visible. Desktop: a wider radar dashboard.
             </p>
             <div className="mt-2 grid grid-cols-3 gap-2">
               {[
-                ['auto', '✨ Auto'],
-                ['desktop', '🖥️ Desktop'],
-                ['phone', '📱 Phone'],
-              ].map(([value, label]) => (
+                ['auto', 'spark', 'Auto'],
+                ['desktop', 'monitor', 'Desktop'],
+                ['phone', 'phone', 'Phone'],
+              ].map(([value, icon, label]) => (
                 <button
                   key={value}
                   type="button"
@@ -228,6 +235,7 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
                       : 'btn btn-quiet !px-2 !text-[10px]'
                   }
                 >
+                  <Icon name={icon} size={11} />
                   {label}
                 </button>
               ))}
@@ -242,10 +250,12 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button type="button" onClick={onExport} className="btn btn-quiet">
-                ⬇ Export tasks (.json)
+                <Icon name="download" size={12} />
+                Export tasks (.json)
               </button>
               <label className="btn btn-quiet cursor-pointer">
-                ⬆ Import backup
+                <Icon name="upload" size={12} />
+                Import backup
                 <input
                   type="file"
                   accept="application/json,.json"
