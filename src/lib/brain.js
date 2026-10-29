@@ -325,6 +325,54 @@ export function paceModel(tasks) {
 }
 
 /**
+ * 🏅 Weekly grade — the report card's rubber stamp. Folds the week's real
+ * result into one honest letter: on-time rate carries most of the weight, the
+ * streak and "nothing late" add up, the week-over-week trend nudges it up or
+ * down. Under 3 rated finishes there is no grade yet — say so, never fake.
+ * `now` is injectable for the tests.
+ */
+const RATED_MIN = 3
+
+export function reportGrade(tasks, now = Date.now()) {
+  const rated = tasks.filter((t) => t.done && t.dueDate && t.completedAt)
+  if (rated.length < RATED_MIN) {
+    return {
+      grade: null,
+      score: null,
+      note: `${RATED_MIN - rated.length} more finish${RATED_MIN - rated.length === 1 ? '' : 'es'} and the grade becomes real.`,
+    }
+  }
+  const onTime = rated.filter((t) => toDateKey(new Date(t.completedAt)) <= t.dueDate).length
+  const rate = onTime / rated.length
+  const streak = onTimeStreak(tasks)
+  const late = tasks.filter(
+    (t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) < 0,
+  ).length
+  const trend = weeklyTrend(tasks, now)
+  const improving = trend.thisWeek.onTime >= trend.lastWeek.onTime
+
+  let score = rate * 70
+  score += Math.min(12, streak * 3) // streak bonus
+  score += late === 0 ? 10 : late <= 2 ? 4 : -6 // clean slate / bleeding late pile
+  score += improving ? 8 : -4 // trajectory counts
+  score = Math.round(Math.max(0, Math.min(100, score)))
+
+  const grade =
+    score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 70 ? 'B+' : score >= 60 ? 'B' : score >= 45 ? 'C' : 'D'
+
+  const note =
+    grade === 'A+' || grade === 'A'
+      ? 'Top of the class — ye pace rakh!'
+      : grade === 'B+' || grade === 'B'
+        ? 'Solid week — late pile chhota karke A aa sakta hai.'
+        : grade === 'C'
+          ? 'Chal raha hai, par late pile numbers kha raha hai.'
+          : 'Isko aaj se theek karo — aadat isi din banti hai.'
+
+  return { grade, score, note }
+}
+
+/**
  * 🔥 12-week consistency heat — GitHub-style grid of finished-work density.
  * One cell per day (oldest → newest, ending today), counting how many tasks
  * were FINISHED that day and how many of those were on time. Also derives the

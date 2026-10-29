@@ -2,9 +2,17 @@ import { useState } from 'react'
 import Modal from './Modal'
 import Icon from './Icon'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
-import { marksAtRisk, onTimeStreak, paceRows, subjectLoad, weeklyTrend } from '../lib/brain'
+import { marksAtRisk, onTimeStreak, paceRows, reportGrade, subjectLoad, weeklyTrend } from '../lib/brain'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
+
+/** Stamp ink colour for a grade — green when the week earns it, red when not. */
+function gradeTone(grade, score) {
+  if (grade === null) return 'text-ink-3'
+  if (score >= 70) return 'border-done text-done'
+  if (score >= 45) return 'border-today text-today'
+  return 'border-late text-late'
+}
 
 function Row({ label, value, className = 'text-ink' }) {
   return (
@@ -40,11 +48,15 @@ export default function WeeklyReport({ tasks, onClose }) {
   const trend = weeklyTrend(tasks)
   const streak = onTimeStreak(tasks)
   const load = subjectLoad(tasks)
+  const grade = reportGrade(tasks)
   const delta = (now, before) =>
     now > before ? 'text-done' : now < before ? 'text-late' : 'text-ink'
 
   const reportText = [
     'Deadline Radar — weekly check-in 📡',
+    grade.grade
+      ? `🏅 Grade: ${grade.grade} (${grade.score}/100) — ${grade.note}`
+      : `🏅 Grade: not yet — ${grade.note}`,
     `📥 Captured this week: ${captured}`,
     `✅ Finished this week: ${finished.length} · on time: ${onTime}`,
     `📌 Pending with a deadline: ${pending}${late ? ` · late: ${late}` : ''}`,
@@ -91,6 +103,39 @@ export default function WeeklyReport({ tasks, onClose }) {
             <Icon name="x" size={14} />
           </button>
         </div>
+
+        {/* 🏅 The grade stamp — rubber-stamped like the rest of Field Notes.
+            Under 3 rated finishes the report refuses to print a grade. */}
+        {grade.grade ? (
+          <div className="mt-3 flex items-center gap-3.5 rounded-[4px] border border-dashed border-line bg-paper px-4 py-3">
+            <span
+              aria-label={`Weekly grade ${grade.grade}, ${grade.score} out of 100`}
+              role="img"
+              className={`inline-flex -rotate-2 shrink-0 items-center gap-2 rounded-[3px] border-2 ${gradeTone(
+                grade.grade,
+                grade.score,
+              )} border-dashed px-3 py-1.5`}
+              style={{ backgroundImage: 'var(--paper-grain)' }}
+            >
+              <span className="font-serif text-[26px] leading-none font-bold tracking-tight">
+                {grade.grade}
+              </span>
+              <span className="font-mono text-[10px] font-semibold tracking-[0.08em] tabular-nums">
+                {grade.score}
+                <span className="opacity-60">/100</span>
+              </span>
+            </span>
+            <p className="text-[12px] leading-relaxed text-ink-2">
+              This week's grade — <b className="font-semibold text-ink">on-time rate carries 70%,
+              the streak and a clean slate add up</b>, and the week-over-week trend nudges it.{' '}
+              <span className="italic">{grade.note}</span>
+            </p>
+          </div>
+        ) : (
+          <p className="mt-3 rounded-[4px] border border-dashed border-line bg-paper px-4 py-2.5 text-[12px] text-ink-3">
+            🏅 Grade: none printed yet — {grade.note}
+          </p>
+        )}
 
         <div className="px-5 pt-4 pb-5">
           <Row label="Captured" value={captured} />

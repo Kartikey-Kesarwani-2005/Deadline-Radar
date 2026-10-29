@@ -37,17 +37,21 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 
 ### 1:10–1:40 — What it gives back
 - Screen: the **"🎯 Ab kya karun?"** decision card at the top (start a ⏱ focus with
-  one click), the **radar dial** (rings fill by urgency, sweep rotating, on-time %
+  one click), then the **🕐 Aaj ka timetable** — today as a bell schedule (time ranges,
+  late task opens the day; ▶ starts a real focus block), the
+  **radar dial** (rings fill by urgency, sweep rotating, on-time %
   in the centre), the **🎯 marks-at-risk** line, and the **🌦️ 7-day weather forecast** —
   tap the ⛈️ storm day to filter to it. Every card now carries a **🎯 risk dial**
   (0–100, inked by deadline proximity + marks + your own lateness history) — hover one
   so its reasons show as a tooltip. A card shows its **🧠 prediction chip**
   ("Usually 2.0d late — start NOW"), the **🔥 12-week consistency heatmap** glows in the
   rail, and the **📈 6-week finish arc** shows the on-time/late split *over time*.
+  Search, sort and filters now sit on the **🗄️ DeskBar** pinned right above the cards.
   Tick a task done — **confetti bursts** — tick the
   **🔁 weekly** lab record and next week's deadline **rolls itself onto the radar** —
   then tick the last pending task: the **whole radar is clear** and confetti falls
-  from every edge. Open **Weekly report**.
+  from every edge. Open **Weekly report** — a **🏅 letter grade (A+…D /100)** is
+  rubber-stamped on the top of it.
 - **The plan moment (new):** click the **📋 list button** on any card → **"Plan banao"**
   lays the deadline out as **day-by-day study sessions** — what to do in each round,
   on which day, ~how long, ending in "submit" — press **Copy plan** and the checklist
@@ -63,8 +67,9 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   in one click; show a **📅 GCal** chip landing a deadline straight into Google Calendar. (+6s)
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
   your on-time score. It counts marks at risk, learns my own rhythm from history — and it
-  doesn't just warn me, it plans me: one click and a scary deadline becomes a short
-  day-by-day checklist."*
+  doesn't just warn me, it plans me: my whole day is time-blocked, one click gives any
+  deadline a short day-by-day checklist, and the weekly report is stamped with a real
+  grade, not vibes."*
 - Tap a dial ring → it jumps to that section. Show the **On time** ring, the **📈 6-week arc**
   and Weekly report numbers — this is the "one real result".
 

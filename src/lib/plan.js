@@ -110,3 +110,108 @@ export function planCopyText(task, plan, today = todayKey()) {
 }
 
 export { stepDate as formatStepDate }
+
+/**
+ * 🕐 "Aaj ka timetable" — one honest day plan, printed like a bell schedule.
+ * Unlike "Plan banao" (one deadline spread over days) this answers the other
+ * question: TODAY, hour by hour — what works in which slot. Pending work is
+ * ranked by the do-now engine (late first, then marks-per-hour ROI), fit into
+ * 25–90 min blocks from "now" (next 5 min) until 10 pm, with a 10 min breath
+ * between blocks. Work that doesn't fit is listed as overflow — never faked.
+ *
+ * Deterministic given `now` — tests stay stable.
+ */
+const DAY_START_MIN = 6 * 60
+const DAY_END_MIN = 22 * 60
+const BREAK_MIN = 10
+
+/** Minutes-of-day "now + a small nudge", rounded up to the next 5 minutes. */
+function nextSlotMin(now) {
+  const d = new Date(now)
+  const min = d.getHours() * 60 + d.getMinutes() + 5
+  const rounded = Math.ceil(min / 5) * 5
+  return Math.max(DAY_START_MIN, rounded)
+}
+
+/** 12-hour clock for the block times ("4:35 pm"). */
+function fmtClock(min) {
+  const h24 = Math.floor(min / 60) % 24
+  const m = min % 60
+  const ampm = h24 < 12 ? 'am' : 'pm'
+  const h = h24 % 12 === 0 ? 12 : h24 % 12
+  return `${h}:${String(m).padStart(2, '0')} ${ampm}`
+}
+
+export function formatClock(min) {
+  return fmtClock(min)
+}
+
+/**
+ * @param {object[]} tasks - the full task list
+ * @param {number} now - injectable timestamp
+ * @returns {{
+ *   blocks: Array<{task, minutes, startMin, endMin}>,
+ *   overflow: object[], startMin: number, endMin: number, totalMin: number
+ * } | null} null when nothing pending is schedulable
+ */
+export function daySchedule(tasks, now = Date.now()) {
+  const today = todayKey()
+  const pending = tasks.filter((t) => !t.done && t.dueDate)
+  if (!pending.length) return null
+
+  // Rank exactly like the do-now engine: late work quadruples its score, ROI
+  // decays with distance, so the queue is always "most damaging first".
+  const pace = paceModel(tasks)
+  const ranked = pending
+    .map((t) => {
+      const { minutes } = estimateEffort(t, pace)
+      const daysLeft = dayDiff(today, t.dueDate)
+      const hours = minutes / 60
+      const roi = (t.marks || 10) / hours
+      // Tomorrow counts as urgent for today's timetable; next week is not.
+      const urgent = daysLeft < 2
+      const score = daysLeft < 0 ? roi * 4 : daysLeft < 2 ? roi : roi / (1 + daysLeft)
+      return { task: t, minutes: Math.min(90, Math.max(25, minutes)), daysLeft, urgent, score }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  const fitRanked = ranked.filter((r) => r.urgent || r.daysLeft <= 3)
+  const rest = ranked.filter((r) => !(r.urgent || r.daysLeft <= 3))
+
+  let cursor = nextSlotMin(now)
+  const endMin = DAY_END_MIN
+  const blocks = []
+  const overflow = []
+  for (const r of fitRanked) {
+    // Shrink to what's actually left of the day — a 25-minute honest slot
+    // beats a skipped deadline — and let the 10 pm wall stand firm.
+    const dur = Math.min(r.minutes, endMin - cursor)
+    if (dur < 25) {
+      overflow.push(r.task)
+      continue
+    }
+    blocks.push({ task: r.task, minutes: dur, startMin: cursor, endMin: cursor + dur })
+    cursor = cursor + dur + BREAK_MIN
+  }
+  // Anything farther out stays out of today — but say so honestly.
+  overflow.push(...rest.map((r) => r.task))
+  if (!blocks.length) return { blocks, overflow, startMin: cursor, endMin, totalMin: 0 }
+  return {
+    blocks,
+    overflow,
+    startMin: blocks[0].startMin,
+    endMin: blocks[blocks.length - 1].endMin,
+    totalMin: blocks.reduce((a, b) => a + b.minutes, 0),
+  }
+}
+
+/** Ready-to-paste timetable for a study-group/notes post. */
+export function timetableCopyText(schedule) {
+  if (!schedule || !schedule.blocks.length) return 'Aaj ka timetable — kuch schedulable nahi.'
+  const lines = schedule.blocks.map(
+    (b) =>
+      `${fmtClock(b.startMin)}–${fmtClock(b.endMin)} · ${b.task.title}${b.task.subject ? ` (${b.task.subject})` : ''} (~${b.minutes}m)`,
+  )
+  const over = schedule.overflow.length ? `\nKal ke liye: ${schedule.overflow.length} pending (${schedule.overflow[0].title}${schedule.overflow.length > 1 ? '…' : ''})` : ''
+  return `🕐 Aaj ka timetable (Deadline Radar)\n${lines.join('\n')}${over}\n\nvia Deadline Radar + Wispr Flow`
+}

@@ -28,6 +28,8 @@ import DoNowCard from './components/DoNowCard'
 import LiveRail from './components/LiveRail'
 import TaskCard from './components/TaskCard'
 import ConsistencyHeatmap from './components/ConsistencyHeatmap'
+import DayPlanner from './components/DayPlanner'
+import DeskBar from './components/DeskBar'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
 import TaskEditModal from './components/TaskEditModal'
@@ -43,14 +45,6 @@ const SECTION_TONES = {
   sky: 'bg-later',
   slate: 'bg-ink-3',
   green: 'bg-done',
-}
-
-function chipCls(active) {
-  return `rounded-[3px] border px-2 py-1 font-mono text-[10px] tracking-[0.06em] uppercase transition ${
-    active
-      ? 'border-ink bg-ink text-paper'
-      : 'border-line bg-paper-2 text-ink-2 hover:border-ink hover:text-ink'
-  }`
 }
 
 const SECTION_DEFS = [
@@ -1670,101 +1664,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Search + subject filters */}
-          {tasks.length > 0 && (
-            <div className="space-y-2">
-              <div className="search-wrap">
-                <Icon name="search" size={14} className="search-icon" />
-                <input
-                  ref={searchRef}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search tasks…"
-                  aria-label="Search tasks"
-                  className="field search-input"
-                />
-                <span className="search-key kbd-chip" aria-hidden="true">
-                  /
-                </span>
-              </div>
-              <label htmlFor="sort-tasks" className="sort-row">
-                <span className="eyebrow shrink-0">Order</span>
-                <select
-                  id="sort-tasks"
-                  value={sortBy}
-                  onChange={(e) => setSort(e.target.value)}
-                  title="How tasks are ordered inside each section"
-                  className="sort-select"
-                >
-                  {SORT_MODES.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="flex gap-1.5">
-                <button
-                  type="button"
-                  onClick={toggleSelectMode}
-                  aria-pressed={selectMode}
-                  title="Select multiple cards, then run one bulk action — done, postpone or delete"
-                  className={chipCls(selectMode)}
-                >
-                  {selectMode ? 'Cancel select' : 'Bulk select'}
-                </button>
-                {selectMode && (
-                  <button
-                    type="button"
-                    onClick={selectAllVisible}
-                    title="Select every visible card"
-                    className={chipCls(true)}
-                  >
-                    All
-                  </button>
-                )}
-              </div>
-              {(subjects.length > 0 || dateFilter) && (
-                <div className="flex flex-wrap gap-1.5">
-                  {subjects.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setSubjectFilter(null)}
-                      className={chipCls(!subjectFilter)}
-                    >
-                      All
-                    </button>
-                  )}
-                  {subjects.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSubjectFilter(subjectFilter === s ? null : s)}
-                      className={chipCls(subjectFilter === s)}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                  {dateFilter && (
-                    <button
-                      type="button"
-                      onClick={() => setDateFilter(null)}
-                      className={chipCls(true)}
-                      title="Clear the day filter"
-                    >
-                      <Icon name="calendar" size={11} />
-                      {new Date(`${dateFilter}T00:00:00`).toLocaleDateString('en-IN', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                      <Icon name="x" size={11} />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Search + subject filters now live in the DeskBar above the cards */}
         </div>
 
         {/* Right column: the radar sections */}
@@ -1813,6 +1713,28 @@ export default function App() {
           )}
           {tasks.length > 0 && (
             <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
+          )}
+          {tasks.length > 0 && plan && (
+            <DayPlanner tasks={tasks} onStart={startFocus} focusId={focus?.taskId} />
+          )}
+          {tasks.length > 0 && (
+            <DeskBar
+              query={query}
+              onQuery={setQuery}
+              sortBy={sortBy}
+              onSort={setSort}
+              sortModes={SORT_MODES}
+              selectMode={selectMode}
+              onToggleSelectMode={toggleSelectMode}
+              onSelectAll={selectAllVisible}
+              selectedCount={selectedIds.size}
+              subjects={subjects}
+              subjectFilter={subjectFilter}
+              onSubjectFilter={setSubjectFilter}
+              dateFilter={dateFilter}
+              onDateFilter={setDateFilter}
+              searchRef={searchRef}
+            />
           )}
           {tasks.length === 0 ? (
             <div className="empty-sheet overflow-hidden rounded-[5px] border border-dashed border-ink/30 bg-paper-2/70">

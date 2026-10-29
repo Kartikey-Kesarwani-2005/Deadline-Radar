@@ -5,12 +5,12 @@
 import { extractLocal, extractManyLocal, looksLikeDeadline, nextOccurrence, reconcile } from '../src/lib/extract.js'
 import { parseCommand } from '../src/lib/commands.js'
 import { parseBackup } from '../src/lib/store.js'
-import { answerQuery, briefingText, doNow, estimateEffort, heatGrid, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
+import { answerQuery, briefingText, doNow, estimateEffort, heatGrid, marksAtRisk, onTimeStreak, paceRows, reportGrade, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS, googleCalendarUrl } from '../src/lib/calendar.js'
 import { dueTone, countdownTo, parseDateKey, dayDiff, todayKey } from '../src/lib/dates.js'
 import { postponeDate, sortTasks } from '../src/lib/sort.js'
 import { riskScore, riskTone } from '../src/lib/risk.js'
-import { buildPlan, planCopyText } from '../src/lib/plan.js'
+import { buildPlan, planCopyText, daySchedule, timetableCopyText } from '../src/lib/plan.js'
 
 const today = new Date()
 const key = (d) =>
@@ -777,6 +777,130 @@ check('risk: score stays inside 0–100', (() => {
   check('gcal: marks travel in the details', plain.includes('20 marks'), true)
   check('gcal: undated task has nothing to schedule', googleCalendarUrl({ title: 'x', dueDate: null }), null)
   check('gcal: impossible date is rejected, not mangled', googleCalendarUrl({ title: 'x', dueDate: '2026-02-31' }), null)
+}
+
+// --- 🕐 Aaj ka timetable — hour-by-hour block schedule for the day ---
+{
+  const noon = () => {
+    const d = new Date()
+    d.setHours(13, 0, 0, 0)
+    return d.getTime()
+  }
+  check('timetable: no pending dated work → null', daySchedule([{ title: 'x', done: true }], noon()), null)
+  check('timetable: undated pending → null', daySchedule([{ title: 'x', done: false, dueDate: null }], noon()), null)
+
+  const mkPending = (id, daysLeft, marks, minuteEst) => ({
+    id,
+    title: `task-${id}`,
+    subject: 'DBMS',
+    done: false,
+    dueDate: shift(daysLeft),
+    marks,
+    priority: 'normal',
+    createdAt: Date.now() - 864e5,
+  })
+  const tt = daySchedule(
+    [
+      mkPending('late', -2, 10), // late → must open the day
+      mkPending('today', 0, 20), // due today
+      mkPending('soon', 3, 5), // fits the 3-day window
+      mkPending('far', 10, 30), // next week → overflow today
+    ],
+    noon(),
+  )
+  check('timetable: blocks exist and a far task stays out', [tt.blocks.length, tt.overflow.length], [3, 1])
+  check('timetable: far task is the overflow', tt.overflow[0].id, 'far')
+  check('timetable: late task opens the day', tt.blocks[0].task.id, 'late')
+  check(
+    'timetable: blocks run chronologically',
+    tt.blocks.every((b, i) => i === 0 || b.startMin >= tt.blocks[i - 1].endMin),
+    true,
+  )
+  check(
+    'timetable: a real break sits between blocks',
+    tt.blocks.every((b, i) => i === 0 || b.startMin - tt.blocks[i - 1].endMin >= 10),
+    true,
+  )
+  check(
+    'timetable: every block is 25–90 minutes and fits before the end',
+    tt.blocks.every((b) => b.minutes >= 25 && b.minutes <= 90 && b.endMin <= tt.endMin),
+    true,
+  )
+  check('timetable: starts after now, never before 6 am', tt.blocks[0].startMin >= 13 * 60 + 5, true)
+  check('timetable: total minutes match the blocks', tt.totalMin, tt.blocks.reduce((a, b) => a + b.minutes, 0))
+
+  // A pocket of work that cannot fit (open at 9:30 pm) becomes honest overflow.
+  const night = new Date()
+  night.setHours(21, 30, 0, 0)
+  const lateNight = daySchedule(
+    [mkPending('late-1', -1, 10), mkPending('late-2', -2, 10), mkPending('late-3', -3, 10)],
+    night.getTime(),
+  )
+  check('timetable: a nearly-gone day still schedules what fits', lateNight.blocks.length, 1)
+  check('timetable: the rest is overflow, never faked', lateNight.overflow.length, 2)
+
+  const copyText = timetableCopyText(tt)
+  check('timetable: copy lists every block', tt.blocks.every((b) => copyText.includes(b.task.title)), true)
+  check('timetable: copy mentions the overflow count', copyText.includes('Kal ke liye: 1'), true)
+}
+
+// --- 🏅 Weekly grade — the report card's rubber stamp ---
+{
+  const onTimeFinish = (daysAgo) => ({
+    id: `g${daysAgo}`,
+    title: `grade ${daysAgo}`,
+    subject: 'DBMS',
+    marks: 10,
+    done: true,
+    dueDate: shift(-daysAgo),
+    completedAt: (() => {
+      const d = new Date()
+      d.setDate(d.getDate() - daysAgo)
+      d.setHours(12, 0, 0, 0)
+      return d.getTime()
+    })(),
+  })
+  const lateFinish = (daysAgo) => {
+    const done = onTimeFinish(daysAgo)
+    done.dueDate = shift(-daysAgo)
+    done.completedAt += 1.5 * 864e5 // finished 1.5 days after the deadline
+    return done
+  }
+
+  // Top case: 5 rated, all on time, no late pile, improving trend.
+  const topCase = [
+    ...[1, 2, 3].map(onTimeFinish), // this week (0–3 days ago)
+    ...[9, 12].map(onTimeFinish), // last week
+  ]
+  const top = reportGrade(topCase)
+  check('grade: an all-on-time improving week earns A+ or A', ['A+', 'A'].includes(top.grade), true)
+  check('grade: that score is honest about its ceiling', top.score >= 80, true)
+
+  // Low case: everything late, a pile of late pending, flat trend.
+  const lowCase = [
+    ...[1, 3].map(lateFinish), // this week, late
+    ...[9, 12].map(lateFinish), // last week, late
+    {
+      id: 'lp1', title: 'pending late pile', subject: 'DBMS', done: false,
+      dueDate: shift(-2), marks: 20, createdAt: Date.now() - 864e5,
+    },
+    {
+      id: 'lp2', title: 'pending late pile 2', subject: 'OS', done: false,
+      dueDate: shift(-3), marks: 20, createdAt: Date.now() - 864e5,
+    },
+    {
+      id: 'lp3', title: 'pending late pile 3', subject: 'SE', done: false,
+      dueDate: shift(-4), marks: 20, createdAt: Date.now() - 864e5,
+    },
+  ]
+  const low = reportGrade(lowCase)
+  check('grade: an all-late week with a late pile cannot be B+', !['A+', 'A', 'B+', 'B'].includes(low.grade), true)
+  check('grade: the score stays inside its scale', low.score >= 0 && low.score <= 100, true)
+  check('grade: an A week never scores below its rate floor', top.score > low.score, true)
+
+  // Honest absence: under 3 rated finishes, no grade is printed.
+  const shy = reportGrade([onTimeFinish(1)])
+  check('grade: under 3 finishes, refuse to grade (never fake it)', [shy.grade, typeof shy.note], [null, 'string'])
 }
 
 console.log(`\n${pass} passed, ${fail} failed`)

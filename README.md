@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-209%2F209%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-229%2F229%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -23,6 +23,21 @@ replacing anything you captured).
 
 ## ✨ Features
 
+- **🕐 "Aaj ka timetable" — hour-by-hour day planner** — beyond the do-now pick, the radar
+  prints an actual bell schedule for the day: pending work ranked by the do-now engine
+  (late first, then marks-per-hour) laid into 25–90 min blocks from *this minute* until
+  10 pm, with a 10-minute breath between rounds. Every block carries a ▶ button that
+  starts a real focus session; work that cannot honestly fit reads as overflow — the
+  timetable never fakes it. One tap copies it for the group.
+- **🏅 Weekly report grade stamp** — the weekly report now ends like a real report card:
+  a rubber-stamped **letter grade (A+…D) with an honest /100 score** — on-time rate
+  carries 70%, the streak and a clean slate add up, and the week-over-week trend nudges
+  it. Under 3 rated finishes it refuses to print a grade. It travels inside the
+  check-in post text too.
+- **🗄️ The DeskBar** — search, five-way sort, bulk select and the subject/day chips
+  moved out of the far stat rail into a sticky paper strip **directly above the radar
+  sections** — controls live where the cards are now, and they stay on screen while the
+  radar scrolls.
 - **🎯 Risk score dial (0–100)** — every pending card carries a small inked ring that
   folds the whole danger level into one glance: deadline proximity + marks + whether the
   learned effort even fits the days left + your own lateness history. Hover names every
@@ -216,6 +231,9 @@ output = `dist`) or Netlify (same settings).
 - [x] 🔥 12-week consistency heatmap + streaks
 - [x] ☑️ Bulk select (done / postpone / delete in one go)
 - [x] 📅 Google Calendar quick-add per task + radar-clear celebration
+- [x] 🕐 "Aaj ka timetable" hour-by-hour block planner
+- [x] 🏅 Weekly report grade stamp (A+…D, refuses to fake a grade)
+- [x] 🗄️ DeskBar restructure — controls moved onto the list they act on
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
@@ -230,6 +248,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # parser + bulk + backup + voice commands + sort/postpone + countdown + risk/plan/heat (209 checks)
+npm test       # parser + bulk + backup + voice + sort + countdown + risk/plan/heat/timetable/grade (229 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```
