@@ -1116,4 +1116,131 @@ select.field {
   .no-print {
     display: none !important;
   }
+  /* Interactive furniture a paper never needs — keep the evidence, drop the
+     controls: capture bar, coach buttons, palette keys, permalink chips. */
+  .addbar-shell,
+  .rail-action,
+  .icon-btn,
+  .kbd-chip,
+  .search-key,
+  .task-action {
+    display: none !important;
+  }
+  /* The dial + heatmap carry real ink (oklch) — force plain black printing. */
+  .app-shell {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}
+
+/* 🎬 The once-per-browser opening page. It stamps itself, holds a beat, then
+   the whole sheet lifts like the top page of a notepad revealing the desk. */
+#cover-page {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    var(--color-paper-2, #ece5d2);
+  background-image:
+    radial-gradient(ellipse 120% 70% at 50% -10%, rgba(255, 255, 255, 0.5), transparent),
+    var(--paper-grain, none);
+  cursor: pointer;
+  animation: cover-away 1.7s cubic-bezier(0.6, 0, 0.8, 0.2) forwards;
+  overflow: hidden;
+}
+#cover-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-bottom: 3px solid var(--color-ink);
+  box-shadow: 0 0 24px rgba(29, 27, 22, 0.25);
+  transform: translateY(100%);
+  animation: cover-lift 1.7s cubic-bezier(0.55, 0, 0.75, 0.25) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  #cover-page,
+  #cover-page::after {
+    animation-duration: 0.01s;
+  }
+}
+@keyframes cover-away {
+  0%,
+  62% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-105%);
+    opacity: 0.4;
+  }
+}
+@keyframes cover-lift {
+  0%,
+  55% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(10vh);
+  }
+}
+.cover-eyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--color-ink-3, #75705f);
+  text-transform: uppercase;
+  animation: stamp-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+.cover-title {
+  margin-top: 10px;
+  font-size: clamp(44px, 9vw, 76px);
+  line-height: 1;
+  font-weight: 700;
+  color: var(--color-ink, #1d1b16);
+  letter-spacing: -0.02em;
+}
+.cover-title-accent {
+  font-style: italic;
+  color: var(--color-later);
+}
+.cover-rule {
+  width: min(240px, 40vw);
+  height: 2px;
+  margin: 18px auto 0;
+  background: var(--color-ink);
+}
+.cover-promise {
+  margin-top: 14px;
+  font-size: 15px;
+  color: var(--color-ink-2, #4d493e);
+}
+.cover-stamp-wrap {
+  margin-top: 34px;
+  display: flex;
+  justify-content: center;
+}
+.cover-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 2.5px dashed var(--color-late, #b83a20);
+  border-radius: 4px;
+  color: var(--color-late, #b83a20);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  transform: rotate(-3deg);
+  animation: stamp-in 0.45s 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+.cover-hint {
+  margin-top: 26px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--color-ink-3, #75705f);
+  text-transform: uppercase;
 }

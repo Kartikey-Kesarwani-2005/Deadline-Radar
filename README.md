@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-229%2F229%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-247%2F247%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -23,6 +23,21 @@ replacing anything you captured).
 
 ## ✨ Features
 
+- **🧮 Exam coach — "Guess karun ya chhodun?"** — a tool no other tracker has, because
+  they all stop at the due date: the decision every Indian exam hall asks under negative
+  marking (JEE +4/−1, GATE, semester schemes). Bank the pakka-sahi marks, feed each guess
+  an honest accuracy, and the ledger prints expected marks with-guesses vs. leaving them
+  blank, the break-even accuracy (penalty ÷ (award + penalty)), and one straight verdict.
+- **📸 The grade card as an actual photo** — the weekly report authors its own shareable:
+  a crisp @2x PNG on Field-Notes paper — registration marks, rubber-stamped grade, the
+  honest numbers, the credit line — native share sheet on phones, download elsewhere.
+  No more blurry screenshots.
+- **🎬 A once-per-browser opening page** — a stamped Field-Notes cover presents itself on
+  first load ("FILE OPENED", the promise line), then the sheet lifts away like the top of
+  a notepad. ~1.7s, tap to skip, a flag — never shown again, so reloads during a demo
+  stay instant.
+- **🖨️ A print stylesheet** — Ctrl+P turns the radar into a clean wall-sheet: capture bar
+  and buttons drop out, the evidence stays.
 - **🕐 "Aaj ka timetable" — hour-by-hour day planner** — beyond the do-now pick, the radar
   prints an actual bell schedule for the day: pending work ranked by the do-now engine
   (late first, then marks-per-hour) laid into 25–90 min blocks from *this minute* until
@@ -232,8 +247,10 @@ output = `dist`) or Netlify (same settings).
 - [x] ☑️ Bulk select (done / postpone / delete in one go)
 - [x] 📅 Google Calendar quick-add per task + radar-clear celebration
 - [x] 🕐 "Aaj ka timetable" hour-by-hour block planner
-- [x] 🏅 Weekly report grade stamp (A+…D, refuses to fake a grade)
+- [x] 🏅 Weekly report grade stamp (A+…D, refuses to fake a grade) + 📸 grade-card PNG share
 - [x] 🗄️ DeskBar restructure — controls moved onto the list they act on
+- [x] 🧮 Exam coach — negative-marking "guess ya chhod" ledger (JEE/GATE/sem schemes)
+- [x] 🎬 Once-per-browser field-notes cover · 🖨️ print stylesheet
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
@@ -248,6 +265,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # parser + bulk + backup + voice + sort + countdown + risk/plan/heat/timetable/grade (229 checks)
+npm test       # parser + bulk + backup + voice + sort + countdown + risk/plan/heat/timetable/grade/marking-coach (247 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

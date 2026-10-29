@@ -3,6 +3,7 @@ import Modal from './Modal'
 import Icon from './Icon'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
 import { marksAtRisk, onTimeStreak, paceRows, reportGrade, subjectLoad, weeklyTrend } from '../lib/brain'
+import { gradeCardBlob, shareOrSaveGradeCard } from '../lib/cardImage'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -33,6 +34,7 @@ const SectionLabel = ({ children }) => (
 export default function WeeklyReport({ tasks, onClose }) {
   const [copied, setCopied] = useState(false)
   const [copyErr, setCopyErr] = useState(false)
+  const [photoState, setPhotoState] = useState('idle') // idle | busy | done | error
 
   const captured = tasks.filter((t) => t.createdAt && t.createdAt >= Date.now() - WEEK).length
   const finished = tasks.filter((t) => t.completedAt && t.completedAt >= Date.now() - WEEK)
@@ -85,6 +87,42 @@ export default function WeeklyReport({ tasks, onClose }) {
       setCopied(false)
       setCopyErr(true)
       setTimeout(() => setCopyErr(false), 3500)
+    }
+  }
+
+  // 📸 The report as an actual photo — the artefact people share in group
+  // chats, authored here instead of a blurry screenshot.
+  async function photo() {
+    if (photoState === 'busy') return
+    setPhotoState('busy')
+    try {
+      const stampTone = grade.grade
+        ? grade.score >= 70
+          ? '#68792b'
+          : grade.score >= 45
+            ? '#a06b0c'
+            : '#b83a20'
+        : null
+      const blob = await gradeCardBlob({
+        grade: grade.grade,
+        score: grade.score,
+        tone: stampTone,
+        note: grade.grade ? grade.note : null,
+        weekLabel: `week of the last 7 days · ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`,
+        rows: [
+          { label: 'Finished this week', value: `${finished.length}` },
+          { label: 'Of those, on time', value: `${onTime}` },
+          { label: 'On-time streak', value: `${streak > 0 ? `${streak} in a row` : '—'}` },
+          { label: 'Marks at risk', value: `${risk.total}` },
+          { label: 'Total finished', value: `${doneEver}` },
+        ],
+      })
+      await shareOrSaveGradeCard(blob)
+      setPhotoState('done')
+      setTimeout(() => setPhotoState('idle'), 2600)
+    } catch {
+      setPhotoState('error')
+      setTimeout(() => setPhotoState('idle'), 3200)
     }
   }
 
@@ -265,27 +303,53 @@ export default function WeeklyReport({ tasks, onClose }) {
             </pre>
           )}
 
-          <button
-            type="button"
-            onClick={copy}
-            className={`btn mt-4 w-full ${
-              copyErr ? 'border-today text-today shadow-[2px_2px_0_var(--color-today)]' : 'btn-primary'
-            }`}
-          >
-            {copied ? (
-              <>
-                <Icon name="check" size={12} />
-                Copied — paste it in your check-in post
-              </>
-            ) : copyErr ? (
-              <>
-                <Icon name="alert" size={12} />
-                Clipboard blocked — select the text above
-              </>
-            ) : (
-              'Copy check-in text for your post'
-            )}
-          </button>
+          <div className="mt-3 grid grid-cols-1 gap-2">
+            <button
+              type="button"
+              onClick={copy}
+              className={`btn w-full ${
+                copyErr ? 'border-today text-today shadow-[2px_2px_0_var(--color-today)]' : 'btn-primary'
+              }`}
+            >
+              {copied ? (
+                <>
+                  <Icon name="check" size={12} />
+                  Copied — paste it in your check-in post
+                </>
+              ) : copyErr ? (
+                <>
+                  <Icon name="alert" size={12} />
+                  Clipboard blocked — select the text above
+                </>
+              ) : (
+                'Copy check-in text for your post'
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={photo}
+              disabled={photoState === 'busy'}
+              title="Draw the graded card as a crisp PNG — share it to the group or save it"
+              className="btn w-full"
+            >
+              {photoState === 'done' ? (
+                <>
+                  <Icon name="check" size={12} />
+                  Grade card shared / saved
+                </>
+              ) : photoState === 'error' ? (
+                <>
+                  <Icon name="alert" size={12} />
+                  Photo ban nahi paya
+                </>
+              ) : (
+                <>
+                  <Icon name="download" size={12} />
+                  📸 Grade card as a photo (PNG)
+                </>
+              )}
+            </button>
+          </div>
           <p className="mt-2 text-center font-mono text-[9px] leading-relaxed tracking-wide text-ink-3">
             Paste in your weekly post with #NoHandsChallenge · tag WeMakeDevs + Wispr Flow
           </p>

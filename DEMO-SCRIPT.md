@@ -17,6 +17,8 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 
 ### 0:18–0:35 — Introduce the tool
 - Screen: clean Deadline Radar dashboard, slow scroll top → bottom.
+  *(First visit only: a **🎬 field-notes cover** rolls up like a notepad to reveal the
+  desk — 1.7s, tap to skip. Show it once; it never comes back on reloads.)*
 - **VO:** *"This is Deadline Radar. Paste, speak, or photograph any of it — it comes back
   as one list that answers: what is due today, and what is getting late."*
 - Caption: **Deadline Radar — link in description**
@@ -51,7 +53,10 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   **🔁 weekly** lab record and next week's deadline **rolls itself onto the radar** —
   then tick the last pending task: the **whole radar is clear** and confetti falls
   from every edge. Open **Weekly report** — a **🏅 letter grade (A+…D /100)** is
-  rubber-stamped on the top of it.
+  rubber-stamped on the top of it, and **📸 "Grade card as a photo"** authors a crisp
+  PNG of that stamp to share or save. Then the rail's **🧮 Exam coach — "Guess karun ya
+  chhodun?"**: set JEE (+4/−1), slide the accuracy, and the ledger prints expected marks
+  with-guesses vs. blanks + the break-even 20% — a tool outside any tracker. **(+10s)**
 - **The plan moment (new):** click the **📋 list button** on any card → **"Plan banao"**
   lays the deadline out as **day-by-day study sessions** — what to do in each round,
   on which day, ~how long, ending in "submit" — press **Copy plan** and the checklist

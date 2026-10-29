@@ -32,8 +32,10 @@ import DayPlanner from './components/DayPlanner'
 import DeskBar from './components/DeskBar'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
+import MarkCoach from './components/MarkCoach'
 import TaskEditModal from './components/TaskEditModal'
 import CommandPalette from './components/CommandPalette'
+import Cover from './components/Cover'
 import Modal from './components/Modal'
 import Icon from './components/Icon'
 import { SORT_MODES, postponeDate, sortTasks } from './lib/sort'
@@ -256,6 +258,31 @@ export default function App() {
   const [flash, setFlash] = useState(null)
   const [perm, setPerm] = useState(() => getPermission())
   const [reportOpen, setReportOpen] = useState(false)
+  const [examOpen, setExamOpen] = useState(false)
+  // 🎬 The once-per-browser cover: shows exactly once (a flag, not a date), so
+  // a judge reloading mid-demo never sees it again.
+  const COVER_KEY = 'deadline-radar.coverShown'
+  const [coverUp, setCoverUp] = useState(() => {
+    try {
+      return !localStorage.getItem(COVER_KEY)
+    } catch {
+      return true
+    }
+  })
+  useEffect(() => {
+    if (!coverUp) return undefined
+    const t = setTimeout(() => setCoverUp(false), 1750) // matches the CSS lift
+    return () => clearTimeout(t)
+  }, [coverUp])
+  const releaseCover = () => {
+    if (!coverUp) return
+    try {
+      localStorage.setItem(COVER_KEY, '1')
+    } catch {
+      /* storage blocked — the cover is 1.7s, it can play again */
+    }
+    setCoverUp(false)
+  }
   const [editingId, setEditingId] = useState(null)
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
@@ -466,7 +493,7 @@ export default function App() {
   useEffect(() => {
     function onKey(e) {
       const modalOpen = Boolean(
-        editingId || settingsOpen || reportOpen || shortcutsOpen || paletteOpen,
+        editingId || settingsOpen || reportOpen || shortcutsOpen || paletteOpen || examOpen,
       )
       // ⌘K / Ctrl+K works everywhere — but must never stack the palette on top
       // of another sheet, and should still close itself.
@@ -507,7 +534,7 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm when tasks/busy change (briefing closure) and when modal layers change (Esc peeling)
-  }, [tasks, busy, editingId, settingsOpen, reportOpen, shortcutsOpen, paletteOpen, askCard, clipSuggest])
+  }, [tasks, busy, editingId, settingsOpen, reportOpen, shortcutsOpen, paletteOpen, examOpen, askCard, clipSuggest])
 
   // Chrome/Edge "install app" prompt (satisfied by the manifest + service worker).
   useEffect(() => {
@@ -1184,6 +1211,14 @@ export default function App() {
       run: shareWeek,
     },
     {
+      id: 'guess',
+      icon: 'target',
+      label: 'Exam coach — guess karun ya chhodun?',
+      hint: 'G',
+      keywords: 'exam negative marking guess coach marks jee neet gate',
+      run: () => setExamOpen(true),
+    },
+    {
       id: 'late',
       icon: 'flame',
       label: 'Jump to Late — handle now',
@@ -1236,6 +1271,7 @@ export default function App() {
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
+      {coverUp && <Cover onSkip={releaseCover} />}
       {/* Masthead strip — the newspaper dateline */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-y border-ink/70 py-1 font-mono text-[9px] tracking-[0.18em] text-ink-3 uppercase">
         <span className="masthead-brand font-semibold text-ink-2">
@@ -1642,6 +1678,21 @@ export default function App() {
                   </span>
                   <Icon name="arrowRight" size={13} className="text-ink-3" />
                 </button>
+                {/* 🧮 The exam-hall coach — a decision no other tracker even
+                    names: which guesses pay for themselves under negative
+                    marking, settled before the bell rings. */}
+                <button
+                  type="button"
+                  onClick={() => setExamOpen(true)}
+                  title="Guess karun ya chhodun? — expected marks ledger for negative-marking guesses (JEE +4/−1, GATE, semester schemes)"
+                  className="rail-action guess-btn"
+                >
+                  <Icon name="target" size={14} className="text-ink-3" />
+                  <span className="min-w-0 flex-1 leading-snug">
+                    Exam coach — guess karun ya chhodun?
+                  </span>
+                  <Icon name="arrowRight" size={13} className="text-ink-3" />
+                </button>
                 <button
                   type="button"
                   onClick={() => downloadICS(tasks)}
@@ -1905,6 +1956,8 @@ export default function App() {
       )}
 
       {reportOpen && <WeeklyReport tasks={tasks} onClose={() => setReportOpen(false)} />}
+
+      {examOpen && <MarkCoach onClose={() => setExamOpen(false)} />}
 
       {settingsOpen && (
         <SettingsModal

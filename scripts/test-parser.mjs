@@ -11,6 +11,7 @@ import { dueTone, countdownTo, parseDateKey, dayDiff, todayKey } from '../src/li
 import { postponeDate, sortTasks } from '../src/lib/sort.js'
 import { riskScore, riskTone } from '../src/lib/risk.js'
 import { buildPlan, planCopyText, daySchedule, timetableCopyText } from '../src/lib/plan.js'
+import { guessCoach, MARKING_PRESETS } from '../src/lib/marking.js'
 
 const today = new Date()
 const key = (d) =>
@@ -901,6 +902,41 @@ check('risk: score stays inside 0–100', (() => {
   // Honest absence: under 3 rated finishes, no grade is printed.
   const shy = reportGrade([onTimeFinish(1)])
   check('grade: under 3 finishes, refuse to grade (never fake it)', [shy.grade, typeof shy.note], [null, 'string'])
+}
+
+// --- 🧮 "Guess karun ya chhodun?" — the negative-marking coach ---
+{
+  // JEE-style +4/−1: half the guesses land → +1.5 EV per guess, clearly keep.
+  const jee = guessCoach({ attempted: 60, sure: 30, accuracyPct: 50, award: 4, penalty: 1 })
+  check('coach: guessed count = attempted − sure', jee.guesses, 30)
+  check('coach: sure answers bank at face value', jee.sureMarks, 120)
+  check('coach: EV per guess = p·award − (1−p)·penalty', jee.evPerGuess, 1.5)
+  check('coach: expected = banked + guesses × EV', jee.expected, 165)
+  check('coach: +4/−1 breaks even at 20% accuracy', jee.breakPct, 20)
+  check('coach: a 50% guesser should keep guessing', jee.verdict, 'guess')
+
+  // A shaky guesser loses marks on every crack — the honest answer is "skip".
+  const shaky = guessCoach({ attempted: 60, sure: 30, accuracyPct: 10, award: 4, penalty: 1 })
+  check('coach: a below-break-even guesser is told to skip', shaky.verdict, 'skip')
+  check('coach: skipping means blanks score the banked marks', shaky.skipTotal, 120)
+  check('coach: expected dips under the banked line', shaky.expected < shaky.skipTotal, true)
+  check('coach: negative EV says how much each guess costs', shaky.evPerGuess, -0.5)
+
+  // Exactly at break-even: zero EV, no arithmetic lied.
+  const even = guessCoach({ attempted: 40, sure: 10, accuracyPct: 20, award: 4, penalty: 1 })
+  check('coach: at break-even the verdict is coin-flip', even.verdict, 'flip')
+  check('coach: zero EV means guessing cannot change the total', even.expected, even.skipTotal)
+
+  // No negative marking → every scheme converges to "guess".
+  const free = guessCoach({ attempted: 20, sure: 5, accuracyPct: 25, award: 1, penalty: 0 })
+  check('coach: no penalty → blanks are always free points', free.verdict, 'guess')
+  check('coach: free variant breaks even at 0%', free.breakPct, 0)
+  check('coach: GATE-style −⅓ breaks even at 25%', guessCoach({ attempted: 10, sure: 5, accuracyPct: 25, award: 1, penalty: 1 / 3 }).breakPct, 25)
+
+  // Junk in, honest math out.
+  check('coach: attempted < sure clamps without inventing marks', guessCoach({ attempted: 5, sure: 20, accuracyPct: 50, award: 4, penalty: 1 }).guesses, 0)
+  check('coach: null float noise on empty input', guessCoach().guesses, 0)
+  check('coach: presets carry the real schemes', MARKING_PRESETS.length >= 4, true)
 }
 
 console.log(`\n${pass} passed, ${fail} failed`)
