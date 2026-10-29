@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { countdownTo, dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
 import { fmtHours } from '../lib/brain'
+import { googleCalendarUrl } from '../lib/calendar'
+import PlanPanel from './PlanPanel'
 import Icon from './Icon'
 
 /**
@@ -36,39 +38,96 @@ function CountdownChip({ dueDate, done }) {
   )
 }
 
+/**
+ * 🎯 Risk dial — a hand-inked 0–100 urgency ring. One glance says how badly
+ * a deadline can bite; hover names exactly why (days, marks, pace, history).
+ */
+function RiskDial({ risk }) {
+  if (!risk) return null
+  const C = 2 * Math.PI * 10
+  const off = C * (1 - risk.score / 100)
+  const ink =
+    risk.level === 'critical'
+      ? 'var(--color-late)'
+      : risk.level === 'high'
+        ? 'var(--color-today)'
+        : risk.level === 'watch'
+          ? 'var(--color-week)'
+          : 'var(--color-later)'
+  return (
+    <span
+      title={`Risk score ${risk.score}/100 — ${risk.reasons.join(' · ')}`}
+      className="relative inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center"
+    >
+      <svg viewBox="0 0 24 24" className="h-full w-full -rotate-90" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="var(--color-line)" strokeWidth="2.6" />
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          fill="none"
+          stroke={ink}
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          strokeDasharray={C}
+          strokeDashoffset={off}
+        />
+      </svg>
+      <span
+        role="img"
+        aria-label={`Risk score ${risk.score} out of 100`}
+        className="absolute flex h-full w-full items-center justify-center font-mono text-[8.5px] font-semibold tabular-nums"
+        style={{ color: ink }}
+      >
+        {risk.score}
+      </span>
+    </span>
+  )
+}
+
 export default function TaskCard({
   task,
   style,
   advice,
   estimate,
+  plan,
+  risk,
   onToggle,
+  onSelectToggle,
+  selecting = false,
+  selected = false,
   onDelete,
   onEdit,
   onDateChange,
   onShare,
   onFocus,
   onPostpone,
+  onCopyPlan,
   focusing = false,
 }) {
   const diff = task.dueDate ? dayDiff(todayKey(), task.dueDate) : null
   const isLate = !task.done && diff !== null && diff < 0
+  const [showPlan, setShowPlan] = useState(false)
+  const gcal = !task.done ? googleCalendarUrl(task) : null
 
   return (
     <div
       title={task.source}
       style={style}
       className={`rise task-card group ${
-        task.done
-          ? 'is-done border-done/25 bg-done-soft/40'
-          : isLate
-            ? 'border-late/35 hover:border-late/60'
-            : diff === 0
-              ? 'border-today/40 hover:border-today/60'
-              : 'hover:border-ink/45'
+        selected
+          ? 'border-ink shadow-[2px_2px_0_rgba(29,27,22,0.35)]'
+          : task.done
+            ? 'is-done border-done/25 bg-done-soft/40'
+            : isLate
+              ? 'border-late/35 hover:border-late/60'
+              : diff === 0
+                ? 'border-today/40 hover:border-today/60'
+                : 'hover:border-ink/45'
       }`}
     >
       {/* urgency rail — a left-edge tell for scanning: red = late, ochre = today */}
-      {!task.done && (isLate || diff === 0) && (
+      {!task.done && !selected && (isLate || diff === 0) && (
         <span
           aria-hidden="true"
           className={`absolute inset-y-2 left-0 w-[3px] rounded-r-full ${
@@ -79,11 +138,33 @@ export default function TaskCard({
 
       <button
         type="button"
-        onClick={onToggle}
-        aria-label={task.done ? 'Mark as not done' : 'Mark as done'}
-        className={`task-check ${task.done ? 'is-done' : ''}`}
+        onClick={selecting ? onSelectToggle : onToggle}
+        aria-label={
+          selecting
+            ? `${
+                selected ? 'Deselect' : 'Select'
+              } ${task.title} for bulk action`
+            : task.done
+              ? 'Mark as not done'
+              : 'Mark as done'
+        }
+        aria-pressed={selecting ? selected : undefined}
+        title={
+          selecting
+            ? selected
+              ? 'Deselect — bulk actions live in the bar above the list'
+              : 'Select for a bulk action (done, postpone, delete)'
+            : task.done
+              ? 'Tick back'
+              : 'Tick done'
+        }
+        className={`task-check ${(task.done || (selecting && selected)) ? 'is-done' : ''}`}
       >
-        <Icon name="check" size={11} strokeWidth={2.6} />
+        <Icon
+          name={selecting && !selected && !task.done ? 'square' : 'check'}
+          size={11}
+          strokeWidth={2.6}
+        />
       </button>
 
       <div className="min-w-0 flex-1">
@@ -96,6 +177,7 @@ export default function TaskCard({
         </p>
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {!task.done && <RiskDial risk={risk} />}
           {task.subject && (
             <span className="tag border-later/30 bg-paper text-later">{task.subject}</span>
           )}
@@ -158,6 +240,18 @@ export default function TaskCard({
               <Icon name="external" size={11} /> Portal
             </a>
           )}
+          {gcal && (
+            <a
+              href={gcal}
+              target="_blank"
+              rel="noreferrer noopener"
+              title="Add this deadline to Google Calendar — prefilled all-day event"
+              onClick={(e) => e.stopPropagation()}
+              className="tag border-later/35 bg-paper text-later transition hover:border-later hover:text-ink"
+            >
+              <Icon name="calendarPlus" size={11} /> GCal
+            </a>
+          )}
 
           {!task.done && (
             <label className="flex items-center font-mono text-[9px] text-ink-3 uppercase">
@@ -171,6 +265,15 @@ export default function TaskCard({
             </label>
           )}
         </div>
+
+        {/* 📋 Study plan drawer — opened from the plan action button below */}
+        {!task.done && showPlan && (
+          <PlanPanel
+            plan={plan}
+            task={task}
+            onCopy={() => onCopyPlan?.(task, plan)}
+          />
+        )}
       </div>
 
       <div className="task-actions">
@@ -187,6 +290,21 @@ export default function TaskCard({
             className={`task-action is-focus ${focusing ? 'bg-done-soft ring-1 ring-done/40' : ''}`}
           >
             <Icon name={focusing ? 'stop' : 'play'} size={13} />
+          </button>
+        )}
+
+        {!task.done && (
+          <button
+            type="button"
+            onClick={() => setShowPlan((v) => !v)}
+            aria-expanded={showPlan}
+            aria-label={`${
+              showPlan ? 'Hide' : 'Show'
+            } study plan for ${task.title}`}
+            title="Plan banao — break this deadline into day-by-day study sessions"
+            className={`task-action ${showPlan ? 'bg-later-soft text-later' : ''}`}
+          >
+            <Icon name="list" size={13} />
           </button>
         )}
 

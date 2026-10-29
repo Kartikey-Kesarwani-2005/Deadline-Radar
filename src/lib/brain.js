@@ -324,6 +324,56 @@ export function paceModel(tasks) {
   return pacePerMark(tasks)
 }
 
+/**
+ * 🔥 12-week consistency heat — GitHub-style grid of finished-work density.
+ * One cell per day (oldest → newest, ending today), counting how many tasks
+ * were FINISHED that day and how many of those were on time. Also derives the
+ * streak story: the longest run of active days and the run ending now — the
+ * "am I actually showing up?" answer the weekly bars can't show per-day.
+ * `now` is injectable so tests stay deterministic.
+ */
+export function heatGrid(tasks, weeks = 12, now = Date.now()) {
+  const total = weeks * 7
+  const start = new Date(now)
+  start.setHours(0, 0, 0, 0)
+  start.setDate(start.getDate() - (total - 1))
+
+  const byDay = {}
+  for (const t of tasks) {
+    if (!t.done || !t.completedAt) continue
+    const k = toDateKey(new Date(t.completedAt))
+    const cell = (byDay[k] ||= { count: 0, onTime: 0, late: 0 })
+    cell.count++
+    if (t.dueDate && toDateKey(new Date(t.completedAt)) <= t.dueDate) cell.onTime++
+    else cell.late++
+  }
+
+  const cells = Array.from({ length: total }, (_, i) => {
+    const d = new Date(start)
+    d.setDate(start.getDate() + i)
+    const key = toDateKey(d)
+    const hit = byDay[key] || { count: 0, onTime: 0, late: 0 }
+    return { key, count: hit.count, onTime: hit.onTime, late: hit.late }
+  })
+
+  // Longest run of active days in the window (names the user's best habit).
+  let longest = 0
+  let run = 0
+  for (const c of cells) {
+    run = c.count ? run + 1 : 0
+    if (run > longest) longest = run
+  }
+  // Current streak: walk back from the most recent active day (today counts
+  // as inside the streak even if yesterday was the last finish).
+  let last = total - 1
+  while (last >= 0 && !cells[last].count) last--
+  let current = 0
+  for (let i = last; i >= 0 && cells[i].count; i--) current++
+
+  const totalDone = cells.reduce((a, c) => a + c.count, 0)
+  return { cells, weeks, longest, current, totalDone }
+}
+
 /** One-line reason for a ranked item — spoken by the voice query too. */
 export function doNowReason(item) {
   if (item.daysLeft < 0) return `already late — about ${Math.round(item.roi)} marks/hr, finish it first`

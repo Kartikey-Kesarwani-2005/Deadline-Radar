@@ -221,6 +221,21 @@ const PATHS = {
   check: <path d="m5 12 4.5 4.5L19 6" />,
   plus: <path d="M12 5v14M5 12h14" />,
   square: <rect x="4.5" y="4.5" width="15" height="15" rx="2" />,
+  list: (
+    <>
+      <path d="M8.5 6h11M8.5 12h11M8.5 18h11" />
+      <circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  calendarPlus: (
+    <>
+      <path d="M8 2.5v3M16 2.5v3M4 9.5h16" />
+      <rect x="3.5" y="4.5" width="17" height="16" rx="2" />
+      <path d="M12 13v5M9.5 15.5h5" />
+    </>
+  ),
 }
 
 export default function Icon({ name, size = 15, className = '', strokeWidth = 1.6, title }) {

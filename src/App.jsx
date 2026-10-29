@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, looksLikeDeadline, nextOccurrence, reconcile } from './lib/extract'
-import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
+import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, heatGrid, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
+import { buildPlan, planCopyText } from './lib/plan'
+import { riskScore } from './lib/risk'
 import { downloadICS } from './lib/calendar'
 import { canListen, canSpeak, listenOnce, speak } from './lib/voice'
 import { parseCommand } from './lib/commands'
@@ -14,7 +16,7 @@ import {
   saveTasks,
   uid,
 } from './lib/store'
-import { burstConfetti } from './lib/confetti'
+import { burstConfetti, celebrateClear } from './lib/confetti'
 import { getPermission, notifyDaily, notifyTest, requestPermission } from './lib/notify'
 import { extractFromImage, fileToDataUrl } from './lib/vision'
 import AddBar from './components/AddBar'
@@ -25,6 +27,7 @@ import TrendSpark from './components/TrendSpark'
 import DoNowCard from './components/DoNowCard'
 import LiveRail from './components/LiveRail'
 import TaskCard from './components/TaskCard'
+import ConsistencyHeatmap from './components/ConsistencyHeatmap'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
 import TaskEditModal from './components/TaskEditModal'
@@ -65,7 +68,7 @@ const SECTION_DEFS = [
 ]
 
 /** One urgency section — heading, count and the ordered task cards inside. */
-function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, focusId }) {
+function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst, getPlan, getRisk, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, onCopyPlan, onSelectToggle, selecting, selectedIds, focusId }) {
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="mb-7 scroll-mt-4">
@@ -88,14 +91,20 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
             task={task}
             advice={getAdvice ? getAdvice(task) : null}
             estimate={getEst ? getEst(task) : null}
+            plan={getPlan ? getPlan(task) : null}
+            risk={getRisk ? getRisk(task) : null}
             style={{ animationDelay: `${Math.min(index * 45, 320)}ms` }}
+            selecting={selecting}
+            selected={selectedIds?.has(task.id) || false}
             onToggle={(e) => onToggle(task.id, e)}
+            onSelectToggle={() => onSelectToggle(task.id)}
             onDelete={() => onDelete(task.id)}
             onEdit={() => onEdit(task.id)}
             onDateChange={(date) => onDateChange(task.id, date)}
             onShare={() => onShare(task.id)}
             onFocus={() => onFocus(task.id)}
             onPostpone={() => onPostpone(task.id)}
+            onCopyPlan={(t, plan) => onCopyPlan?.(t, plan)}
             focusing={focusId === task.id}
           />
         ))}
@@ -264,6 +273,9 @@ export default function App() {
   const [clipSuggest, setClipSuggest] = useState(null)
   const [askCard, setAskCard] = useState(null)
   const [listening, setListening] = useState(false)
+  // ☑️ Bulk select — a mode (never always-on checkboxes) with a Set of ids.
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
   // ⏱️ Focus timer — { taskId, startedAt }; survives refresh via localStorage.
   const [focus, setFocus] = useState(loadFocus)
   const [focusTick, setFocusTick] = useState(0)
@@ -631,6 +643,8 @@ export default function App() {
       burstConfetti(event.clientX, event.clientY)
     }
     const markingDone = !current?.done
+    // 🎉 The last pending tick clears the whole radar — celebrate accordingly.
+    const willClear = markingDone && tasks.length > 1 && tasks.every((t) => t.done || t.id === id)
     setTasks((prev) => {
       let next = prev.map((t) =>
         t.id === id
@@ -670,6 +684,10 @@ export default function App() {
       }
       return next
     })
+    if (willClear) {
+      celebrateClear()
+      setFlash({ msg: 'Radar clear — sab done 🎉 Next deadline paste karo, the radar picks it up.' })
+    }
   }
   const deleteTask = (id) => {
     const index = tasks.findIndex((t) => t.id === id)
@@ -818,6 +836,79 @@ export default function App() {
     setDateFilter(null)
   }
 
+  // ☑️ Bulk select — many cards, a few taps. The tick box swaps roles while
+  // the mode is on, so a card can't be accidentally marked done mid-selection.
+  const exitSelect = () => {
+    setSelectMode(false)
+    setSelectedIds(new Set())
+  }
+  const toggleSelectMode = () => {
+    setSelectMode((m) => !m)
+    setSelectedIds(new Set())
+  }
+  const toggleSelect = (id) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  const selectAllVisible = () => setSelectedIds(new Set(visible.map((t) => t.id)))
+
+  const bulkDone = () => {
+    const ids = selectedIds
+    if (!ids.size) return
+    const now = Date.now()
+    setTasks((prev) =>
+      prev.map((t) =>
+        ids.has(t.id) && !t.done ? { ...t, done: true, completedAt: t.completedAt || now } : t,
+      ),
+    )
+    const willClear = tasks.every((t) => t.done || ids.has(t.id))
+    setFlash({
+      msg: `✅ ${ids.size} marked done${willClear ? ' — radar clear 🎉' : ''}`,
+    })
+    if (willClear) celebrateClear()
+    exitSelect()
+  }
+
+  const bulkPostpone = () => {
+    if (!selectedIds.size) return
+    setTasks((prev) =>
+      prev.map((t) =>
+        selectedIds.has(t.id) && !t.done ? { ...t, dueDate: postponeDate(t.dueDate, 1) } : t,
+      ),
+    )
+    setFlash({ msg: `⏭ ${selectedIds.size} deadline${selectedIds.size > 1 ? 's' : ''} pushed by a day.` })
+    exitSelect()
+  }
+
+  const bulkDelete = () => {
+    const removed = tasks.filter((t) => selectedIds.has(t.id))
+    if (!removed.length) return
+    // No zombie focus timer: bank the running session if its task is going.
+    if (focus && removed.some((t) => t.id === focus.taskId)) bankFocus()
+    setTasks((prev) => prev.filter((t) => !selectedIds.has(t.id)))
+    const restores = [...removed]
+    setFlash({
+      msg: `Deleted ${removed.length} task${removed.length > 1 ? 's' : ''}.`,
+      action: { label: 'Undo', run: () => setTasks((prev) => [...restores, ...prev]) },
+    })
+    exitSelect()
+  }
+
+  // 📋 Copy a card's study plan to the clipboard (notes app / group chat).
+  const copyPlan = async (task, plan) => {
+    const text = planCopyText(task, plan)
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setFlash({ msg: `Plan copied ✓ — ${plan.steps.length} session${plan.steps.length > 1 ? 's' : ''}, ~${Math.round(plan.minutes / 60 * 10) / 10}h total.` })
+    } catch {
+      setFlash({ msg: 'Copy blocked by the browser — try again.', tone: 'error' })
+    }
+  }
+
   // 📤 copies a ready-to-paste line (plus the app link) for study groups.
   async function shareTask(id) {
     const task = tasks.find((t) => t.id === id)
@@ -915,7 +1006,21 @@ export default function App() {
   const startSoon = useMemo(() => startAlerts(tasks), [tasks, dayKey])
   const trend = useMemo(() => weeklyTrend(tasks), [tasks, dayKey])
   const pace = useMemo(() => paceModel(tasks), [tasks, dayKey])
+  const heat = useMemo(() => heatGrid(tasks), [tasks, dayKey])
   const canAsk = canListen()
+
+  // 📋 Per-task study plans — recomputed only when the data (or the day) changes.
+  const plans = useMemo(() => {
+    const map = new Map()
+    for (const t of tasks) map.set(t.id, buildPlan(t, tasks))
+    return map
+  }, [tasks, dayKey])
+  // 🎯 Per-task risk scores — one shared pace/brain pair beats recomputing
+  // the whole model inside every card.
+  const riskFor = useMemo(() => {
+    const brain = computeBrain(tasks)
+    return (t) => riskScore(t, { pace, brain, today: dayKey })
+  }, [tasks, pace, dayKey])
 
   // 🎙️ "Ask the radar" — one spoken question, spoken answer. Orders
   // ("mark DBMS done", "delete OS lab", "add viva Friday") execute instead.
@@ -1522,6 +1627,7 @@ export default function App() {
                 </p>
               )}
               <TrendSpark weeks={trend.weeks} />
+              <ConsistencyHeatmap heat={heat} />
               <WeatherStrip
                 days={forecast}
                 active={dateFilter}
@@ -1597,6 +1703,27 @@ export default function App() {
                   ))}
                 </select>
               </label>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={toggleSelectMode}
+                  aria-pressed={selectMode}
+                  title="Select multiple cards, then run one bulk action — done, postpone or delete"
+                  className={chipCls(selectMode)}
+                >
+                  {selectMode ? 'Cancel select' : 'Bulk select'}
+                </button>
+                {selectMode && (
+                  <button
+                    type="button"
+                    onClick={selectAllVisible}
+                    title="Select every visible card"
+                    className={chipCls(true)}
+                  >
+                    All
+                  </button>
+                )}
+              </div>
               {(subjects.length > 0 || dateFilter) && (
                 <div className="flex flex-wrap gap-1.5">
                   {subjects.length > 0 && (
@@ -1642,6 +1769,48 @@ export default function App() {
 
         {/* Right column: the radar sections */}
         <div className="flex min-w-0 flex-col gap-4">
+          {selectMode && (
+            <div className="stamp-in flex flex-wrap items-center gap-2 rounded-[4px] border-2 border-ink bg-ink px-3 py-2 text-paper-2 shadow-[3px_3px_0_rgba(29,27,22,0.35)]">
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase">
+                ☑️ {selectedIds.size} selected
+              </span>
+              <span className="flex-1" />
+              <button
+                type="button"
+                onClick={bulkDone}
+                disabled={!selectedIds.size}
+                title="Mark every selected card done"
+                className="btn !border-line !bg-paper !text-ink !shadow-none"
+              >
+                Done ✓
+              </button>
+              <button
+                type="button"
+                onClick={bulkPostpone}
+                disabled={!selectedIds.size}
+                title="Push every selected deadline by one day"
+                className="btn !border-line !bg-paper !text-ink !shadow-none"
+              >
+                +1 day
+              </button>
+              <button
+                type="button"
+                onClick={bulkDelete}
+                disabled={!selectedIds.size}
+                title="Delete every selected card — undo stays in the toast"
+                className="btn !border-late !bg-late !text-paper-2 !shadow-none"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={exitSelect}
+                className="btn !border-paper-2/40 !bg-transparent !text-paper-2 !shadow-none hover:!bg-paper-2/10"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
           {tasks.length > 0 && (
             <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
           )}
@@ -1736,6 +1905,8 @@ export default function App() {
                   tasks={sections[key]}
                   getAdvice={(task) => adviceFor(brain, task)}
                   getEst={(task) => estimateEffort(task, pace)}
+                  getPlan={(task) => plans.get(task.id)}
+                  getRisk={riskFor}
                   onToggle={toggleTask}
                   onDelete={deleteTask}
                   onEdit={setEditingId}
@@ -1743,6 +1914,10 @@ export default function App() {
                   onShare={shareTask}
                   onFocus={startFocus}
                   onPostpone={postponeTask}
+                  onCopyPlan={copyPlan}
+                  onSelectToggle={toggleSelect}
+                  selecting={selectMode}
+                  selectedIds={selectedIds}
                   focusId={focus?.taskId}
                 />
               ))}

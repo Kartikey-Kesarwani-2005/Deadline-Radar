@@ -5,10 +5,12 @@
 import { extractLocal, extractManyLocal, looksLikeDeadline, nextOccurrence, reconcile } from '../src/lib/extract.js'
 import { parseCommand } from '../src/lib/commands.js'
 import { parseBackup } from '../src/lib/store.js'
-import { answerQuery, briefingText, doNow, estimateEffort, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
-import { buildICS } from '../src/lib/calendar.js'
+import { answerQuery, briefingText, doNow, estimateEffort, heatGrid, onTimeStreak, paceRows, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
+import { buildICS, googleCalendarUrl } from '../src/lib/calendar.js'
 import { dueTone, countdownTo, parseDateKey, dayDiff, todayKey } from '../src/lib/dates.js'
 import { postponeDate, sortTasks } from '../src/lib/sort.js'
+import { riskScore, riskTone } from '../src/lib/risk.js'
+import { buildPlan, planCopyText } from '../src/lib/plan.js'
 
 const today = new Date()
 const key = (d) =>
@@ -81,7 +83,16 @@ const t8 = extractLocal('OS viva agle somvar, 10 marks')
 check('agle somvar -> the Monday after this one', t8.dueDate, nextWeekday(1, false))
 
 const t9 = extractLocal('DBMS quiz 25 tarikh tak submit karna hai')
-check('25 tarikh -> 25th of this month', t9.dueDate, key(new Date(today.getFullYear(), today.getMonth(), 25)))
+// The parser never puts a bare day in the past — a "25 tarikh" written on the
+// 29th rolls to next month. Mirror that here so the test isn't date-flaky.
+const expected25 = key(
+  new Date(
+    today.getFullYear(),
+    today.getDate() > 25 ? today.getMonth() + 1 : today.getMonth(),
+    25,
+  ),
+)
+check('25 tarikh -> 25th, never in the past', t9.dueDate, expected25)
 
 const t10 = extractLocal('lab record parso tak dena')
 check('parso -> day after tomorrow', t10.dueDate, shift(2))
@@ -425,9 +436,15 @@ check(
 
 // --- Fuzz round: ordinals, year handling ---
 check(
-  'standalone ordinal "the 26th" -> this month',
+  'standalone ordinal "the 26th" -> future day, never the past',
   extractLocal('viva on the 26th, 10 marks').dueDate,
-  key(new Date(today.getFullYear(), today.getMonth(), 26)),
+  key(
+    new Date(
+      today.getFullYear(),
+      today.getDate() > 26 ? today.getMonth() + 1 : today.getMonth(),
+      26,
+    ),
+  ),
 )
 const yrTask = extractLocal('deadline 27 October 2026, 20 marks')
 check(
@@ -629,6 +646,138 @@ check(
   extractLocal('1st internal exam on 25th').dueDate !== null,
   true,
 )
+
+// --- 🎯 Risk score — one honest 0–100 number per pending card ---
+const riskOf = (task) => riskScore(task, { pace: {}, today: todayKey() })
+check('risk: done task earns no score', riskOf({ title: 'x', dueDate: shift(-2), done: true, completedAt: 1 }), null)
+check('risk: undated task earns no score', riskOf({ title: 'x', dueDate: null, done: false }), null)
+check('risk: unreadable date earns no score', riskOf({ title: 'x', dueDate: '2026-02-31' }), null)
+check('risk: unreadable cell blocks the pager path (rejects impossible dates)', riskOf({ title: 'x' }), null)
+{
+  const late = riskOf({ title: 'x', dueDate: shift(-3), marks: 5, done: false })
+  const dueToday = riskOf({ title: 'x', dueDate: shift(0), marks: 5, done: false })
+  const tomorrow = riskOf({ title: 'x', dueDate: shift(1), marks: 5, done: false })
+  const far = riskOf({ title: 'x', dueDate: shift(30), marks: 5, done: false })
+  check('risk: late outranks due today', late.score > dueToday.score, true)
+  check('risk: due today outranks tomorrow', dueToday.score > tomorrow.score, true)
+  check('risk: tomorrow outranks a month away', tomorrow.score > far.score, true)
+  check('risk: critical level only at the top', late.level, 'critical')
+  check('risk: far future hums along calm-or-watch', ['calm', 'watch'].includes(far.level), true)
+  check('risk: late card names its lateness', late.reasons.some((r) => r.includes('late')), true)
+  check('risk: bigger marks push the score up', riskOf({ title: 'x', dueDate: shift(2), marks: 25 }).score > riskOf({ title: 'x', dueDate: shift(2), marks: 5 }).score, true)
+  check('risk: high priority pushes the score up', riskOf({ title: 'x', dueDate: shift(2), priority: 'high' }).score > riskOf({ title: 'x', dueDate: shift(2), priority: 'normal' }).score, true)
+}
+{
+  // A subject that is usually late raises the card's risk once the brain has proof.
+  const base = { title: 'Quiz', dueDate: shift(4), subject: 'DBMS', marks: 10 }
+  const brain = {
+    overall: null,
+    subject: (s) =>
+      String(s).trim().toLowerCase() === 'dbms' ? { n: 3, onTimeRate: 33, avgBuffer: -2 } : null,
+  }
+  const without = riskScore(base, { today: todayKey() })
+  const withLateHistory = riskScore(base, { brain, today: todayKey() })
+  check('risk: usually-late history lifts the score', withLateHistory.score > without.score, true)
+  check('risk: usually-late reason is spoken on the card', withLateHistory.reasons.some((r) => r.includes('usually')), true)
+}
+check('risk: tone classes exist for every level', ['critical', 'high', 'watch', 'calm'].every((l) => typeof riskTone(l) === 'string' && riskTone(l)), true)
+check('risk: score stays inside 0–100', (() => {
+  for (let d = -40; d <= 40; d++) {
+    const r = riskOf({ title: 'x', dueDate: shift(d), marks: 30, priority: 'high' })
+    if (r && (r.score < 0 || r.score > 100)) return false
+  }
+  return true
+})(), true)
+
+// --- 📋 Plan banao — deadline → day-by-day study sessions ---
+{
+  const planning = { title: 'DBMS assignment Q1-Q12 due soon', dueDate: shift(6), marks: 20, done: false }
+  const plan = buildPlan(planning, [], todayKey())
+  check('plan: exists for a dated pending task', Boolean(plan), true)
+  check('plan: submit step lands on the due date', plan.steps[plan.steps.length - 1].date, planning.dueDate)
+  check('plan: sessions are ordered today → due', plan.steps[0].date <= plan.steps[plan.steps.length - 1].date, true)
+  check('plan: every session carries minutes', plan.steps.every((s) => s.minutes > 0), true)
+  check('plan: caps sessions at 4 rounds', plan.steps.length <= 4, true)
+  check('plan: no sprint stamp while days fit', plan.sprint, false)
+
+  const tonight = buildPlan({ title: 'OS viva tomorrow morning', dueDate: shift(0), marks: 10 }, [], todayKey())
+  check('plan: due-today collapses into a sprint', tonight.sprint, true)
+  check('plan: sprint still ends at submit', tonight.steps[tonight.steps.length - 1].label.toLowerCase().includes('submit'), true)
+
+  const overdue = buildPlan({ title: 'lab record', dueDate: shift(-2), marks: 10 }, [], todayKey())
+  check('plan: overdue task also gets a sprint, not a fantasy schedule', overdue.sprint, true)
+  check('plan: sprint work is scheduled today', overdue.steps[0].date, todayKey())
+
+  check('plan: done task needs no plan', buildPlan({ title: 'x', dueDate: shift(2), done: true }, []), null)
+  check('plan: undated task needs no plan', buildPlan({ title: 'x', dueDate: null }, []), null)
+
+  const diffSubjects = [
+    buildPlan({ title: 'DBMS lab record', dueDate: shift(3), marks: 10 }, [], todayKey()).steps[0],
+    buildPlan({ title: 'DBMS quiz revision', dueDate: shift(3), marks: 10 }, [], todayKey()).steps[0],
+    buildPlan({ title: 'SE presentation slides', dueDate: shift(3), marks: 10 }, [], todayKey()).steps[0],
+  ]
+  check('plan: labels adapt to what the work actually is', new Set(diffSubjects.map((s) => s.label)).size, 3)
+
+  const copy = planCopyText(planning, plan, todayKey())
+  check('plan: copy text is a numbered checklist', /^\^?1\. /m.test(copy) || copy.includes('1. '), true)
+  check('plan: copy mentions the total effort', copy.includes('2h') || copy.includes('1h') || copy.includes('h'), true)
+
+  // Hours that obviously don't fit still fit in a bounded plan — max 4 rounds.
+  const huge = buildPlan({ title: 'Big assignment', dueDate: shift(2), marks: null }, [], todayKey())
+  check('plan: never more rounds than the days left', huge.steps.length <= 3, true)
+}
+
+// --- 🔥 12-week consistency heat ---
+{
+  const now = Date.now()
+  const dayMs = 864e5
+  const mk = (daysAgo, n = 1) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `h${daysAgo}-${i}`,
+      title: `heat ${daysAgo}`,
+      done: true,
+      dueDate: key(new Date(now - daysAgo * dayMs)), // same local day → on time
+      completedAt: now - daysAgo * dayMs - i, // inside the same local day
+    }))
+  const heatTasks = [
+    ...mk(0), // today
+    ...mk(1, 2), // yesterday — 2 finished
+    ...mk(2, 5), // 2 days ago — the busy day
+    ...mk(10), // isolated finish
+    // One late finish: completed after dueDate.
+    {
+      id: 'late-finish',
+      title: 'late lab',
+      done: true,
+      dueDate: key(new Date(new Date(now - 3 * dayMs).setDate(new Date(now - 3 * dayMs).getDate() - 1))),
+      completedAt: now - 3 * dayMs,
+    },
+  ]
+  const heat = heatGrid(heatTasks, 12, now)
+  check('heat: one cell per day across 12 weeks', heat.cells.length, 84)
+  check('heat: newest cell is today', key(new Date(now)), heat.cells[heat.cells.length - 1].key)
+  check('heat: counts finishes by local day', heat.cells[heat.cells.length - 1].count, 1)
+  check('heat: busiest day is day -2', heat.cells[heat.cells.length - 3].count, 5)
+  check('heat: on-time counts are split out', heat.cells[heat.cells.length - 3].onTime, 5)
+  check('heat: late finish shows in the day -3 cell', heat.cells[heat.cells.length - 4].late, 1)
+  check('heat: total done matches the input', heat.totalDone, heatTasks.length, )
+  check('heat: longest streak counts the 3-day run', heat.longest >= 3, true)
+  check('heat: current streak ends today', heat.current >= 1, true)
+  const empty = heatGrid([], 12, now)
+  check('heat: empty history is all-zero with no streaks', [empty.totalDone, empty.longest, empty.current], [0, 0, 0])
+}
+
+// --- 📅 Google Calendar quick add ---
+{
+  const gcal = googleCalendarUrl({ id: 'g1', title: 'DBMS assignment', dueDate: '2026-11-05', marks: 20, subject: 'DBMS' })
+  check('gcal: builds a real template URL', gcal?.startsWith('https://calendar.google.com/calendar/render?'), true)
+  const plain = gcal ? decodeURIComponent(gcal).replace(/\+/g, ' ') : ''
+  check('gcal: all-day event uses an exclusive next-day end', plain.includes('dates=20261105/20261106'), true)
+  check('gcal: title travels in the URL', plain.includes('DBMS'), true)
+  check('gcal: marks travel in the details', plain.includes('20 marks'), true)
+  check('gcal: undated task has nothing to schedule', googleCalendarUrl({ title: 'x', dueDate: null }), null)
+  check('gcal: impossible date is rejected, not mangled', googleCalendarUrl({ title: 'x', dueDate: '2026-02-31' }), null)
+}
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

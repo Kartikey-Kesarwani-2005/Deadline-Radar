@@ -64,3 +64,24 @@ export function burstConfetti(x, y) {
     /* the celebration is a bonus — never break the tick for it */
   }
 }
+
+/**
+ * 🎉 Radar-clear celebration — the final tick of the radar deserves more than
+ * one small burst: a curtain of confetti from several points across the page,
+ * gently staggered so it reads as applause, not a glitch. Respects reduced
+ * motion exactly like the single burst.
+ */
+export function celebrateClear() {
+  try {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const w = window.innerWidth
+    const spans = [0.2, 0.4, 0.6, 0.8]
+    spans.forEach((frac, i) => {
+      window.setTimeout(() => {
+        burstConfetti(w * frac, window.innerHeight * (0.3 + (i % 2) * 0.25))
+      }, i * 160)
+    })
+  } catch {
+    /* a bonus — never break the tick for it */
+  }
+}

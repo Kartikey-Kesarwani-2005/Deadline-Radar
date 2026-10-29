@@ -38,12 +38,20 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 ### 1:10–1:40 — What it gives back
 - Screen: the **"🎯 Ab kya karun?"** decision card at the top (start a ⏱ focus with
   one click), the **radar dial** (rings fill by urgency, sweep rotating, on-time %
-  in the centre), the **🎯 marks-at-risk** line, the **📈 6-week finish arc**
-  (green = on time, amber = late — the result *over time*), and the **🌦️ 7-day weather forecast** —
-  tap the ⛈️ storm day to filter to it. A card shows its **🧠 prediction chip**
-  ("Usually 2.0d late — start NOW"). Tick a task done — **confetti bursts** — tick the
+  in the centre), the **🎯 marks-at-risk** line, and the **🌦️ 7-day weather forecast** —
+  tap the ⛈️ storm day to filter to it. Every card now carries a **🎯 risk dial**
+  (0–100, inked by deadline proximity + marks + your own lateness history) — hover one
+  so its reasons show as a tooltip. A card shows its **🧠 prediction chip**
+  ("Usually 2.0d late — start NOW"), the **🔥 12-week consistency heatmap** glows in the
+  rail, and the **📈 6-week finish arc** shows the on-time/late split *over time*.
+  Tick a task done — **confetti bursts** — tick the
   **🔁 weekly** lab record and next week's deadline **rolls itself onto the radar** —
-  open **Weekly report**.
+  then tick the last pending task: the **whole radar is clear** and confetti falls
+  from every edge. Open **Weekly report**.
+- **The plan moment (new):** click the **📋 list button** on any card → **"Plan banao"**
+  lays the deadline out as **day-by-day study sessions** — what to do in each round,
+  on which day, ~how long, ending in "submit" — press **Copy plan** and the checklist
+  lands in the chat. **(8s)**
 - **Voice beats:** press **🔊 Briefing** — the radar *speaks* your whole day
   (late → today → tomorrow → on-time rate → "ab kya karun" pick). Then press
   **🎙️ Ask** and say *"ab kya karun?"* → the radar
@@ -51,10 +59,12 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 - **Then order it, don't just ask it:** press **🎙️ Ask** again and say *"mark DBMS done"*
   → the **card ticks itself** with a spoken "Done: DBMS worksheet" (+3s). Say
   *"delete OS lab"* and it's gone with an undo flash. One button — questions *and* orders.
+  Quiet-time beats if the take is calm: toggle **☑️ Bulk select** and clear three tasks
+  in one click; show a **📅 GCal** chip landing a deadline straight into Google Calendar. (+6s)
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
-  your on-time score. It counts marks at risk, learns my own rhythm from history — the
-  six-week arc shows that rhythm actually improving, weekly labs roll themselves into next
-  week — and I can just ask it, out loud, what's due today."*
+  your on-time score. It counts marks at risk, learns my own rhythm from history — and it
+  doesn't just warn me, it plans me: one click and a scary deadline becomes a short
+  day-by-day checklist."*
 - Tap a dial ring → it jumps to that section. Show the **On time** ring, the **📈 6-week arc**
   and Weekly report numbers — this is the "one real result".
 

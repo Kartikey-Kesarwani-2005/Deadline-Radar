@@ -4,6 +4,8 @@
  * Plain text, no dependencies, nothing leaves the device.
  */
 
+import { parseDateKey } from './dates.js'
+
 function esc(text) {
   return String(text)
     .replace(/\\/g, '\\\\')
@@ -60,4 +62,34 @@ export function downloadICS(tasks) {
   a.click()
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 4000)
+}
+
+/**
+ * 📅 One-tap "Add to Google Calendar" link for a single task — a template
+ * event prefilled with title, marks, portal link and the deadline as an
+ * all-day event, so the phone calendar gets it without downloading anything.
+ * Returns null when the task has no usable date (nothing to schedule).
+ */
+export function googleCalendarUrl(task) {
+  if (!task?.dueDate) return null
+  const due = parseDateKey(task.dueDate)
+  if (!due) return null
+  // All-day events run [start, end) — the exclusive end must be the next day.
+  const end = new Date(due)
+  end.setDate(due.getDate() + 1)
+  const endKey = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`
+  const details = [
+    task.subject,
+    task.marks ? `${task.marks} marks` : null,
+    'via Deadline Radar',
+  ]
+    .filter(Boolean)
+    .join('\n')
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${task.title}`,
+    dates: `${task.dueDate.replace(/-/g, '')}/${endKey.replace(/-/g, '')}`,
+    details,
+  })
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
 }

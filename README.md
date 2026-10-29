@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-152%2F152%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-209%2F209%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -23,6 +23,29 @@ replacing anything you captured).
 
 ## ✨ Features
 
+- **🎯 Risk score dial (0–100)** — every pending card carries a small inked ring that
+  folds the whole danger level into one glance: deadline proximity + marks + whether the
+  learned effort even fits the days left + your own lateness history. Hover names every
+  reason ("3d left · 25 marks — big one · usually 2d late in DBMS"). No other tracker
+  scores a workload this honestly.
+- **📋 "Plan banao" — one tap, a real study plan** — the card's 📋 button turns a scary
+  deadline into a **day-by-day session checklist**: what to do in each round ("Re-read
+  notes", "Solve the first half"…), on which date, ~how long, always ending in
+  **submit**. Sessions are spaced between today and the due date from your learned pace;
+  a task that no longer fits collapses into an honest single sprint. One tap copies the
+  plan to the group chat.
+- **🔥 12-week consistency heatmap** — a GitHub-style grid of the last 12 weeks on paper:
+  ink density = tasks finished that day, an amber ring marks days that ran late, with the
+  **best streak** ("best streak 5d") and the active one — the "am I actually showing up?"
+  answer at a glance.
+- **☑️ Bulk select** — toggle **Bulk select** in the rail and the ticks become selection
+  boxes: tick several cards, then one bar does it all — **Done ✓**, **+1 day** postpone,
+  or **Delete** (with a group Undo). Spring cleaning without ten trips.
+- **📅 Google Calendar quick add** — every dated card shows a **GCal** chip: one tap opens
+  Google Calendar with a prefilled all-day event (title, marks, portal link) — no file
+  download needed.
+- **🎉 Radar-clear celebration** — tick the last pending task and confetti falls from every
+  edge of the page: the radar earned its all-clear.
 - **Capture anything** — paste a messy assignment message, or hold your Wispr key and speak it
   straight into the input box. Press <kbd>n</kbd> anywhere to jump to the input, <kbd>/</kbd> to search.
 - **Full editing** — ✏️ on any card fixes title, subject, marks, date and priority; original
@@ -188,6 +211,11 @@ output = `dist`) or Netlify (same settings).
 - [x] Rich link preview (OG cover image)
 - [x] ⌘K command palette + five-way order control
 - [x] Postpone one day with undo + duplicate task
+- [x] 🎯 Risk score dial on every card (0–100, multi-factor)
+- [x] 📋 "Plan banao" — one-tap day-by-day study plan
+- [x] 🔥 12-week consistency heatmap + streaks
+- [x] ☑️ Bulk select (done / postpone / delete in one go)
+- [x] 📅 Google Calendar quick-add per task + radar-clear celebration
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
@@ -202,6 +230,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # parser + bulk + backup + voice commands + sort/postpone + countdown (152 checks)
+npm test       # parser + bulk + backup + voice commands + sort/postpone + countdown + risk/plan/heat (209 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```
