@@ -6,14 +6,18 @@ import { parseDateKey, todayKey } from './dates.js'
  * (Groq's qwen/qwen3.8-27b and Gemini both work).
  */
 
-const PROMPT = [
-  'You extract assignment/deadline info from a screenshot or photo of a notice, message, syllabus or chat.',
-  'Read all visible text carefully, including dates written as "25 Oct", "Friday", "25/10", "tomorrow".',
-  `Today is ${todayKey()}.`,
-  'Reply with ONLY minified JSON, no prose, exactly this shape:',
-  '{"title":string,"subject":string|null,"dueDate":"YYYY-MM-DD"|null,"marks":number|null,"priority":"high"|"normal","link":"https://..."|null}',
-  'title = short task name (max 90 chars). dueDate = a real calendar date derived from the image text, or null if none is mentioned. link = the submission/portal URL if one is visible, else null. priority = "high" if due within 1 day or marks >= 15, else "normal".',
-].join('\n')
+// Built per call — "Today" must be the day the photo is read, not the day the
+// module was imported (a tab left open past midnight once fed the AI yesterday).
+function buildPrompt() {
+  return [
+    'You extract assignment/deadline info from a screenshot or photo of a notice, message, syllabus or chat.',
+    'Read all visible text carefully, including dates written as "25 Oct", "Friday", "25/10", "tomorrow".',
+    `Today is ${todayKey()}.`,
+    'Reply with ONLY minified JSON, no prose, exactly this shape:',
+    '{"title":string,"subject":string|null,"dueDate":"YYYY-MM-DD"|null,"marks":number|null,"priority":"high"|"normal","link":"https://..."|null}',
+    'title = short task name (max 90 chars). dueDate = a real calendar date derived from the image text, or null if none is mentioned. link = the submission/portal URL if one is visible, else null. priority = "high" if due within 1 day or marks >= 15, else "normal".',
+  ].join('\n')
+}
 
 /**
  * Downscale any picked image into a compact JPEG data URL.
@@ -74,7 +78,7 @@ export async function extractFromImage(dataUrl, settings) {
         {
           role: 'user',
           content: [
-            { type: 'text', text: PROMPT },
+            { type: 'text', text: buildPrompt() },
             { type: 'image_url', image_url: { url: dataUrl } },
           ],
         },

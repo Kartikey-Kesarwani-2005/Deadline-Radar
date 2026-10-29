@@ -39,7 +39,9 @@ export function notifyDaily(tasks) {
 
   const late = tasks.filter((t) => !t.done && t.dueDate && dayDiff(today, t.dueDate) < 0)
   const dueToday = tasks.filter((t) => !t.done && t.dueDate && dayDiff(today, t.dueDate) === 0)
-  const startSoon = startAlerts(tasks, today)
+  // A due-today task's start window IS its due-today-ness — counting it again
+  // below would report one task as two ("1 due today · 1 start window closing").
+  const startSoon = startAlerts(tasks, today).filter((x) => x.daysLeft > 0)
   if (!late.length && !dueToday.length && !startSoon.length) return false
 
   const parts = []

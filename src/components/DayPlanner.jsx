@@ -68,8 +68,9 @@ export default function DayPlanner({ tasks, onStart, focusId, onCopy }) {
         {schedule.blocks.map((b, i) => {
           const running = focusId === b.task.id
           // Tone mirrors the card's urgency rail: red late, ochre today, olive week.
+          // (diff===0 is due-TODAY — never render it as late red.)
           const diff = dayDiff(todayKey(), b.task.dueDate)
-          const tone = !diff || diff < 0 ? 'bg-late' : diff === 0 ? 'bg-today' : 'bg-week'
+          const tone = diff === null ? 'bg-week' : diff < 0 ? 'bg-late' : diff === 0 ? 'bg-today' : 'bg-week'
           return (
             <li
               key={b.task.id}

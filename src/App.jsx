@@ -406,7 +406,9 @@ export default function App() {
   // ?text=… and captures it automatically.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const shared = (params.get('text') || params.get('body') || '').trim()
+    // Shared weblinks often arrive with only a title (text may be empty) —
+    // the manifest's share_target declares title, so honour it as a fallback.
+    const shared = (params.get('text') || params.get('body') || params.get('title') || '').trim()
     if (shared) {
       addTask(shared, 'from the share sheet')
       window.history.replaceState({}, '', window.location.pathname)
