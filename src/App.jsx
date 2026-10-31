@@ -1658,38 +1658,43 @@ export default function App() {
       }`}
     >
       {/* Masthead strip — the newspaper dateline */}
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-y border-ink/70 py-1 font-mono text-[9px] tracking-[0.18em] text-ink-3 uppercase">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-y border-ink/70 py-0.5 font-mono text-[8px] tracking-[0.16em] text-ink-3 uppercase">
         <button
           type="button"
           onClick={() => openHome()}
           title="Open the front page — H"
           aria-label="Open the Deadline Radar front page"
-          className="masthead-brand font-semibold text-ink-2 transition hover:text-ink min-w-0"
+          className="masthead-brand font-semibold text-ink-2 transition hover:text-ink min-w-0 leading-none"
         >
           <span aria-hidden="true" className="masthead-dot" />
-          Deadline Radar <span className="text-ink-3">·</span> Field Notes
+          Deadline Radar<span className="text-ink-3">·</span>Field Notes
         </button>
         <span className="hidden sm:inline">No Hands Challenge · Wispr Flow</span>
         <span className="dateline-chip">{formatLongToday()}</span>
       </div>
 
       {/* Header */}
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-4">
+      <header className="mb-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
               <span
                 aria-hidden="true"
-                className="compass-needle absolute bottom-1/2 left-1/2 h-[15px] w-[2px] -translate-x-1/2 rounded-full bg-late"
+                className="compass-needle absolute bottom-1/2 left-1/2 h-[14px] w-[2px] -translate-x-1/2 rounded-full bg-late"
               />
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-ink bg-paper" />
             </span>
             <div className="min-w-0">
-              <p className="eyebrow mt-0.5">Field notes · {stats.total} on the radar</p>
+              <p
+                className="eyebrow mb-1 leading-tight"
+                style={{ lineHeight: '1.1', marginBottom: '4px' }}
+              >
+                Field notes · {stats.total} on the radar
+              </p>
               <h1
                 data-parallax="0.08"
-                className="app-title font-serif text-[2rem] leading-snug font-semibold tracking-tight text-ink sm:text-[2.3rem] min-w-0 break-words"
-                style={{ maxWidth: '100%' }}
+                className="app-title font-serif text-[1.875rem] leading-[1.1] font-semibold tracking-tight text-ink sm:text-[2.125rem] min-w-0 break-words"
+                style={{ maxWidth: '100%', marginTop: '0', lineHeight: '1.1' }}
               >
                 Deadline Radar<span className="text-late">.</span>
               </h1>

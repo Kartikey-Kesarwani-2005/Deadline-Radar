@@ -287,6 +287,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.7),
     0 -1px 0 rgba(29, 27, 22, 0.16);
+  line-height: 1.1 !important;
+  margin-top: 0 !important;
+}
+
+/* Ensure eyebrow text never collides with the app title */
+header .eyebrow {
+  line-height: 1.1 !important;
+  margin-bottom: 4px !important;
+  margin-top: 0 !important;
+}
+
+/* Tight masthead brand text — no leading gap between lines */
+.masthead-brand {
+  line-height: 1 !important;
 }
 
 /* Product name on the capture card, printed rather than typed. */
