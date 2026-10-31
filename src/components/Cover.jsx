@@ -109,19 +109,21 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
             <h1 className="cover-title">
               Deadline <span className="cover-title-accent">Radar</span>
             </h1>
-            <div className="cover-rule" aria-hidden="true" />
+            <div className="cover-rule-center">
+              <div className="cover-rule" aria-hidden="true" />
+            </div>
             <p className="cover-blurb">
               Every deadline that arrives as a WhatsApp forward, a screenshot or a voice note —
               filed, dated and answered. <b>Paste, speak, or photograph it.</b>
             </p>
 
-            <div className="cover-chips" aria-label="What is inside">
+            <div className="cover-chips" aria-label="What is inside" style={{ justifyContent: 'center' }}>
               <span>🎙 Voice-first</span>
               <span>🧠 Learns your pace</span>
               <span>🖨 Print-ready</span>
             </div>
 
-            <div className="cover-stamp-wrap">
+            <div className="cover-stamp-wrap" style={{ justifyContent: 'center' }}>
               <button
                 type="button"
                 ref={stampRef}
@@ -136,9 +138,9 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
               </button>
             </div>
 
-            <p className="cover-foot">
+            <p className="cover-foot" style={{ textAlign: 'center' }}>
               Paste. Speak. Never miss a submission.
-              <span className="cover-hint">
+              <span className="cover-hint" style={{ display: 'block', textAlign: 'center' }}>
                 click the stamp · Enter · Esc · 1–6 jump · h returns here
               </span>
             </p>

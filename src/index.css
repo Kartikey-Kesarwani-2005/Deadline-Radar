@@ -1570,26 +1570,34 @@ select.field {
   letter-spacing: 0.32em;
   color: var(--color-ink-3, #75705f);
   text-transform: uppercase;
+  text-align: center;
   animation: cover-rise 0.5s 0.08s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .cover-title {
-  margin-top: 10px;
+  margin-top: 8px;
   font-family: var(--font-serif, Georgia, serif);
   font-size: clamp(46px, 7.5vw, 78px);
-  line-height: 0.94;
+  line-height: 1.05;
   font-weight: 700;
   color: var(--color-ink, #1d1b16);
   letter-spacing: -0.025em;
+  text-align: center;
   animation: cover-rise 0.55s 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .cover-title-accent {
   font-style: italic;
   color: var(--color-later);
 }
+.cover-rule-center {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
 .cover-rule {
   width: min(230px, 40vw);
   height: 2px;
-  margin: 16px 0 0;
+  margin: 0 auto;
   background: var(--color-ink);
   animation: cover-draw 0.45s 0.42s ease-out both;
 }
@@ -1794,10 +1802,13 @@ select.field {
 
 .cover-blurb {
   margin-top: 14px;
-  max-width: 42ch;
+  max-width: 60ch;
+  margin-left: auto;
+  margin-right: auto;
   font-size: 13px;
   line-height: 1.65;
   color: var(--color-ink-2, #4d493e);
+  text-align: center;
   animation: cover-rise 0.5s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .cover-blurb b {
