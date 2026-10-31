@@ -64,6 +64,7 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
           return (
             <g
               key={z.k}
+              className="dial-zone"
               onClick={() => deg && jump(z.k)}
               tabIndex={deg ? 0 : -1}
               role={deg ? 'button' : undefined}
@@ -79,6 +80,7 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
             >
               <title>{`${z.label}: ${c}${deg ? ' — click or press Enter to jump there' : ''}`}</title>
               <circle
+                className="dial-track"
                 cx={110}
                 cy={110}
                 r={RADII[i]}
@@ -86,8 +88,22 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
                 stroke="#e9e1cf"
                 strokeWidth={9}
               />
+              {/* Invisible fat hit-ring — the visible ring is 9px wide, but a
+                  pointer should not have to be that precise. The band is kept
+                  to ~13px (the gap between neighbouring radii) so zones never
+                  swallow each other's clicks or reach the centre dial. */}
+              <circle
+                cx={110}
+                cy={110}
+                r={RADII[i]}
+                fill="none"
+                stroke="rgba(29,27,22,0)"
+                strokeWidth={13}
+                style={{ pointerEvents: 'all' }}
+              />
               {deg > 0 && (
                 <circle
+                  className="dial-ring"
                   cx={110}
                   cy={110}
                   r={RADII[i]}

@@ -1,10 +1,10 @@
 import Icon from './Icon'
 
 function chipCls(active) {
-  return `rounded-[3px] border px-2 py-1 font-mono text-[10px] tracking-[0.06em] uppercase transition ${
+  return `rounded-[3px] border px-2 py-1 font-mono text-[10px] tracking-[0.06em] uppercase transition active:translate-y-px ${
     active
-      ? 'border-ink bg-ink text-paper'
-      : 'border-line bg-paper-2 text-ink-2 hover:border-ink hover:text-ink'
+      ? 'border-ink bg-ink text-paper shadow-[1px_1px_0_rgba(29,27,22,0.35)]'
+      : 'border-line bg-paper-2 text-ink-2 hover:border-ink hover:text-ink active:bg-paper-3'
   }`
 }
 
@@ -73,13 +73,14 @@ export default function DeskBar({
   searchRef,
   zoneCounts,
   onJump,
+  activeZone,
 }) {
   const isList = view === 'list'
   return (
     <div className="desk-bar paper-panel sticky top-4 z-20 rounded-[5px] p-2.5 shadow-[3px_3px_0_rgba(29,27,22,0.18)]">
       <div className="flex flex-wrap items-center gap-2">
         <ViewToggle view={view} onView={onView} />
-        <div className="search-wrap min-w-[42%] flex-1">
+        <div className="search-wrap min-w-[46%] flex-1">
           <Icon name="search" size={14} className="search-icon" />
           <input
             ref={searchRef}
@@ -89,9 +90,21 @@ export default function DeskBar({
             aria-label="Search tasks"
             className="field search-input"
           />
-          <span className="search-key kbd-chip" aria-hidden="true">
-            /
-          </span>
+          {query ? (
+            <button
+              type="button"
+              onClick={() => onQuery('')}
+              aria-label="Clear the search"
+              title="Clear search"
+              className="search-clear"
+            >
+              <Icon name="x" size={12} />
+            </button>
+          ) : (
+            <span className="search-key kbd-chip" aria-hidden="true">
+              /
+            </span>
+          )}
         </div>
         {isList && (
           <label htmlFor="sort-tasks" className="sort-row !min-h-0 flex-1 min-w-0">
@@ -147,6 +160,7 @@ export default function DeskBar({
           <span className="eyebrow shrink-0">Zones</span>
           {ZONES.map(({ key, label, dot }) => {
             const count = zoneCounts[key] || 0
+            const current = activeZone === key
             return (
               <button
                 key={key}
@@ -154,12 +168,15 @@ export default function DeskBar({
                 onClick={() => onJump?.(key)}
                 disabled={!count}
                 aria-label={`Jump to ${label} — ${count} ${count === 1 ? 'task' : 'tasks'}`}
+                aria-pressed={current}
                 title={
                   count
-                    ? `Jump to ${label} — ${count} ${count === 1 ? 'task' : 'tasks'}`
+                    ? current
+                      ? `Viewing ${label} — ${count} ${count === 1 ? 'task' : 'tasks'}`
+                      : `Jump to ${label} — ${count} ${count === 1 ? 'task' : 'tasks'}`
                     : `Nothing in ${label}`
                 }
-                className={`zone-chip ${count ? '' : 'is-empty'}`}
+                className={`zone-chip ${count ? '' : 'is-empty'} ${current ? 'is-current' : ''}`}
               >
                 <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${dot}`} />
                 {label}
@@ -180,6 +197,7 @@ export default function DeskBar({
             <button
               type="button"
               onClick={() => onSubjectFilter(null)}
+              aria-pressed={!subjectFilter}
               className={chipCls(!subjectFilter)}
             >
               All subjects
@@ -190,6 +208,7 @@ export default function DeskBar({
               key={s}
               type="button"
               onClick={() => onSubjectFilter(subjectFilter === s ? null : s)}
+              aria-pressed={subjectFilter === s}
               className={chipCls(subjectFilter === s)}
             >
               {s}

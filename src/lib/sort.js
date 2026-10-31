@@ -17,6 +17,9 @@ export const SORT_VALUES = new Set(SORT_MODES.map((m) => m.value))
  * sections all agree on one definition of "most urgent".
  */
 export function smartSort(a, b) {
+  // Defensive: a comparator must never take the whole app down if a slot in
+  // the list is somehow missing — sort holes to the end instead of throwing.
+  if (!a || !b) return !a ? (!b ? 0 : 1) : -1
   if (a.priority !== b.priority) return a.priority === 'high' ? -1 : 1
   if (a.dueDate && b.dueDate && a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1
   if (a.dueDate && !b.dueDate) return -1
@@ -35,22 +38,25 @@ export function sortTasks(list, mode = 'smart') {
     case 'due':
       return arr.sort(
         (a, b) =>
-          (a.dueDate || UNDATED).localeCompare(b.dueDate || UNDATED) ||
-          (b.marks || 0) - (a.marks || 0) ||
+          (a?.dueDate || UNDATED).localeCompare(b?.dueDate || UNDATED) ||
+          (b?.marks || 0) - (a?.marks || 0) ||
           smartSort(a, b),
       )
     case 'marks':
       return arr.sort(
         (a, b) =>
-          (b.marks || 0) - (a.marks || 0) ||
-          (a.dueDate || UNDATED).localeCompare(b.dueDate || UNDATED) ||
+          (b?.marks || 0) - (a?.marks || 0) ||
+          (a?.dueDate || UNDATED).localeCompare(b?.dueDate || UNDATED) ||
           smartSort(a, b),
       )
     case 'newest':
-      return arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0) || smartSort(a, b))
+      return arr.sort((a, b) => (b?.createdAt || 0) - (a?.createdAt || 0) || smartSort(a, b))
     case 'title':
       return arr.sort(
-        (a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }) || smartSort(a, b),
+        (a, b) =>
+          String(a?.title || '').localeCompare(String(b?.title || ''), undefined, {
+            sensitivity: 'base',
+          }) || smartSort(a, b),
       )
     default:
       return arr.sort(smartSort)

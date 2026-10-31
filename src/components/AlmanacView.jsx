@@ -66,12 +66,15 @@ export default function AlmanacView({
   }, [activeDay, cursor.year, cursor.month, grid, tasks])
 
   const items = useMemo(() => dayItems(tasks, selected), [tasks, selected])
-  const pending = useMemo(() => smartSort(items.pending), [items.pending])
+  // smartSort is a two-argument comparator — sort a copy of the list with it,
+  // never call it on the array itself (that passes the array as `a` and
+  // undefined as `b`, which threw "reading 'priority'" into the ErrorBoundary).
+  const pending = useMemo(() => [...items.pending].sort(smartSort), [items.pending])
   const done = useMemo(
     () => [...items.done].sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)),
     [items.done],
   )
-  const undated = useMemo(() => smartSort(undatedPending(tasks)), [tasks])
+  const undated = useMemo(() => [...undatedPending(tasks)].sort(smartSort), [tasks])
   const selectedMarks = pending.reduce((a, t) => a + (Number(t.marks) || 0), 0)
 
   const monthSubjects = useMemo(() => {
@@ -118,7 +121,7 @@ export default function AlmanacView({
   return (
     <div className="paper-panel alm-panel rise overflow-hidden rounded-[5px]">
       {/* Month masthead */}
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-ink/60 px-3.5 pt-3 pb-2.5">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-ink/60 px-3.5 pt-3 pb-3">
         <div className="min-w-0">
           <p className="eyebrow flex items-center gap-1.5">
             <Icon name="grid" size={11} />

@@ -17,6 +17,15 @@ const TIER_DOT = {
   later: 'bg-later',
 }
 
+/** The same four inks as CSS custom properties — each rescue row wears its
+ *  tier's colour on the left edge, so the triage order reads at a glance. */
+const TIER_INK = {
+  late: 'var(--color-late)',
+  today: 'var(--color-today)',
+  week: 'var(--color-week)',
+  later: 'var(--color-later)',
+}
+
 const TIER_KEYS = [
   { tone: 'late', label: 'Late — rescue first' },
   { tone: 'today', label: 'Today/tomorrow — must-do' },
@@ -50,18 +59,40 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
     >
       <div
         data-parallax="0.04"
-        className="rescue-head flex flex-wrap items-start justify-between gap-2 px-3.5 py-2.5"
+        className="rescue-head flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-4 py-3"
       >
-        <div>
-          <p className="flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.2em] text-paper-2 uppercase">
-            <Icon name="alert" size={12} className="text-today-soft" />
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.2em] text-today-soft uppercase">
+            <Icon name="alert" size={12} />
             Deadline Rescue Mode
           </p>
-          <p className="mt-0.5 text-[11px] leading-snug text-paper-2/70">
+          <h2 className="rescue-title mt-1 font-serif text-[21px] leading-tight font-semibold text-paper-2">
             Pick a window. Save the deadlines that bite first.
+          </h2>
+          <p className="mt-1 max-w-2xl text-[11.5px] leading-snug text-paper-2/65">
+            Real triage: the radar commits only what honestly fits, and names the overflow instead of
+            hiding it.
           </p>
         </div>
-        <span className="rescue-stamp shrink-0">Triage</span>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span className="rescue-stamp">Triage</span>
+          {plan.items.length > 0 && onStart && (
+            <button
+              type="button"
+              onClick={() => onStart(plan.items[0].task.id)}
+              disabled={focusId === plan.items[0].task.id}
+              title={
+                focusId === plan.items[0].task.id
+                  ? 'Focus already running on the first rescue task'
+                  : `Start a focus timer on the first task of this ${selected.label} window — "${plan.items[0].task.title}"`
+              }
+              className="rescue-cta"
+            >
+              <Icon name={focusId === plan.items[0].task.id ? 'stop' : 'play'} size={12} />
+              {focusId === plan.items[0].task.id ? 'Running' : 'Start rescue'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="px-3.5 py-3">
@@ -91,7 +122,7 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
           </span>
         </div>
 
-        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 reveal--fade" style={{ '--reveal-delay': '60ms' }}>
+        <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 reveal--fade" style={{ '--reveal-delay': '60ms' }}>
           <p className="font-mono text-[9.5px] tracking-wide text-ink-2">
             {plan.items.length} task{plan.items.length === 1 ? '' : 's'} ·{' '}
             <span className="font-semibold text-ink">{fmtHours(plan.used)} committed</span>
@@ -102,7 +133,7 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
           </p>
         </div>
         <div
-          className="rescue-meter mt-1.5 reveal--lift"
+          className={`rescue-meter mt-1.5 reveal--lift ${pct >= 100 ? 'is-full' : ''}`}
           style={{ '--reveal-delay': '120ms' }}
           role="progressbar"
           aria-label="Rescue window used"
@@ -111,6 +142,14 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
           aria-valuenow={plan.used}
         >
           <span style={{ width: `${pct}%` }} />
+        </div>
+        <div
+          className="mt-1 flex items-baseline justify-between font-mono text-[8px] tracking-[0.1em] text-ink-3 uppercase reveal--fade"
+          style={{ '--reveal-delay': '160ms' }}
+          aria-hidden="true"
+        >
+          <span>0m</span>
+          <span>{selected.label} committed · {pct}% used</span>
         </div>
 
         <ol className="rescue-steps mt-2.5 space-y-1.5" role="list" aria-label="Rescue plan steps">
@@ -121,8 +160,10 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
             return (
               <li
                 key={item.task.id}
-                className={`rescue-step rescue-row rounded-[3px] border border-line bg-paper px-2.5 py-2`}
-                style={{ '--reveal-delay': `${delay}ms` }}
+                className={`rescue-step rescue-row rounded-[3px] border border-line bg-paper px-2.5 py-2 ${
+                  running ? 'is-running' : ''
+                }`}
+                style={{ '--reveal-delay': `${delay}ms`, '--tier': TIER_INK[tone] || 'var(--color-line)' }}
               >
                 <div className="flex items-start gap-2">
                   <span aria-hidden="true" className="rescue-rank mt-0.5 shrink-0">
@@ -140,7 +181,7 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
                         {item.tier.label}
                       </span>
                       <span
-                        className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-ink"
+                        className="min-w-0 flex-1 truncate text-[13px] leading-snug font-medium text-ink"
                         title={item.task.title}
                       >
                         {item.task.title}
@@ -171,7 +212,7 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
                           ? 'Focus already running — stop it from the header'
                           : `Start a focus timer on "${item.task.title}"`
                       }
-                      className={`task-action is-focus shrink-0 ${running ? 'bg-done-soft' : ''}`}
+                      className={`task-action is-focus shrink-0 ${running ? 'bg-done-soft ring-1 ring-done/40' : ''}`}
                     >
                       <Icon name={running ? 'stop' : 'play'} size={12} />
                     </button>

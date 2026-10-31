@@ -73,7 +73,7 @@ export default function Modal({
 
   return (
     <div
-      className={`fixed inset-0 z-[70] flex justify-center overflow-y-auto bg-ink/45 p-4 backdrop-blur-[2px] ${
+      className={`modal-veil fixed inset-0 z-[70] flex justify-center overflow-y-auto bg-ink/45 p-4 backdrop-blur-[2px] ${
         align === 'top' ? 'items-start pt-[8vh] sm:pt-[12vh]' : 'items-center'
       }`}
       onMouseDown={(e) => {
@@ -86,7 +86,7 @@ export default function Modal({
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
-        className={`outline-none ${panelClassName}`}
+        className={`modal-panel outline-none ${panelClassName}`}
       >
         {children}
       </div>

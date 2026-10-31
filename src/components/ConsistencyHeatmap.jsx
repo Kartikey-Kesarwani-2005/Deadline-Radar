@@ -30,7 +30,7 @@ export default function ConsistencyHeatmap({ heat }) {
     })
 
   return (
-    <div>
+    <div className="reveal" style={{ '--reveal-delay': '380ms' }}>
       <div className="mb-1.5 flex items-baseline justify-between">
         <p className="eyebrow flex items-center gap-1.5">
           <Icon name="flame" size={11} />
@@ -43,7 +43,7 @@ export default function ConsistencyHeatmap({ heat }) {
       <div
         role="img"
         aria-label={`${heat.totalDone} tasks finished in the last 12 weeks — best streak ${heat.longest} days`}
-        className="flex gap-[3px] border-b border-ink/60 pb-1.5"
+        className="heat-grid flex gap-[3px] border-b border-ink/60 pb-1.5"
       >
         {cols.map((col, ci) => (
           <div key={ci} className="flex flex-col gap-[3px]">
@@ -52,7 +52,7 @@ export default function ConsistencyHeatmap({ heat }) {
                 key={c.key}
                 title={`${dayLabel(c)} — ${label(c)}`}
                 aria-hidden="true"
-                className={`h-[9px] w-[9px] rounded-[1.5px] ${tone(c)} ${
+                className={`heat-cell h-[9px] w-[9px] rounded-[1.5px] ${tone(c)} ${
                   c.late ? 'ring-1 ring-today/70' : ''
                 }`}
               />
@@ -60,10 +60,20 @@ export default function ConsistencyHeatmap({ heat }) {
           </div>
         ))}
       </div>
-      <p className="mt-1 font-mono text-[10px] text-ink-3">
-        <span className="font-semibold text-done">{heat.totalDone}</span> finished ·{' '}
-        {heat.longest}d best streak
-      </p>
+      <div className="mt-1 flex items-center justify-between gap-2 font-mono text-[10px] text-ink-3">
+        <span className="flex items-center gap-1.5">
+          <span className="font-semibold text-done">{heat.totalDone}</span> finished ·{' '}
+          {heat.longest}d best streak
+        </span>
+        <span className="flex items-center gap-1" aria-hidden="true">
+          less
+          <span className="heat-cell h-[9px] w-[9px] rounded-[1.5px] bg-line/40" />
+          <span className="heat-cell h-[9px] w-[9px] rounded-[1.5px] bg-done/45" />
+          <span className="heat-cell h-[9px] w-[9px] rounded-[1.5px] bg-done/75" />
+          <span className="heat-cell h-[9px] w-[9px] rounded-[1.5px] bg-done" />
+          more
+        </span>
+      </div>
     </div>
   )
 }

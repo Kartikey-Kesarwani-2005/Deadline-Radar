@@ -34,14 +34,16 @@ export default function WeatherStrip({ days, active, onPick }) {
               key={d.key}
               type="button"
               onClick={() => onPick(d.key)}
+              aria-pressed={on}
+              aria-label={`${d.isToday ? 'Today' : d.label}: ${d.count ? `${d.count} submission${d.count > 1 ? 's' : ''}, ${d.marks} marks` : 'clear day'}${on ? ' — filtered' : ' — tap to filter'}`}
               title={
                 d.count
                   ? `${d.count} submission${d.count > 1 ? 's' : ''}, ${d.marks} marks — tap to filter`
                   : 'Clear day — tap to filter'
               }
-              className={`flex flex-col items-center rounded-[3px] border px-0.5 py-1.5 transition ${
+              className={`weather-day flex flex-col items-center rounded-[3px] border px-0.5 py-1.5 transition ${
                 on
-                  ? 'border-ink bg-ink text-paper'
+                  ? 'border-ink bg-ink text-paper shadow-[1px_1px_0_rgba(29,27,22,0.3)]'
                   : d.isToday
                     ? 'border-ink/70 bg-paper-2 ring-1 ring-ink/20'
                     : LEVEL_TONE[d.level] || LEVEL_TONE.free

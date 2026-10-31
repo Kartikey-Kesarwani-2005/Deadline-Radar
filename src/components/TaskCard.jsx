@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { countdownTo, dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
+import { countdownTo, dayDiff, dueTone, formatDue, parseDateKey, todayKey } from '../lib/dates'
 import { fmtHours } from '../lib/brain'
 import { googleCalendarUrl } from '../lib/calendar'
 import { subjectInk, subjectStyle } from '../lib/subjects'
@@ -84,6 +84,25 @@ function RiskDial({ risk }) {
       </span>
     </span>
   )
+}
+
+/**
+ * 📅 Due-date chip title — the chip prints the short reading ("in 3 days ·
+ * Fri, 31 Oct"); hover/focus names the exact calendar day underneath it, so
+ * nothing about the deadline is ever left to guesswork.
+ */
+function dueTitle(task) {
+  if (!task.dueDate) return 'No due date yet — set one with the date box on this card'
+  const d = parseDateKey(task.dueDate)
+  const exact = d
+    ? d.toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : task.dueDate
+  return `Due ${exact} · ${formatDue(task.dueDate)}`
 }
 
 export default function TaskCard({
@@ -183,15 +202,30 @@ export default function TaskCard({
 
       <div className="min-w-0 flex-1">
         <p
-          className={`text-[13.5px] leading-[1.45] break-words min-w-0 ${
+          className={`text-[14px] leading-snug break-words min-w-0 ${
             task.done ? 'text-ink-3 line-through' : 'font-medium text-ink'
           }`}
         >
           {task.title}
         </p>
 
+        {/* Meta row — read in order of decision: how bad is it (priority),
+            when is it due (date + live countdown), then the supporting
+            evidence (risk, subject, marks, estimates, links). */}
         <div className="mt-2 flex flex-wrap items-start gap-1.5 min-w-0">
+          {task.priority === 'high' && !task.done && (
+            <span
+              title="Marked high priority — due within a day or worth 15+ marks"
+              className="tag border-late bg-late font-semibold tracking-[0.08em] text-paper-2 uppercase"
+            >
+              High
+            </span>
+          )}
           {!task.done && <RiskDial risk={risk} />}
+          <span className={`tag due-tag ${dueTone(task)}`} title={dueTitle(task)}>
+            <Icon name="calendar" size={11} /> {formatDue(task.dueDate)}
+          </span>
+          <CountdownChip dueDate={task.dueDate} done={task.done} />
           {task.subject && (
             <span className="tag bg-paper" style={subjectStyle(task.subject, { soft: true })}>
               {task.subject}
@@ -221,15 +255,6 @@ export default function TaskCard({
               {estimate.learned && (
                 <Icon name="spark" size={10} className="text-done" title="Learned from your sessions" />
               )}
-            </span>
-          )}
-          <span className={`tag ${dueTone(task)}`}>
-            <Icon name="calendar" size={11} /> {formatDue(task.dueDate)}
-          </span>
-          <CountdownChip dueDate={task.dueDate} done={task.done} />
-          {task.priority === 'high' && !task.done && (
-            <span className="tag border-late bg-late font-semibold tracking-[0.08em] text-paper-2 uppercase">
-              High
             </span>
           )}
           {advice && (

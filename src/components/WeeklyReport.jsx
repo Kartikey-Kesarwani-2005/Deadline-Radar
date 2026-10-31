@@ -18,7 +18,7 @@ function gradeTone(grade, score) {
 
 function Row({ label, value, className = 'text-ink' }) {
   return (
-    <div className="flex items-baseline gap-2 border-b border-dotted border-line py-1.5 last:border-0">
+    <div className="report-row flex items-baseline gap-2 border-b border-dotted border-line py-1.5 last:border-0">
       <span className="text-[12px] leading-snug text-ink-2">{label}</span>
       <span aria-hidden="true" className="leader" />
       <span className={`font-serif text-[17px] leading-none font-semibold tabular-nums ${className}`}>
@@ -31,6 +31,27 @@ function Row({ label, value, className = 'text-ink' }) {
 const SectionLabel = ({ children }) => (
   <p className="eyebrow mt-4 mb-1 border-b border-ink/25 pb-1">{children}</p>
 )
+
+/**
+ * One report figure, printed with the same anatomy as the dashboard's stat
+ * tiles (label / serif number / hint) so the two read as one instrument set.
+ * Mounted inside a dialog, so it enters on the `.rise` animation rather than
+ * the scroll observer.
+ */
+function ReportStat({ label, value, tone = 'text-ink', hint, alert = false, delay = 0 }) {
+  return (
+    <div
+      className={`stat-tile rise rounded-[4px] border px-3 py-2.5 ${
+        alert ? 'is-alert border-late/35 bg-late-soft/45' : 'border-line bg-paper-2'
+      }`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <span className="stat-label">{label}</span>
+      <span className={`stat-value ${tone}`}>{value}</span>
+      <span className="stat-hint">{hint}</span>
+    </div>
+  )
+}
 
 export default function WeeklyReport({ tasks, onClose }) {
   const [copied, setCopied] = useState(false)
@@ -146,7 +167,7 @@ export default function WeeklyReport({ tasks, onClose }) {
         {/* 🏅 The grade stamp — rubber-stamped like the rest of Field Notes.
             Under 3 rated finishes the report refuses to print a grade. */}
         {grade.grade ? (
-          <div className="mt-3 flex items-center gap-3.5 rounded-[4px] border border-dashed border-line bg-paper px-4 py-3">
+          <div className="mx-5 mt-4 flex items-center gap-3.5 rounded-[4px] border border-dashed border-line bg-paper px-3.5 py-3">
             <span
               aria-label={`Weekly grade ${grade.grade}, ${grade.score} out of 100`}
               role="img"
@@ -171,10 +192,43 @@ export default function WeeklyReport({ tasks, onClose }) {
             </p>
           </div>
         ) : (
-          <p className="mt-3 rounded-[4px] border border-dashed border-line bg-paper px-4 py-2.5 text-[12px] text-ink-3">
+          <p className="mx-5 mt-4 rounded-[4px] border border-dashed border-line bg-paper px-3.5 py-2.5 text-[12px] text-ink-3">
             🏅 Grade: none printed yet — {grade.note}
           </p>
         )}
+
+        {/* Headline figures first — the four numbers a check-in post actually
+            quotes, set in the same tile anatomy as the dashboard stats. */}
+        <div className="mt-3 grid grid-cols-2 gap-2 px-5 sm:grid-cols-4">
+          <ReportStat
+            label="Captured"
+            value={captured}
+            hint="this week"
+            delay={40}
+          />
+          <ReportStat
+            label="Finished"
+            value={finished.length}
+            tone="text-done"
+            hint={`${onTime} on time`}
+            delay={90}
+          />
+          <ReportStat
+            label="Streak"
+            value={streak > 0 ? streak : '—'}
+            tone={streak > 1 ? 'text-today' : streak === 1 ? 'text-done' : 'text-ink-3'}
+            hint={streak > 0 ? 'on time in a row' : 'start it today'}
+            delay={140}
+          />
+          <ReportStat
+            label="At risk"
+            value={risk.total}
+            tone={risk.total > 0 ? 'text-late' : 'text-done'}
+            hint={risk.late > 0 ? `${risk.late} already late` : 'marks pending'}
+            alert={risk.total > 0}
+            delay={190}
+          />
+        </div>
 
         <div className="px-5 pt-4 pb-5">
           <Row label="Captured" value={captured} />
@@ -271,7 +325,7 @@ export default function WeeklyReport({ tasks, onClose }) {
                   </thead>
                   <tbody>
                     {pace.map((r) => (
-                      <tr key={r.key} className="border-t border-line">
+                      <tr key={r.key} className="border-t border-line transition-colors hover:bg-paper-3/70">
                         <td className="px-2.5 py-1.5 text-left font-medium text-ink">{r.label}</td>
                         <td
                           className={`px-2.5 py-1.5 text-right font-semibold tabular-nums ${

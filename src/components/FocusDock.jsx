@@ -17,6 +17,11 @@ function clock(ms) {
  * stays parked in the corner so a long scroll never hides the live timer or
  * the stop button. The bar compares real minutes against the radar's own
  * estimate, so the number on screen means something.
+ *
+ * Reading order matches the instrument: state → clock → stop, then the task
+ * (a door to its entry), then the bar and its one-line read-out. Past the
+ * estimate the whole dock switches to ochre — over budget is a fact, not a
+ * failure.
  */
 export default function FocusDock({ task, elapsedMs, estimateMin, onStop, onEdit }) {
   if (!task) return null
@@ -26,11 +31,18 @@ export default function FocusDock({ task, elapsedMs, estimateMin, onStop, onEdit
   const over = elapsedMin > estimate
   const delta = Math.round(Math.abs(estimate - elapsedMin))
   return (
-    <aside className="focus-dock no-print" aria-label={`Focus timer running for ${task.title}`}>
+    <aside
+      className={`focus-dock no-print ${over ? 'is-over' : ''}`}
+      aria-label={`Focus timer running for ${task.title}`}
+    >
       <div className="flex items-center gap-2">
         <span className="focus-dock-pulse" aria-hidden="true" />
         <span className="eyebrow min-w-0 flex-1 truncate">On the desk · focus</span>
-        <span className="font-mono text-[13px] leading-none font-semibold tabular-nums text-ink">
+        <span
+          className={`font-mono text-[15px] leading-none font-semibold tabular-nums ${
+            over ? 'text-today' : 'text-ink'
+          }`}
+        >
           {clock(elapsedMs)}
         </span>
         <button
@@ -48,10 +60,11 @@ export default function FocusDock({ task, elapsedMs, estimateMin, onStop, onEdit
       <button
         type="button"
         onClick={onEdit}
-        title="Open this entry"
-        className="mt-1.5 block w-full truncate text-left font-serif text-[13px] leading-snug font-semibold text-ink hover:underline hover:decoration-ink/30 hover:underline-offset-2"
+        title="Open this entry — edit the deadline, marks or link"
+        className="focus-dock-task"
       >
-        {task.title}
+        <span className="min-w-0 flex-1 truncate">{task.title}</span>
+        <Icon name="pencil" size={11} className="focus-dock-edit" />
       </button>
 
       <div
@@ -62,10 +75,10 @@ export default function FocusDock({ task, elapsedMs, estimateMin, onStop, onEdit
         aria-valuenow={pct}
         aria-label={`${Math.round(elapsedMin)} of about ${estimate} estimated minutes`}
       >
-        <span className={over ? 'is-over' : ''} style={{ width: `${pct}%` }} />
+        <span style={{ width: `${pct}%` }} />
       </div>
       <div className="mt-1 flex items-center justify-between gap-2 font-mono text-[8.5px] tracking-[0.08em] text-ink-3 uppercase">
-        <span>
+        <span className={over ? 'text-today' : undefined}>
           {over ? `${delta}m over the ≈${estimate}m estimate` : `≈${delta}m left of ${estimate}m`}
         </span>
         <span>{task.marks ? `${task.marks} marks` : 'untracked marks'}</span>

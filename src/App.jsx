@@ -54,6 +54,17 @@ const SECTION_TONES = {
   green: 'bg-done',
 }
 
+/* Soft paper washes for the section headings — same urgency hue, at low
+   opacity, so a chapter reads as its own quiet lane before the cards speak. */
+const SECTION_WASH = {
+  red: 'bg-late-soft',
+  amber: 'bg-today-soft',
+  yellow: 'bg-week-soft',
+  sky: 'bg-later-soft',
+  slate: 'bg-paper-3',
+  green: 'bg-done-soft',
+}
+
 const SECTION_DEFS = [
   { key: 'late', title: 'Late — handle now', tone: 'red' },
   { key: 'today', title: 'Due today', tone: 'amber' },
@@ -73,7 +84,10 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
   if (!tasks.length) return null
   return (
     <section id={`radar-${sectionKey}`} className="section-reveal mb-5 scroll-mt-4">
-      <div className="section-head mb-2.5 reveal--fade" style={{ '--reveal-delay': '0ms' }}>
+      <div
+        className={`section-head mb-2.5 reveal--fade ${SECTION_WASH[tone] || ''}`}
+        style={{ '--reveal-delay': '0ms' }}
+      >
         <span className="section-index" aria-hidden="true">
           {String(num).padStart(2, '0')}
         </span>
@@ -85,7 +99,7 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
         <span className="flex-1" />
         {hint && <span className="mb-0.5 font-mono text-[9px] tracking-wide text-ink-3">{hint}</span>}
       </div>
-      <div className="space-y-2 reveal-stagger">
+      <div className="space-y-2.5 reveal-stagger">
         {tasks.map((task, index) => (
           <TaskCard
             key={task.id}
@@ -1663,7 +1677,7 @@ export default function App() {
       }`}
     >
       {/* Masthead strip — the newspaper dateline */}
-      <div className="mb-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-y border-ink/70 py-0.25 font-mono text-[8px] tracking-[0.16em] text-ink-3 uppercase">
+      <div className="mb-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-y border-ink/70 py-0.5 font-mono text-[8.5px] tracking-[0.16em] text-ink-3 uppercase">
         <button
           type="button"
           onClick={() => openHome()}
@@ -1678,24 +1692,24 @@ export default function App() {
         <span className="dateline-chip">{formatLongToday()}</span>
       </div>
 
-      {/* Header */}
-      <header className="mb-0.5 flex flex-wrap items-start justify-between gap-2">
+      {/* Header — the welcome block: identity, promise and the action cluster */}
+      <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:flex-nowrap">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
               <span
                 aria-hidden="true"
-                className="compass-needle absolute bottom-1/2 left-1/2 h-[14px] w-[2px] -translate-x-1/2 rounded-full bg-late"
+                className="compass-needle absolute bottom-1/2 left-1/2 h-[15px] w-[2px] -translate-x-1/2 rounded-full bg-late"
               />
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-ink bg-paper" />
             </span>
-            <div className="min-w-0 flex flex-col gap-1">
+            <div className="min-w-0 flex flex-col gap-0.5">
               <p className="eyebrow mb-0 leading-tight">
                 Field notes · {stats.total} on the radar
               </p>
               <h1
                 data-parallax="0.08"
-                className="app-title font-serif text-[1.875rem] leading-[1.1] font-semibold tracking-tight text-ink sm:text-[2.125rem] min-w-0 break-words"
+                className="app-title font-serif text-[1.875rem] leading-[1.1] font-semibold tracking-tight text-ink sm:text-[2.25rem] min-w-0 break-words"
                 style={{ maxWidth: '100%', marginTop: '0', lineHeight: '1.1' }}
               >
                 Deadline Radar<span className="text-late">.</span>
@@ -1811,7 +1825,7 @@ export default function App() {
 
       {/* Offline mode — everything below keeps working without a connection */}
       {!online && (
-        <div className="rise mb-2 flex items-start gap-2.5 rounded-[4px] border border-today/40 bg-today-soft px-3 py-2.5 text-xs leading-relaxed text-ink-2">
+        <div className="rise mt-1.5 rounded-[5px] border border-today/40 bg-today-soft px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-2">
           <Icon name="wifiOff" size={14} className="mt-0.5 text-today" />
           <p>
             <b className="font-semibold text-ink">You are offline — the radar keeps working.</b>{' '}
@@ -1835,7 +1849,7 @@ export default function App() {
 
       {/* Demo mode — a one-line tour for judges opening ?demo=1 cold */}
       {isDemo && !hintsClosed && (
-        <div className="rise mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[4px] border border-later/35 bg-later-soft px-3.5 py-2 text-xs text-ink-2">
+        <div className="rise mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[5px] border border-later/35 bg-later-soft px-3.5 py-2.5 text-[12px] text-ink-2">
           <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-later uppercase">
             <Icon name="spark" size={11} />
             Demo mode — try
@@ -1869,7 +1883,7 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className={`stamp-in mt-1.5 flex items-center gap-3 rounded-[4px] border px-3 py-2 text-xs font-medium ${
+          className={`stamp-in mt-1.5 flex items-center gap-3 rounded-[5px] border px-3.5 py-2.5 text-[12px] font-medium ${
             flash.tone === 'error'
               ? 'border-late/45 bg-late-soft text-late'
               : 'border-done/40 bg-done-soft text-done'
@@ -1910,7 +1924,7 @@ export default function App() {
 
       {/* ⏳ Start window closing — "start now", not just "due soon" */}
       {startSoon.length > 0 && (
-        <div className="rise mt-1.5 rounded-[4px] border border-today/40 bg-today-soft px-3.5 py-2 text-xs text-ink-2">
+        <div className="rise mt-1.5 rounded-[5px] border border-today/40 bg-today-soft px-3.5 py-2.5 text-[12px] leading-relaxed text-ink-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-today uppercase">
               <Icon name="clock" size={11} />
@@ -2047,7 +2061,7 @@ export default function App() {
           rail; from xl up a live countdown + subject-load rail fills the right
           edge so the middle column stops stretching into dead space. */}
       <div
-        className={`dashboard-grid mt-1 grid gap-2 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-4 lg:items-start' : ''}`}
+        className={`dashboard-grid mt-1 grid gap-2 ${isWide ? 'lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_280px] 2xl:grid-cols-[320px_minmax(0,1fr)_300px] xl:gap-4 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div
@@ -2145,7 +2159,7 @@ export default function App() {
         </div>
 
         {/* Right column: the radar sections */}
-        <div id="radar-sections" className="flex min-w-0 scroll-mt-4 flex-col gap-3">
+        <div id="radar-sections" className="flex min-w-0 scroll-mt-4 flex-col gap-4">
           {selectMode && view === 'list' && (
             <div className="stamp-in flex flex-wrap items-center gap-2 rounded-[4px] border-2 border-ink bg-ink px-3 py-2 text-paper-2 shadow-[3px_3px_0_rgba(29,27,22,0.35)]">
               <span className="font-mono text-[10px] tracking-[0.12em] uppercase">
@@ -2221,6 +2235,7 @@ export default function App() {
               searchRef={searchRef}
               zoneCounts={zoneCounts}
               onJump={jumpZone}
+              activeZone={activeZone}
             />
           )}
           {/* 🧭 Sticky chapter plate — the story chapter the reader is currently
@@ -2362,8 +2377,17 @@ export default function App() {
                 />
               ))}
               {visible.length === 0 && (
-                <div className="rounded-[4px] border border-dashed border-ink/30 bg-paper-2/60 p-6 text-center text-sm text-ink-2">
-                  No tasks match this filter.{' '}
+                <div className="rise overflow-hidden rounded-[4px] border border-dashed border-ink/25 bg-paper-2/50 px-6 py-8 text-center">
+                  <p className="mx-auto flex w-fit items-center gap-1.5 font-mono text-[9px] tracking-[0.2em] text-ink-3 uppercase">
+                    <Icon name="search" size={11} />
+                    No match
+                  </p>
+                  <p className="mx-auto mt-2 max-w-xs font-serif text-[16px] leading-snug font-semibold text-ink">
+                    No tasks match this filter.
+                  </p>
+                  <p className="mx-auto mt-1 max-w-xs text-[11.5px] leading-relaxed text-ink-3">
+                    Try a different subject, day, or search term.
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
@@ -2371,8 +2395,9 @@ export default function App() {
                       setSubjectFilter(null)
                       setDateFilter(null)
                     }}
-                    className="font-semibold text-late underline decoration-late/40 underline-offset-2 hover:decoration-late"
+                    className="btn btn-quiet mx-auto mt-3"
                   >
+                    <Icon name="x" size={11} />
                     Clear filters
                   </button>
                 </div>

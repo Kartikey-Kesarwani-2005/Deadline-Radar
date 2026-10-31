@@ -497,6 +497,14 @@ header > div > p.mt-3 {
   white-space: nowrap;
 }
 
+/* The due-date chip leads the meta row, so it gets one notch more weight —
+   the deadline itself is the fact a scanning reader must not miss. */
+.tag.due-tag {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
 .stamp {
   display: inline-block;
   border: 1.5px solid var(--color-late);
@@ -595,6 +603,39 @@ select.field {
   transform: translateY(-50%);
   pointer-events: none;
 }
+/* The clear button that swaps in for the "/" hint once a query is typed —
+   same footprint, real hit target, presses like a stamp. */
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  transform: translateY(-50%);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--color-ink-3);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.1s ease;
+}
+.search-clear:hover {
+  border-color: var(--color-line);
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.search-clear:active {
+  transform: translateY(calc(-50% + 1px)) scale(0.92);
+}
+.search-clear:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 1px;
+}
 
 /* Order row: a ledger line with the select sitting inside it. */
 .sort-row {
@@ -643,12 +684,16 @@ select.field {
 
 .section-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: 0.25rem 0.75rem;
-  padding-bottom: 0.6rem;
+  padding: 0.7rem 0.8rem;
   border-bottom: 1px solid rgba(29, 27, 22, 0.5);
   box-shadow: 0 2px 0 rgba(29, 27, 22, 0.1);
+}
+
+.section-head h2 {
+  letter-spacing: -0.012em;
 }
 
 /* Editorial section number — a small printed plate, like a chapter marker. */
@@ -775,8 +820,8 @@ select.field {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.62rem 0.7rem 0.62rem 0.85rem;
+  gap: 0.7rem;
+  padding: 0.72rem 0.8rem 0.72rem 0.95rem;
   border: 1px solid var(--color-line);
   border-radius: var(--paper-radius);
   background-color: var(--color-paper-2);
@@ -824,18 +869,104 @@ select.field {
   }
 }
 
+/* ---------- Study plan drawer (Plan banao) ---------- */
+/* A tear-off schedule: label strip, sessions hung on a dotted rail, copy
+   action pinned to the footer. */
+.plan-panel {
+  background-color: var(--color-paper);
+}
+.plan-rail {
+  position: relative;
+  margin: 0;
+  list-style: none;
+}
+/* The rail is the panel's own margin line — sessions read as entries in a
+   notebook rather than loose rows. */
+.plan-rail::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 0.85rem;
+  border-left: 1px dotted var(--color-line);
+  pointer-events: none;
+}
+.plan-step {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+}
+.plan-step:hover .plan-num {
+  background: var(--color-ink);
+  color: var(--color-paper-2);
+}
+.plan-num {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
+}
+.plan-copy {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid transparent;
+  border-radius: var(--paper-radius-xs);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-later);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.1s ease;
+}
+.plan-copy:hover {
+  border-color: var(--color-later);
+  background: var(--color-later-soft);
+  color: var(--color-ink);
+}
+.plan-copy:active {
+  transform: translateY(1px);
+}
+
 /* Finished cards keep their soft sage wash. The base paper colour above is
    unlayered CSS, so it would otherwise beat Tailwind's translucent utility. */
 .task-card.is-done {
   background-color: #eff3e9;
 }
 
+/* The completion control: a 22px inked box (bigger than the icon it holds)
+   with a press-down "stamp" feel, a green hover preview and an unmistakable
+   filled state. Announced to AT by the button's aria-label / aria-pressed. */
 .task-check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: none;
   margin-top: 0.15rem;
   border: 1.5px solid rgba(29, 27, 22, 0.55);
   border-radius: var(--paper-radius-sm);
@@ -844,12 +975,23 @@ select.field {
   transition:
     border-color 0.12s ease,
     background-color 0.12s ease,
-    color 0.12s ease;
+    color 0.12s ease,
+    transform 0.1s ease,
+    box-shadow 0.12s ease;
 }
 .task-check:hover {
   border-color: var(--color-done);
   background: var(--color-done-soft);
   color: var(--color-done);
+  box-shadow: 1px 1px 0 rgba(43, 103, 74, 0.35);
+}
+.task-check:active {
+  transform: translate(1px, 1px) scale(0.94);
+  box-shadow: none;
+}
+.task-check:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
 }
 .task-check.is-done {
   border-color: var(--color-done);
@@ -857,11 +999,13 @@ select.field {
   color: var(--color-paper-2);
 }
 
-/* Action cluster: hover-revealed on desktop, a tidy footer row on touch. */
+/* Action cluster: hover-revealed on desktop, a tidy footer row on touch.
+   Always revealed for keyboard users (focus-within) so the controls are
+   never unreachable without a pointer. */
 .task-actions {
   display: flex;
   align-items: flex-start;
-  gap: 1px;
+  gap: 2px;
   flex-shrink: 0;
   transition: opacity 0.14s ease;
 }
@@ -869,23 +1013,36 @@ select.field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 1.6rem;
+  height: 1.6rem;
   border-radius: var(--paper-radius-sm);
   color: var(--color-ink-3);
   transition:
     background-color 0.12s ease,
-    color 0.12s ease;
+    color 0.12s ease,
+    transform 0.1s ease;
 }
 .task-action:hover {
   background: var(--color-paper-3);
   color: var(--color-ink);
+}
+.task-action:active {
+  transform: scale(0.9);
+  background: var(--color-paper-4);
+}
+.task-action:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 1px;
 }
 .task-action.is-danger:hover {
   background: var(--color-late-soft);
   color: var(--color-late);
 }
 .task-action.is-focus {
+  color: var(--color-done);
+}
+.task-action.is-focus:hover {
+  background: var(--color-done-soft);
   color: var(--color-done);
 }
 @media (hover: hover) {
@@ -895,6 +1052,14 @@ select.field {
   .task-card:hover .task-actions,
   .task-card:focus-within .task-actions {
     opacity: 1;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .task-action:hover {
+    transform: translateY(-1px);
+  }
+  .task-action:active {
+    transform: translateY(0) scale(0.94);
   }
 }
 
@@ -942,6 +1107,46 @@ select.field {
   transform: translateY(-0.25rem);
 }
 
+/* Weekly report ledger row — reads like a printed line, warms on hover so
+   the eye can track across the leader to the number. */
+.report-row {
+  padding: 0.3rem 0.4rem;
+  margin: 0 -0.4rem;
+  border-radius: var(--paper-radius-xs);
+  transition: background-color 0.12s ease;
+}
+.report-row:hover {
+  background: rgba(29, 27, 22, 0.045);
+}
+
+/* ---------- Dialog entrance ---------- */
+/* The veil fades, the sheet settles — one shared motion for every sheet so
+   settings, report, help and edit all arrive the same way. */
+.modal-veil {
+  animation: veil-in 0.16s ease-out both;
+}
+.modal-panel {
+  animation: panel-in 0.24s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+@keyframes veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ---------- Small paper details ---------- */
 
 /* Ledger stat tiles: a lit sheet that lifts a hair on hover. */
@@ -969,6 +1174,109 @@ select.field {
       transform 0.14s ease,
       box-shadow 0.14s ease,
       border-color 0.14s ease;
+  }
+}
+
+/* One shared tile anatomy: printed label, serif number, one-line hint. */
+.stat-tile {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+/* The inked top rule — attention tiles carry their own status colour, the
+   quiet ones keep the hairline. Same idea as the card's urgency rail. */
+.stat-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--color-line);
+  opacity: 0.75;
+}
+.stat-tile.is-alert::before {
+  background: var(--color-late);
+  opacity: 1;
+}
+.stat-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  margin-bottom: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stat-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+}
+.stat-dot.is-live {
+  animation: stat-live 1.8s ease-in-out infinite;
+}
+@keyframes stat-live {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.55;
+  }
+}
+.stat-value {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  animation: stat-pop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+.stat-hint {
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.stat-tile.is-alert .stat-hint {
+  color: var(--color-late);
+}
+/* The number re-mounts when it changes (React `key`), so this plays once per
+   real change — a quiet "the radar just re-counted" tick, never a loop. */
+@keyframes stat-pop {
+  0% {
+    opacity: 0.35;
+    transform: translateY(4px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.stat-focus {
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+@media (hover: hover) {
+  .stat-focus:hover {
+    border-color: var(--color-later);
+    box-shadow: 2px 2px 0 rgba(47, 86, 135, 0.18);
   }
 }
 
@@ -1000,11 +1308,29 @@ select.field {
 
 /* ---------- Deadline Rescue Mode ---------- */
 /* A dark triage header and hard paper controls make the rescue window read as
-   an instrument panel, while the rows stay on the same paper stock as cards. */
+   an instrument panel, while the rows stay on the same paper stock as cards.
+   The heavier ink border + sheet shadow keep it the loudest card on the desk. */
 .rescue-card {
   position: relative;
+  border: 1.5px solid var(--color-line-strong);
   /* Standout: the heavy stamped sheet shadow lifts it off the plain panels. */
   box-shadow: var(--paper-shadow-sheet);
+}
+/* A hazard-tape hairline under the panel — the one flourish the dashboard
+   allows itself, and it only ever appears on this card. */
+.rescue-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 4px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-late) 0 7px,
+    var(--color-today) 7px 14px
+  );
+  opacity: 0.9;
+  pointer-events: none;
 }
 .rescue-head {
   background-color: var(--color-ink);
@@ -1016,6 +1342,47 @@ select.field {
     rgba(243, 238, 225, 0.055) 20px
   );
   border-bottom: 1px solid var(--color-line-strong);
+}
+.rescue-title {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+/* The header CTA — a paper stamp pressed onto the dark band, mirrored by the
+   inked primary button elsewhere so the two read as one system. */
+.rescue-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.85rem;
+  padding: 0.25rem 0.7rem;
+  border: 1.5px solid var(--color-paper-2);
+  border-radius: var(--paper-radius-sm);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 rgba(243, 238, 225, 0.28);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.12s ease;
+}
+.rescue-cta:hover:not(:disabled) {
+  background: var(--color-today-soft);
+  border-color: var(--color-today-soft);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 rgba(243, 238, 225, 0.34);
+}
+.rescue-cta:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(243, 238, 225, 0.24);
+}
+.rescue-cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .rescue-stamp {
   display: inline-block;
@@ -1031,11 +1398,11 @@ select.field {
   transform: rotate(2deg);
 }
 .rescue-level {
-  min-height: 1.55rem;
+  min-height: 1.7rem;
   border: 1px solid var(--color-line);
   border-radius: var(--paper-radius-xs);
   background: var(--color-paper);
-  padding: 0.12rem 0.5rem;
+  padding: 0.15rem 0.6rem;
   font-family: var(--font-mono);
   font-size: 9.5px;
   font-weight: 600;
@@ -1045,12 +1412,17 @@ select.field {
     border-color 0.12s ease,
     background-color 0.12s ease,
     color 0.12s ease,
-    box-shadow 0.12s ease;
+    box-shadow 0.12s ease,
+    transform 0.1s ease;
 }
 .rescue-level:hover {
   border-color: var(--color-ink);
   background: var(--color-paper-3);
   color: var(--color-ink);
+}
+.rescue-level:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 .rescue-level.is-on {
   border-color: var(--color-ink);
@@ -1059,7 +1431,7 @@ select.field {
   box-shadow: 2px 2px 0 rgba(29, 27, 22, 0.22);
 }
 .rescue-meter {
-  height: 5px;
+  height: 7px;
   overflow: hidden;
   border: 1px solid var(--color-line);
   border-radius: 999px;
@@ -1069,8 +1441,11 @@ select.field {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--color-late);
-  transition: width 0.2s ease;
+  background: linear-gradient(90deg, var(--color-late), var(--color-today));
+  transition: width 0.35s cubic-bezier(0.22, 0.61, 0.21, 1);
+}
+.rescue-meter.is-full > span {
+  background: var(--color-ink);
 }
 .rescue-rank {
   font-family: var(--font-mono);
@@ -1080,11 +1455,20 @@ select.field {
 }
 .rescue-row {
   border-left-width: 3px !important;
-  border-left-color: var(--color-line);
-  transition: border-left-color 0.12s ease;
+  /* The tier ink is injected as --tier by the component: red for late work,
+     ochre for today, olive for the week, blue for later. */
+  border-left-color: var(--tier, var(--color-line));
+  transition:
+    border-left-color 0.12s ease,
+    background-color 0.12s ease;
 }
 .rescue-row:hover {
-  border-left-color: var(--color-late);
+  background: #fffdf6;
+}
+.rescue-row.is-running {
+  background: var(--color-done-soft);
+  border-color: var(--color-done);
+  border-left-color: var(--color-done) !important;
 }
 /* Hover lift — same story as the task card: the scroll reveal owns the resting
    transition, so the lift re-declares its own short one. */
@@ -1322,6 +1706,35 @@ select.field {
   animation: flicker-in 7s linear infinite;
 }
 
+/* A compass zone answers the pointer and the keyboard by thickening its ink
+   and ringing the track — the ring you are about to press is the one that
+   gets louder. */
+.dial-zone .dial-ring,
+.dial-zone .dial-track {
+  transition:
+    stroke-width 0.16s ease,
+    stroke 0.16s ease,
+    opacity 0.16s ease;
+}
+@media (hover: hover) {
+  .dial-zone:hover .dial-ring {
+    stroke-width: 12;
+    opacity: 1;
+  }
+  .dial-zone:hover .dial-track {
+    stroke: #ded3bd;
+  }
+}
+.dial-zone:focus-visible {
+  outline: none;
+}
+.dial-zone:focus-visible .dial-ring {
+  stroke-width: 12;
+}
+.dial-zone:focus-visible .dial-track {
+  stroke: var(--color-ink);
+}
+
 /* ============================================================
    COMPASS NEEDLE — slow, deliberate rotation
    ============================================================ */
@@ -1335,6 +1748,29 @@ select.field {
 .compass-rotor {
   animation: needle-spin 24s linear infinite;
   transform-origin: center;
+}
+
+/* ============================================================
+   PROGRESS INSTRUMENTS — chart motion
+   ============================================================ */
+/* Bars grow up from the baseline once their chart scrolls into view, one
+   week after another; afterwards they sit still like printed ink. */
+.reveal .trend-bar {
+  transform-origin: bottom;
+  transform: scaleY(0.04);
+  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.21, 1);
+  transition-delay: var(--bar-delay, 0ms);
+}
+.reveal.is-visible .trend-bar {
+  transform: none;
+}
+/* Heat squares answer the cursor with a hair of scale — enough to show
+   which cell the tooltip belongs to, not enough to disturb the grid. */
+.heat-cell {
+  transition: transform 0.12s ease;
+}
+.heat-grid .heat-cell:hover {
+  transform: scale(1.4);
 }
 
 /* ============================================================
@@ -1360,9 +1796,29 @@ select.field {
   .reveal-stagger > *,
   .rescue-step,
   .section-reveal,
-  .chapter-plate {
+  .chapter-plate,
+  .reveal .trend-bar {
     opacity: 1 !important;
     transform: none !important;
+    transition: none !important;
+  }
+  .stat-value,
+  .modal-veil,
+  .modal-panel,
+  .stat-dot.is-live {
+    animation: none !important;
+  }
+  .heat-cell,
+  .report-row,
+  .plan-copy,
+  .task-action,
+  .search-clear,
+  .weather-day,
+  .zone-chip,
+  .rescue-cta,
+  .rescue-level,
+  .focus-dock-task,
+  .focus-dock-stop {
     transition: none !important;
   }
   html { scroll-behavior: auto; }
@@ -1371,7 +1827,9 @@ select.field {
   .task-card:hover,
   .stat-tile:hover,
   .btn:hover:not(:disabled),
-  .rescue-row:hover { transform: none !important; }
+  .rescue-row:hover,
+  .weather-day:hover:not([aria-pressed='true']),
+  .rescue-cta:hover:not(:disabled) { transform: none !important; }
   [data-parallax] { transform: none !important; }
   .focus-dock,
   .focus-dock-pulse { animation: none !important; }
@@ -2575,6 +3033,21 @@ select.field {
   background: var(--color-paper-3);
   color: var(--color-ink);
 }
+/* The zone the desk is currently scrolled to — inked like the active view
+   toggle so the reader always knows which section the list is parked in. */
+.zone-chip.is-current {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-paper-2);
+  box-shadow: 1px 1px 0 rgba(29, 27, 22, 0.3);
+}
+.zone-chip.is-current .zone-count {
+  background: rgba(243, 238, 225, 0.22);
+  color: var(--color-paper-2);
+}
+.zone-chip:active:not(:disabled) {
+  transform: translateY(1px);
+}
 .zone-chip:disabled,
 .zone-chip.is-empty {
   opacity: 0.4;
@@ -2590,6 +3063,31 @@ select.field {
   font-weight: 700;
   line-height: 1.35;
   text-align: center;
+}
+
+/* 🌦️ Deadline-weather day cells — a pressed stamp on tap, a hair of lift on
+   hover, an ink ring on keyboard focus. */
+.weather-day {
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    background-color 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+@media (hover: hover) {
+  .weather-day:hover:not([aria-pressed='true']) {
+    border-color: var(--color-ink);
+    transform: translateY(-1px);
+  }
+}
+.weather-day:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: none;
+}
+.weather-day:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 1px;
 }
 
 /* 🗓️ The month grid. Complete weeks, Monday first, one printed cell per day. */
@@ -2744,6 +3242,7 @@ select.field {
 
 /* ⏱️ The focus dock — parked in the corner while the radar scrolls. */
 .focus-dock {
+  --pulse-ink: rgba(43, 103, 74, 0.42);
   position: fixed;
   right: max(0.75rem, env(safe-area-inset-right, 0px));
   bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
@@ -2761,6 +3260,12 @@ select.field {
     4px 4px 0 var(--color-line-strong),
     0 16px 30px -24px rgba(29, 27, 22, 0.8);
   animation: focus-dock-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+/* Past the estimate the whole instrument turns ochre — the session is over
+   budget and every read-out on the dock should say so at once. */
+.focus-dock.is-over {
+  --pulse-ink: rgba(141, 93, 8, 0.45);
+  border-color: var(--color-today);
 }
 
 /* Phone mode: dock at bottom center, full width minus safe areas */
@@ -2803,8 +3308,54 @@ select.field {
   background: var(--color-done);
   color: var(--color-paper-2);
 }
+.focus-dock-stop:active {
+  transform: translateY(1px);
+}
+/* The running task — a door to its entry, not just a label. */
+.focus-dock-task {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.12rem 0.25rem;
+  border-radius: var(--paper-radius-xs);
+  text-align: left;
+  font-family: var(--font-serif);
+  font-size: 13.5px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--color-ink);
+  transition:
+    background-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.focus-dock-task:hover {
+  background: var(--color-paper-3);
+  box-shadow: inset 2px 0 0 var(--color-ink);
+}
+.focus-dock-edit {
+  flex: none;
+  color: var(--color-ink-3);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+}
+.focus-dock-task:hover .focus-dock-edit,
+.focus-dock-task:focus-visible .focus-dock-edit {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .focus-dock-edit {
+    opacity: 0.55;
+    transform: none;
+  }
+}
 .focus-dock-bar {
-  height: 5px;
+  height: 6px;
   overflow: hidden;
   border: 1px solid var(--color-line);
   border-radius: 1px;
@@ -2816,7 +3367,8 @@ select.field {
   background: var(--color-done);
   transition: width 0.5s linear;
 }
-.focus-dock-bar span.is-over {
+.focus-dock-bar span.is-over,
+.focus-dock.is-over .focus-dock-bar span {
   background: var(--color-today);
 }
 @keyframes focus-dock-in {
@@ -2831,13 +3383,13 @@ select.field {
 }
 @keyframes focus-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(43, 103, 74, 0.42);
+    box-shadow: 0 0 0 0 var(--pulse-ink, rgba(43, 103, 74, 0.42));
   }
   70% {
-    box-shadow: 0 0 0 7px rgba(43, 103, 74, 0);
+    box-shadow: 0 0 0 7px transparent;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(43, 103, 74, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2868,7 +3420,8 @@ select.field {
     display: block !important;
   }
   /* A printed page is final — never let an unplayed scroll reveal hide content. */
-  .reveal {
+  .reveal,
+  .reveal .trend-bar {
     opacity: 1 !important;
     transform: none !important;
   }
