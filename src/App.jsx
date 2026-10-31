@@ -1653,7 +1653,7 @@ export default function App() {
   return (
     <div
       ref={appShellRef}
-      className={`app-shell mx-auto w-full px-4 pb-16 pt-3 sm:pt-4 ${
+      className={`app-shell mx-auto w-full px-4 pb-10 pt-3 sm:pt-4 ${
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
