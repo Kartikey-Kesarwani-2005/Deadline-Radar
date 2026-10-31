@@ -1653,12 +1653,12 @@ export default function App() {
   return (
     <div
       ref={appShellRef}
-      className={`app-shell mx-auto w-full px-4 pb-10 pt-3 sm:pt-4 ${
+      className={`app-shell mx-auto w-full px-4 pb-6 pt-0 ${
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
       {/* Masthead strip — the newspaper dateline */}
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-y border-ink/70 py-0.5 font-mono text-[8px] tracking-[0.16em] text-ink-3 uppercase">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-y border-ink/70 py-0.25 font-mono text-[8px] tracking-[0.16em] text-ink-3 uppercase">
         <button
           type="button"
           onClick={() => openHome()}
@@ -1674,7 +1674,7 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <header className="mb-2 flex flex-wrap items-start justify-between gap-3">
+      <header className="mb-1 flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
@@ -2042,7 +2042,7 @@ export default function App() {
           rail; from xl up a live countdown + subject-load rail fills the right
           edge so the middle column stops stretching into dead space. */}
       <div
-        className={`dashboard-grid mt-3 grid gap-4 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-5 lg:items-start' : ''}`}
+        className={`dashboard-grid mt-1 grid gap-3 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-5 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div
