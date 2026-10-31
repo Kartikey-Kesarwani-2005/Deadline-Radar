@@ -26,7 +26,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
         </span>
       </div>
 
-      <div className="relative px-4 py-2">
+      <div className="relative min-w-0 px-4 py-2">
         {/* the red margin line of a notebook page */}
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-2 w-px bg-late/45" />
         <textarea
@@ -42,7 +42,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
           }}
           placeholder="Paste an assignment message… or hold your Wispr key, speak, and hit Enter"
           aria-label="Add a deadline"
-          className="ruled w-full resize-none bg-transparent px-2 py-1.5 font-serif text-[16px] text-ink caret-late placeholder:font-sans placeholder:text-[13px] placeholder:text-ink-3 focus:outline-none"
+          className="ruled w-full min-w-0 resize-none bg-transparent px-2 py-1.5 font-serif text-[16px] text-ink caret-late placeholder:font-sans placeholder:text-[13px] placeholder:text-ink-3 focus:outline-none"
         />
       </div>
 
@@ -54,7 +54,7 @@ export default function AddBar({ onAdd, busy, inputRef, onImage, onAsk, onBrief,
           </span>
           Hold Wispr · speak · the text lands here
         </span>
-        <div className="add-row flex flex-wrap items-center justify-end gap-2">
+        <div className="add-row flex flex-wrap items-center justify-end gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={onBrief}

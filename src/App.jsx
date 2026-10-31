@@ -1684,11 +1684,8 @@ export default function App() {
               />
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-ink bg-paper" />
             </span>
-            <div className="min-w-0">
-              <p
-                className="eyebrow mb-1 leading-tight"
-                style={{ lineHeight: '1.1', marginBottom: '4px' }}
-              >
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="eyebrow mb-0 leading-tight">
                 Field notes · {stats.total} on the radar
               </p>
               <h1
@@ -1700,7 +1697,7 @@ export default function App() {
               </h1>
             </div>
           </div>
-          <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-ink-2">
+          <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-ink-2 break-words">
             Assignments arrive in WhatsApp groups and notes — nothing stays in one place.
             <span className="font-medium text-ink"> Paste or speak them here</span>, and always know
             what is due <span className="font-semibold text-today">today</span> and what is getting{' '}
