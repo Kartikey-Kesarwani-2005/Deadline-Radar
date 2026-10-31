@@ -124,7 +124,7 @@ export default function CommandPalette({ tasks, commands, onClose, onEditTask })
         id="cmd-list"
         role="listbox"
         aria-label="Palette results"
-        className="max-h-[54dvh] overflow-y-auto px-1.5 py-1.5"
+        className="max-h-[50vh] max-h-[54dvh] overflow-y-auto px-1.5 py-1.5"
       >
         {flat.length === 0 && (
           <div className="px-3 py-7 text-center">

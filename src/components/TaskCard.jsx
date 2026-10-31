@@ -106,6 +106,9 @@ export default function TaskCard({
   onCopyPlan,
   focusing = false,
 }) {
+  // Defensive: if task is somehow undefined/null, render nothing
+  if (!task) return null
+  
   const diff = task.dueDate ? dayDiff(todayKey(), task.dueDate) : null
   const isLate = !task.done && diff !== null && diff < 0
   const [showPlan, setShowPlan] = useState(false)

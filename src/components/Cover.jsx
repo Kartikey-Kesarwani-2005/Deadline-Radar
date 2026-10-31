@@ -6,20 +6,16 @@ import Icon from './Icon'
 /**
  * 🎬 The dossier cover — the radar's front page, not a splash screen.
  *
- * A real file cover: stamped masthead, the next deadline, a live table of
- * contents that reads the radar behind it, and the week ahead as a printed
- * strip. Every contents row is a door — press "Late" and the sheet lifts
- * straight onto that section. The OPEN stamp lifts it onto the top.
- *
- * It opens once per browser on first visit, and comes back any time from the
- * masthead, the toolbar home button, Settings, or the `h` key. `?home=1` is a
- * permanent, shareable door to this page.
+ * Refined: editorial-tech aesthetic.
+ * - Serif headings + sans-serif body for a minimalist editorial hierarchy.
+ * - Glassmorphism cards: soft borders, light shadows, generous padding.
+ * - Polished buttons: crisp borders, hover lifts, accent gradient primary.
+ * - Containerized grid layout with generous negative space.
  */
 export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening, onOpen, onDemo }) {
   const boxRef = useRef(null)
   const stampRef = useRef(null)
   useEffect(() => {
-    // Keyboard judges land straight on the stamp — Enter opens the file.
     const raf = requestAnimationFrame(() => {
       ;(boxRef.current?.querySelector('[data-autofocus]') || boxRef.current)?.focus?.()
     })
@@ -37,8 +33,6 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
   const fileTotal = rows.reduce((a, r) => a + r.n, 0)
   const pendingTotal = fileTotal - (Number(counts.done) || 0)
 
-  // The week ahead + the single next thing on the desk. Pure, derived from the
-  // same tasks the radar renders — the cover never invents content.
   const { week, next } = useMemo(() => {
     const today = todayKey()
     const pending = tasks.filter((t) => !t.done && t.dueDate && parseDateKey(t.dueDate))
@@ -61,8 +55,6 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
     return { week: days, next: sorted[0] || null }
   }, [tasks])
 
-  // Loading a sample file removes the button that was focused — hand focus
-  // back to the stamp so Enter still opens the file.
   useEffect(() => {
     if (!opening && fileTotal > 0) stampRef.current?.focus()
   }, [fileTotal, opening])
@@ -77,14 +69,11 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
       aria-label="Deadline Radar — front page: open the file"
       onKeyDown={(e) => {
         if (opening) return
-        // Escape always opens. Enter is handled by the focused button itself,
-        // so a focused contents row opens ITS section instead of the top.
         if (e.key === 'Escape' || (e.key === 'Enter' && e.target === e.currentTarget)) {
           e.preventDefault()
           onOpen()
           return
         }
-        // 1–6 are the printed contents index: press a number, open that door.
         if (/^[1-6]$/.test(e.key)) {
           const r = rows[Number(e.key) - 1]
           if (r && r.n > 0) {
@@ -96,6 +85,7 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
       tabIndex={-1}
     >
       <div className="cover-inner">
+        {/* Topline — file masthead */}
         <div className="cover-topline">
           <span className="cover-file-no">Field Notes · Dossier 026</span>
           <span className="cover-topline-date">{formatLongToday()}</span>
@@ -103,7 +93,7 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
         </div>
 
         <div className="cover-grid">
-          {/* Left leaf — masthead + the one action that matters */}
+          {/* Left leaf — masthead, story, primary action */}
           <div className="cover-lead">
             <p className="cover-eyebrow">Built with Wispr Flow · voice first</p>
             <h1 className="cover-title">
@@ -117,20 +107,20 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
               filed, dated and answered. <b>Paste, speak, or photograph it.</b>
             </p>
 
-            <div className="cover-chips" aria-label="What is inside" style={{ justifyContent: 'center' }}>
+            <div className="cover-chips" aria-label="What is inside">
               <span>🎙 Voice-first</span>
               <span>🧠 Learns your pace</span>
               <span>🖨 Print-ready</span>
             </div>
 
-            <div className="cover-stamp-wrap" style={{ justifyContent: 'center' }}>
+            <div className="cover-stamp-wrap">
               <button
                 type="button"
                 ref={stampRef}
                 onClick={() => onOpen()}
                 disabled={opening}
                 data-autofocus
-                className="cover-stamp"
+                className="cover-stamp cover-stamp-primary"
                 aria-label={fileTotal > 0 ? 'Open the file — enter the radar' : 'Start the radar'}
               >
                 <Icon name={fileTotal > 0 ? 'external' : 'pencil'} size={14} strokeWidth={1.6} />
@@ -138,9 +128,9 @@ export default function Cover({ tasks = [], counts = {}, riskTotal = 0, opening,
               </button>
             </div>
 
-            <p className="cover-foot" style={{ textAlign: 'center' }}>
+            <p className="cover-foot">
               Paste. Speak. Never miss a submission.
-              <span className="cover-hint" style={{ display: 'block', textAlign: 'center' }}>
+              <span className="cover-hint" style={{ display: 'block', marginTop: '6px' }}>
                 click the stamp · Enter · Esc · 1–6 jump · h returns here
               </span>
             </p>

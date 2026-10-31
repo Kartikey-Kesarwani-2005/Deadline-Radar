@@ -14,6 +14,11 @@ function Field({ label, children }) {
 }
 
 export default function TaskEditModal({ task, onSave, onClose, onDelete, onDuplicate }) {
+  // Defensive: if task is somehow undefined/null, close the modal
+  if (!task) {
+    onClose?.()
+    return null
+  }
   const [draft, setDraft] = useState({
     title: task.title,
     subject: task.subject || '',

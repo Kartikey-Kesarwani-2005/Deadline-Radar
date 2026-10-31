@@ -11,6 +11,7 @@ import {
   exportTasks,
   loadSettings,
   loadTasks,
+  normalizeTask,
   parseBackup,
   saveSettings,
   saveTasks,
@@ -71,7 +72,7 @@ const SECTION_DEFS = [
 function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst, getPlan, getRisk, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, onCopyPlan, onSelectToggle, selecting, selectedIds, focusId }) {
   if (!tasks.length) return null
   return (
-    <section id={`radar-${sectionKey}`} className="section-reveal mb-7 scroll-mt-4">
+    <section id={`radar-${sectionKey}`} className="section-reveal mb-5 scroll-mt-4">
       <div className="section-head mb-2.5 reveal--fade" style={{ '--reveal-delay': '0ms' }}>
         <span className="section-index" aria-hidden="true">
           {String(num).padStart(2, '0')}
@@ -1243,12 +1244,14 @@ export default function App() {
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return tasks.filter((t) => {
-      if (subjectFilter && t.subject !== subjectFilter) return false
-      if (dateFilter && t.dueDate !== dateFilter) return false
-      if (!q) return true
-      return `${t.title} ${t.subject || ''} ${t.source || ''}`.toLowerCase().includes(q)
-    })
+    return tasks
+      .filter((t) => t) // defensive: filter out any undefined/null tasks
+      .filter((t) => {
+        if (subjectFilter && t.subject !== subjectFilter) return false
+        if (dateFilter && t.dueDate !== dateFilter) return false
+        if (!q) return true
+        return `${t.title} ${t.subject || ''} ${t.source || ''}`.toLowerCase().includes(q)
+      })
   }, [tasks, query, subjectFilter, dateFilter])
 
   const sections = useMemo(() => {
@@ -1284,11 +1287,13 @@ export default function App() {
   // filter would erase every other dot) but still honours search + subject.
   const almanacTasks = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return tasks.filter((t) => {
-      if (subjectFilter && t.subject !== subjectFilter) return false
-      if (!q) return true
-      return `${t.title} ${t.subject || ''} ${t.source || ''}`.toLowerCase().includes(q)
-    })
+    return tasks
+      .filter((t) => t) // defensive: filter out any undefined/null tasks
+      .filter((t) => {
+        if (subjectFilter && t.subject !== subjectFilter) return false
+        if (!q) return true
+        return `${t.title} ${t.subject || ''} ${t.source || ''}`.toLowerCase().includes(q)
+      })
   }, [tasks, query, subjectFilter])
 
   // "Real result" metric: tasks finished before their deadline.
@@ -1658,7 +1663,7 @@ export default function App() {
       }`}
     >
       {/* Masthead strip — the newspaper dateline */}
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-y border-ink/70 py-0.25 font-mono text-[8px] tracking-[0.16em] text-ink-3 uppercase">
+      <div className="mb-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-y border-ink/70 py-0.25 font-mono text-[8px] tracking-[0.16em] text-ink-3 uppercase">
         <button
           type="button"
           onClick={() => openHome()}
@@ -1674,7 +1679,7 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <header className="mb-1 flex flex-wrap items-start justify-between gap-2">
+      <header className="mb-0.5 flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
@@ -1806,7 +1811,7 @@ export default function App() {
 
       {/* Offline mode — everything below keeps working without a connection */}
       {!online && (
-        <div className="rise mb-4 flex items-start gap-2.5 rounded-[4px] border border-today/40 bg-today-soft px-3 py-2.5 text-xs leading-relaxed text-ink-2">
+        <div className="rise mb-2 flex items-start gap-2.5 rounded-[4px] border border-today/40 bg-today-soft px-3 py-2.5 text-xs leading-relaxed text-ink-2">
           <Icon name="wifiOff" size={14} className="mt-0.5 text-today" />
           <p>
             <b className="font-semibold text-ink">You are offline — the radar keeps working.</b>{' '}
@@ -1830,7 +1835,7 @@ export default function App() {
 
       {/* Demo mode — a one-line tour for judges opening ?demo=1 cold */}
       {isDemo && !hintsClosed && (
-        <div className="rise mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[4px] border border-later/35 bg-later-soft px-3.5 py-2 text-xs text-ink-2">
+        <div className="rise mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[4px] border border-later/35 bg-later-soft px-3.5 py-2 text-xs text-ink-2">
           <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-later uppercase">
             <Icon name="spark" size={11} />
             Demo mode — try
@@ -1864,7 +1869,7 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className={`stamp-in mt-2 flex items-center gap-3 rounded-[4px] border px-3 py-2 text-xs font-medium ${
+          className={`stamp-in mt-1.5 flex items-center gap-3 rounded-[4px] border px-3 py-2 text-xs font-medium ${
             flash.tone === 'error'
               ? 'border-late/45 bg-late-soft text-late'
               : 'border-done/40 bg-done-soft text-done'
@@ -1905,7 +1910,7 @@ export default function App() {
 
       {/* ⏳ Start window closing — "start now", not just "due soon" */}
       {startSoon.length > 0 && (
-        <div className="rise mt-2 rounded-[4px] border border-today/40 bg-today-soft px-3.5 py-2 text-xs text-ink-2">
+        <div className="rise mt-1.5 rounded-[4px] border border-today/40 bg-today-soft px-3.5 py-2 text-xs text-ink-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-today uppercase">
               <Icon name="clock" size={11} />
@@ -1980,7 +1985,7 @@ export default function App() {
 
       {/* Clipboard auto-detect suggestion */}
       {clipSuggest && (
-        <div className="mt-2 flex items-center gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2">
+        <div className="mt-1.5 flex items-center gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2">
           <Icon name="clipboard" size={14} className="mt-0.5 text-later" />
           <p className="min-w-0 flex-1 break-words">
             <b className="font-semibold text-ink">Clipboard check</b> — looks like a deadline notice.
@@ -2019,7 +2024,7 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className="mt-2 flex items-start gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2"
+          className="mt-1.5 flex items-start gap-3 rounded-[4px] border border-later/35 bg-later-soft px-3 py-2 text-xs text-ink-2"
         >
           <Icon name="mic" size={14} className="mt-0.5 text-later" />
           <p className="min-w-0 flex-1 leading-relaxed">
@@ -2042,19 +2047,20 @@ export default function App() {
           rail; from xl up a live countdown + subject-load rail fills the right
           edge so the middle column stops stretching into dead space. */}
       <div
-        className={`dashboard-grid mt-1 grid gap-3 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-5 lg:items-start' : ''}`}
+        className={`dashboard-grid mt-1 grid gap-2 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-4 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div
-          className={`rail flex min-w-0 flex-col gap-4 ${
+          className={`rail flex min-w-0 flex-col gap-3 ${
             isWide
               ? 'paper-panel p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto'
               : ''
           }`}
+          style={isWide ? { minWidth: 0 } : undefined}
         >
           {/* Stats + compass dial */}
           <div
-            className={`stats-row flex items-stretch gap-3 ${isWide ? 'lg:flex-col lg:items-stretch' : ''}`}
+            className={`stats-row flex items-stretch gap-2 ${isWide ? 'lg:flex-col lg:items-stretch' : ''}`}
           >
             <RadarDial
               late={stats.late}
@@ -2139,7 +2145,7 @@ export default function App() {
         </div>
 
         {/* Right column: the radar sections */}
-        <div id="radar-sections" className="flex min-w-0 scroll-mt-4 flex-col gap-4">
+        <div id="radar-sections" className="flex min-w-0 scroll-mt-4 flex-col gap-3">
           {selectMode && view === 'list' && (
             <div className="stamp-in flex flex-wrap items-center gap-2 rounded-[4px] border-2 border-ink bg-ink px-3 py-2 text-paper-2 shadow-[3px_3px_0_rgba(29,27,22,0.35)]">
               <span className="font-mono text-[10px] tracking-[0.12em] uppercase">
@@ -2303,7 +2309,7 @@ export default function App() {
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setTasks(buildSampleTasks())}
+                    onClick={() => setTasks(buildSampleTasks().map(normalizeTask).filter(Boolean))}
                     className="btn btn-quiet"
                   >
                     Load a full demo radar
@@ -2337,10 +2343,10 @@ export default function App() {
                   tone={tone}
                   hint={key === 'done' ? `${onTime} finished on time${streak > 1 ? ` · ${streak} in a row` : ''}` : hint}
                   tasks={sections[key]}
-                  getAdvice={(task) => adviceFor(brain, task)}
-                  getEst={(task) => estimateEffort(task, pace)}
-                  getPlan={(task) => plans.get(task.id)}
-                  getRisk={riskFor}
+                  getAdvice={(task) => task ? adviceFor(brain, task) : null}
+                  getEst={(task) => task ? estimateEffort(task, pace) : null}
+                  getPlan={(task) => task ? plans.get(task.id) : null}
+                  getRisk={(task) => task ? riskFor(task) : null}
                   onToggle={toggleTask}
                   onDelete={deleteTask}
                   onEdit={setEditingId}

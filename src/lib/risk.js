@@ -24,6 +24,8 @@ const HOURS_PER_DAY = 3
  */
 export function riskScore(task, { pace = {}, brain = null, today = todayKey() } = {}) {
   if (!task || task.done || !task.dueDate) return null
+  // Defensive: ensure task has priority field (normalizeTask sets default but old data may lack it)
+  const priority = task.priority === 'high' ? 'high' : 'normal'
   const diff = dayDiff(today, task.dueDate)
   if (diff === null) return null
 
@@ -93,7 +95,7 @@ export function riskScore(task, { pace = {}, brain = null, today = todayKey() } 
   }
 
   // 5. The stamp itself — high priority is the user telling us it matters.
-  if (task.priority === 'high') {
+  if (priority === 'high') {
     score += 4
     reasons.push('high priority')
   }

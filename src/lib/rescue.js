@@ -45,6 +45,7 @@ const TIER_BY_DAYS = (daysLeft) => {
 
 /** Human explanation for why this task earned its place in the queue. */
 function rescueReasons(item) {
+  if (!item || !item.task) return []
   const { task, daysLeft, minutes, learned, marks, roi } = item
   const reasons = []
 
