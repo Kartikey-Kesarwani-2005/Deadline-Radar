@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { buildRescuePlan, rescueDueLabel, RESCUE_LEVELS, RESCUE_POLICY } from '../lib/rescue'
 import { fmtHours } from '../lib/brain'
 import Icon from './Icon'
@@ -29,10 +29,34 @@ const TIER_KEYS = [
  * The student picks 30, 60 or 120 minutes; the module reuses the radar's
  * existing due-date + effort ranking and commits only what actually fits.
  * Anything that cannot fit is named as overflow instead of hidden.
+ * 
+ * Progressive reveal: each rescue step draws in sequence, so the plan
+ * reads like a briefing being written in real time.
  */
 export default function RescueMode({ tasks = [], today, onStart, focusId }) {
   const [budget, setBudget] = useState(60)
   const plan = useMemo(() => buildRescuePlan(tasks, budget, today), [tasks, budget, today])
+  const [stepsVisible, setStepsVisible] = useState(false)
+
+  // Trigger progressive reveal when plan changes or section enters viewport
+  useEffect(() => {
+    if (!plan) {
+      setStepsVisible(false)
+      return
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStepsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -50px 0px' }
+    )
+    const el = document.querySelector('.rescue-card')
+    if (el) observer.observe(el)
+    return () => observer.disconnect()
+  }, [plan?.items?.length, budget])
 
   if (!plan) return null
 
@@ -42,11 +66,12 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
 
   return (
     <section
-      className="rescue-card paper-card rise overflow-hidden"
+      className="rescue-card paper-card rise overflow-hidden section-reveal"
       aria-label="Deadline Rescue Mode"
+      ref={(el) => { if (el) el.classList.add('is-visible'); }}
     >
       <div
-        data-parallax="0.06"
+        data-parallax="0.04"
         className="rescue-head flex flex-wrap items-start justify-between gap-2 px-3.5 py-2.5"
       >
         <div>
@@ -62,7 +87,7 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
       </div>
 
       <div className="px-3.5 py-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 reveal--fade" style={{ '--reveal-delay': '0ms' }}>
           <span className="font-mono text-[9px] tracking-[0.14em] text-ink-3 uppercase">
             Rescue window
           </span>
@@ -88,7 +113,7 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
           </span>
         </div>
 
-        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 reveal--fade" style={{ '--reveal-delay': '60ms' }}>
           <p className="font-mono text-[9.5px] tracking-wide text-ink-2">
             {plan.items.length} task{plan.items.length === 1 ? '' : 's'} ·{' '}
             <span className="font-semibold text-ink">{fmtHours(plan.used)} committed</span>
@@ -99,7 +124,8 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
           </p>
         </div>
         <div
-          className="rescue-meter mt-1.5"
+          className="rescue-meter mt-1.5 reveal--lift"
+          style={{ '--reveal-delay': '120ms' }}
           role="progressbar"
           aria-label="Rescue window used"
           aria-valuemin={0}
@@ -109,15 +135,16 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
           <span style={{ width: `${pct}%` }} />
         </div>
 
-        <ol className="mt-2.5 space-y-1.5">
+        <ol className="rescue-steps mt-2.5 space-y-1.5" role="list" aria-label="Rescue plan steps">
           {plan.items.map((item, index) => {
             const running = focusId === item.task.id
             const tone = item.tier.tone
+            const delay = index * 80
             return (
               <li
                 key={item.task.id}
-                className={`rescue-row rounded-[3px] border border-line bg-paper px-2.5 py-2 reveal`}
-                style={{ '--reveal-delay': `${Math.min(index * 60, 300)}ms` }}
+                className={`rescue-step rescue-row rounded-[3px] border border-line bg-paper px-2.5 py-2`}
+                style={{ '--reveal-delay': `${delay}ms` }}
               >
                 <div className="flex items-start gap-2">
                   <span aria-hidden="true" className="rescue-rank mt-0.5 shrink-0">
@@ -177,9 +204,10 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
           })}
         </ol>
 
-        {plan.overloaded ? (
+        {(plan.overloaded ? (
           <div
-            className={`mt-2 rounded-[3px] border px-2.5 py-2 ${plan.urgentOverloaded ? 'border-late/40 bg-late-soft/70' : 'border-today/40 bg-today-soft/70'}`}
+            className={`mt-2 rounded-[3px] border px-2.5 py-2 reveal--slide ${plan.urgentOverloaded ? 'border-late/40 bg-late-soft/70' : 'border-today/40 bg-today-soft/70'}`}
+            style={{ '--reveal-delay': `${plan.items.length * 80 + 120}ms` }}
           >
             <p
               className={`flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.12em] uppercase ${plan.urgentOverloaded ? 'text-late' : 'text-today'}`}
@@ -194,13 +222,13 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
             </p>
           </div>
         ) : (
-          <p className="mt-2 flex items-center gap-1.5 font-mono text-[9px] text-done">
+          <p className="mt-2 flex items-center gap-1.5 font-mono text-[9px] text-done reveal--fade" style={{ '--reveal-delay': `${plan.items.length * 80 + 120}ms` }}>
             <Icon name="check" size={11} />
             Everything pending fits this window{plan.remaining > 0 ? ` — ${plan.remaining}m spare` : ''}. Start at the top.
           </p>
-        )}
+        ))}
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-dashed border-line pt-2">
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-dashed border-line pt-2 reveal--fade" style={{ '--reveal-delay': `${plan.items.length * 80 + 180}ms` }}>
           {TIER_KEYS.map((tier) => (
             <span
               key={tier.tone}
@@ -214,7 +242,7 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
             </span>
           ))}
         </div>
-        <p className="mt-1.5 font-mono text-[8.5px] leading-relaxed text-ink-3">{RESCUE_POLICY}</p>
+        <p className="mt-1.5 font-mono text-[8.5px] leading-relaxed text-ink-3 reveal--fade" style={{ '--reveal-delay': `${plan.items.length * 80 + 240}ms` }}>{RESCUE_POLICY}</p>
       </div>
     </section>
   )

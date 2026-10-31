@@ -71,8 +71,8 @@ const SECTION_DEFS = [
 function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst, getPlan, getRisk, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, onCopyPlan, onSelectToggle, selecting, selectedIds, focusId }) {
   if (!tasks.length) return null
   return (
-    <section id={`radar-${sectionKey}`} className="reveal mb-7 scroll-mt-4">
-      <div className="section-head mb-2.5">
+    <section id={`radar-${sectionKey}`} className="section-reveal mb-7 scroll-mt-4">
+      <div className="section-head mb-2.5 reveal--fade" style={{ '--reveal-delay': '0ms' }}>
         <span className="section-index" aria-hidden="true">
           {String(num).padStart(2, '0')}
         </span>
@@ -84,7 +84,7 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
         <span className="flex-1" />
         {hint && <span className="mb-0.5 font-mono text-[9px] tracking-wide text-ink-3">{hint}</span>}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 reveal-stagger">
         {tasks.map((task, index) => (
           <TaskCard
             key={task.id}
@@ -93,7 +93,7 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
             estimate={getEst ? getEst(task) : null}
             plan={getPlan ? getPlan(task) : null}
             risk={getRisk ? getRisk(task) : null}
-            style={{ '--reveal-delay': `${Math.min(index * 45, 320)}ms`, '--reveal-scale': index === 0 ? 1 : 0.97 }}
+            style={{ '--reveal-delay': `${Math.min(index * 45, 320)}ms`, '--reveal-scale': index === 0 ? 1 : 0.96 }}
             selecting={selecting}
             selected={selectedIds?.has(task.id) || false}
             onToggle={(e) => onToggle(task.id, e)}
@@ -375,6 +375,7 @@ export default function App() {
   const searchRef = useRef(null)
   const resizeRef = useRef(null)
   const appShellRef = useRef(null)
+  const chapterPlateRef = useRef(null)
   const [installEvt, setInstallEvt] = useState(null)
   // Connectivity + screen size drive the offline banner and desktop / phone modes.
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -505,6 +506,32 @@ export default function App() {
     // `coverUp` re-runs the parallax sweep once the shell is mounted behind the cover.
     // Deps read `settings.view` to dodge the temporal-dead-zone ordering issue above.
   }, [tasks, settings.view, isDemo, dateFilter, subjectFilter, query, coverUp])
+
+  // 📌 Chapter plate sticky tracker — on wide screens, the plate pins under the desk bar.
+  // When it becomes stuck (position: sticky kicks in), we add .is-pinned to trigger
+  // the subtle slide-down reveal. Uses a sentinel element to detect stickiness.
+  useEffect(() => {
+    if (!isWide) return
+    const plate = chapterPlateRef.current
+    if (!plate) return
+    // Create a sentinel just above the plate to detect when it sticks
+    const sentinel = document.createElement('div')
+    sentinel.style.cssText = 'height:1px;pointer-events:none;position:sticky;top:7.5rem;z-index:14;'
+    plate.parentNode?.insertBefore(sentinel, plate)
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        // When sentinel leaves viewport (sticks), plate is pinned
+        plate.classList.toggle('is-pinned', !entry.isIntersecting)
+      },
+      { threshold: 0, rootMargin: '-7.5rem 0px 0px 0px' }
+    )
+    io.observe(sentinel)
+    return () => {
+      io.disconnect()
+      sentinel.remove()
+      plate.classList.remove('is-pinned')
+    }
+  }, [isWide, activeZone, view])
 
   // ⏱️ Focus timer: persist + tick the header display once a second.
   useEffect(() => {
@@ -2192,7 +2219,11 @@ export default function App() {
               actually exist (empty sections never mounted one), so it never
               promises a blank chapter. */}
           {view === 'list' && activeZone && activeSectionDef && (
-            <div className="chapter-plate" aria-hidden="true">
+            <div
+              ref={chapterPlateRef}
+              className="chapter-plate"
+              aria-hidden="true"
+            >
               <span className="eyebrow">Chapter {activeSectionNum + 1}</span>
               <span className="chapter-plate-title font-serif text-[18px] leading-none font-semibold text-ink">
                 {activeSectionDef.title}

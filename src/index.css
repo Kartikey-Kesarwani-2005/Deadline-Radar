@@ -1106,28 +1106,231 @@ select.field {
   animation: rise-in 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
 }
 
-/* Scroll-triggered reveal — the radar's entries fade in and slide upward as
-   they enter the viewport (the field-notes entry) instead of playing on a
-   timer. The scroll observer toggles `.is-visible`; the transition then plays
-   once, with `--reveal-delay` carrying the stagger. Transitions (not fill-
-   forwards keyframes) keep the resting state plain CSS, so hover lifts and
-   subsequent state changes are never frozen mid-flight by a finished animation.
+/* ============================================================
+   PREMIUM SCROLL REVEAL SYSTEM
+   Multiple reveal personalities for different content types.
+   All transform/opacity only — zero layout shift, compositor-friendly.
+   Respect prefers-reduced-motion globally.
+   ============================================================ */
 
-   The entry also settles with a whisper of scale (`--reveal-scale`, 0.97 → 1)
-   so cards feel like they lift into place rather than just fading — still a
-   soft, restrained motion. Only opacity/transform transition, so the reveal
-   never causes layout shift. */
+/* Base reveal state — hidden, scaled down, ready to lift in */
 .reveal {
   opacity: 0;
-  transform: translateY(16px) scale(var(--reveal-scale, 0.97));
+  transform: translateY(18px) scale(var(--reveal-scale, 0.96));
   transition-property: opacity, transform;
-  transition-duration: 0.55s;
+  transition-duration: 0.6s;
   transition-timing-function: cubic-bezier(0.22, 0.61, 0.21, 1);
   transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
 }
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+}
+
+/* — Variant: gentle fade-in (for section heads, light elements) — */
+.reveal--fade {
+  transform: translateY(12px) scale(0.98);
+  transition-duration: 0.5s;
+}
+.reveal--fade.is-visible {
+  transform: none;
+}
+
+/* — Variant: scale-up lift (for cards, panels — feels like paper settling) — */
+.reveal--lift {
+  transform: translateY(20px) scale(0.95);
+  transition-duration: 0.65s;
+  transition-timing-function: cubic-bezier(0.16, 0.75, 0.26, 1);
+}
+.reveal--lift.is-visible {
+  transform: none;
+}
+
+/* — Variant: slide from left (for rescue steps, side content) — */
+.reveal--slide {
+  transform: translateX(-24px) translateY(8px) scale(0.97);
+  transition-duration: 0.55s;
+}
+.reveal--slide.is-visible {
+  transform: none;
+}
+
+/* — Variant: slide from right (for rail, complementary content) — */
+.reveal--slide-reverse {
+  transform: translateX(24px) translateY(8px) scale(0.97);
+  transition-duration: 0.55s;
+}
+.reveal--slide-reverse.is-visible {
+  transform: none;
+}
+
+/* — Variant: stagger children automatically (parent orchestrates) — */
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(16px) scale(0.97);
+  transition-property: opacity, transform;
+  transition-duration: 0.5s;
+  transition-timing-function: cubic-bezier(0.22, 0.61, 0.21, 1);
+}
+.reveal-stagger.is-visible > *:nth-child(1)  { transition-delay: 0ms; }
+.reveal-stagger.is-visible > *:nth-child(2)  { transition-delay: 60ms; }
+.reveal-stagger.is-visible > *:nth-child(3)  { transition-delay: 120ms; }
+.reveal-stagger.is-visible > *:nth-child(4)  { transition-delay: 180ms; }
+.reveal-stagger.is-visible > *:nth-child(5)  { transition-delay: 240ms; }
+.reveal-stagger.is-visible > *:nth-child(6)  { transition-delay: 300ms; }
+.reveal-stagger.is-visible > *:nth-child(7)  { transition-delay: 360ms; }
+.reveal-stagger.is-visible > *:nth-child(8)  { transition-delay: 420ms; }
+.reveal-stagger.is-visible > *:nth-child(9)  { transition-delay: 480ms; }
+.reveal-stagger.is-visible > *:nth-child(10) { transition-delay: 540ms; }
+.reveal-stagger.is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* — Progressive reveal for Rescue Mode steps — each step draws in sequence — */
+.rescue-steps {
+  /* no base transform — children handle their own */
+}
+.rescue-steps.is-visible .rescue-step {
+  opacity: 1;
+  transform: none;
+}
+.rescue-step {
+  opacity: 0;
+  transform: translateX(-16px) translateY(10px) scale(0.97);
+  transition-property: opacity, transform;
+  transition-duration: 0.5s;
+  transition-timing-function: cubic-bezier(0.16, 0.75, 0.26, 1);
+}
+.rescue-steps.is-visible .rescue-step:nth-child(1)  { transition-delay: 0ms; }
+.rescue-steps.is-visible .rescue-step:nth-child(2)  { transition-delay: 80ms; }
+.rescue-steps.is-visible .rescue-step:nth-child(3)  { transition-delay: 160ms; }
+.rescue-steps.is-visible .rescue-step:nth-child(4)  { transition-delay: 240ms; }
+.rescue-steps.is-visible .rescue-step:nth-child(5)  { transition-delay: 320ms; }
+.rescue-steps.is-visible .rescue-step:nth-child(6)  { transition-delay: 400ms; }
+.rescue-steps.is-visible .rescue-step:nth-child(7)  { transition-delay: 480ms; }
+.rescue-steps.is-visible .rescue-step:nth-child(8)  { transition-delay: 560ms; }
+
+/* — Section entrance: the whole section breathes in — */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.21, 1),
+              transform 0.7s cubic-bezier(0.16, 0.75, 0.26, 1);
+}
+.section-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* — Chapter plate enhanced: subtle slide-down when it becomes sticky — */
+.chapter-plate {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.5rem;
+  padding: 0.5rem 0.2rem 0.3rem;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.35s ease, transform 0.35s ease, 
+              background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.chapter-plate.is-pinned {
+  opacity: 1;
+  transform: none;
+}
+@media (min-width: 1024px) {
+  .chapter-plate {
+    position: sticky;
+    top: 7.5rem;
+    z-index: 15;
+    padding: 0.5rem 0.2rem 0.35rem;
+    background-color: var(--color-paper);
+    border-bottom: 1px solid rgba(29, 27, 22, 0.5);
+    box-shadow: 0 2px 0 rgba(29, 27, 22, 0.1);
+  }
+  .chapter-plate:not(.is-pinned) {
+    background-color: transparent;
+    border-bottom: none;
+    box-shadow: none;
+  }
+}
+.chapter-plate-title {
+  margin: 0;
+}
+
+/* ============================================================
+   PARALLAX — exclusive to signature elements only
+   ============================================================ */
+[data-parallax] {
+  will-change: transform;
+}
+
+/* ============================================================
+   FLICKER — only on the radar dial (signature element)
+   ============================================================ */
+@keyframes flicker-in {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  46%      { opacity: 0.88; transform: scale(0.996); }
+  50%      { opacity: 1;   transform: scale(1); }
+  84%      { opacity: 0.94; transform: scale(1.0015); }
+}
+.flicker {
+  animation: flicker-in 7s linear infinite;
+}
+
+/* ============================================================
+   COMPASS NEEDLE — slow, deliberate rotation
+   ============================================================ */
+@keyframes needle-spin {
+  to { transform: rotate(360deg); }
+}
+.compass-needle {
+  animation: needle-spin 18s linear infinite;
+  transform-origin: bottom center;
+}
+.compass-rotor {
+  animation: needle-spin 24s linear infinite;
+  transform-origin: center;
+}
+
+/* ============================================================
+   REDUCED MOTION — comprehensive opt-out
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .stamp-in,
+  .compass-needle,
+  .compass-rotor,
+  .live-dot::after,
+  .task-check.is-done > svg,
+  .animate-ping,
+  .animate-pulse,
+  .flicker {
+    animation: none !important;
+  }
+  .reveal,
+  .reveal--fade,
+  .reveal--lift,
+  .reveal--slide,
+  .reveal--slide-reverse,
+  .reveal-stagger > *,
+  .rescue-step,
+  .section-reveal,
+  .chapter-plate {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  html { scroll-behavior: auto; }
+  .app-shell,
+  .addbar-shell:focus-within { transform: none !important; }
+  .task-card:hover,
+  .stat-tile:hover,
+  .btn:hover:not(:disabled),
+  .rescue-row:hover { transform: none !important; }
+  [data-parallax] { transform: none !important; }
 }
 
 /* Subtle scroll parallax — anything flagged `data-parallax` drifts at its own
