@@ -143,12 +143,6 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
         <span className="absolute top-[6%] left-1/2 h-[25%] w-[2px] -translate-x-1/2 rounded-full bg-late/60" />
       </span>
 
-      {/* hub on top of the dial — small ink dot the needle pivots on */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink bg-paper-2"
-      />
-
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-serif text-[20px] leading-[1.1] font-semibold tabular-nums text-ink">
           {pct === null ? '—' : `${pct}%`}
