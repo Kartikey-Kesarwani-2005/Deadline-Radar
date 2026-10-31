@@ -93,7 +93,7 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
             estimate={getEst ? getEst(task) : null}
             plan={getPlan ? getPlan(task) : null}
             risk={getRisk ? getRisk(task) : null}
-            style={{ '--reveal-delay': `${Math.min(index * 45, 320)}ms` }}
+            style={{ '--reveal-delay': `${Math.min(index * 45, 320)}ms`, '--reveal-scale': index === 0 ? 1 : 0.97 }}
             selecting={selecting}
             selected={selectedIds?.has(task.id) || false}
             onToggle={(e) => onToggle(task.id, e)}
@@ -345,6 +345,10 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
   const [dateFilter, setDateFilter] = useState(null)
+  // 🧭 Scroll-spy — the chapter of the radar the reader is currently in. Drives
+  // the sticky chapter plate and nothing else; the plate only pins on wide
+  // screens so phones keep the plain reading flow.
+  const [activeZone, setActiveZone] = useState(null)
   // The almanac keeps its own picked day: opening a date sheet must not
   // silently filter the whole radar. The list only narrows when the user
   // explicitly asks for "open this day in the list".
@@ -424,7 +428,83 @@ export default function App() {
     )
     pending.forEach((el) => io.observe(el))
     return () => io.disconnect()
-  }, [tasks, view, isDemo, dateFilter, subjectFilter, query])
+    // `coverUp` re-runs the sweep after the dossier cover lifts (the shell only
+    // mounts behind it, so the observer must re-attach once it is back). The
+    // deps read `settings.view` (declared lower in the component) so the sweep
+    // re-runs when the reading room swaps without touching the temporal dead zone.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- surfaced-content deps above
+  }, [tasks, settings.view, isDemo, dateFilter, subjectFilter, query, coverUp])
+
+  // 🧭 Scroll-spy — which urgency chapter is the reader in? One more native
+  // IntersectionObserver (still no dependency): the section whose band is
+  // nearest the top of the viewport becomes the "selected" one, and the sticky
+  // chapter plate under the desk bar answers to it. Reruns when the surfaced
+  // content changes so filtered lists track correctly.
+  useEffect(() => {
+    const root = appShellRef.current
+    if (!root) return undefined
+    const chapters = Array.from(root.querySelectorAll('[id^="radar-"]:not(#radar-sections)'))
+    if (!chapters.length) {
+      setActiveZone(null)
+      return undefined
+    }
+    if (typeof IntersectionObserver === 'undefined') {
+      // Engine without IO support: fall back to the first chapter rather than
+      // stranding the reader without a story.
+      setActiveZone(chapters[0].id.slice('radar-'.length))
+      return undefined
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hit = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
+        if (hit) setActiveZone(hit.target.id.slice('radar-'.length))
+      },
+      { rootMargin: '-25% 0px -60% 0px', threshold: 0 },
+    )
+    chapters.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+    // `coverUp` re-attaches once the shell is mounted behind the cover; covered
+    // chapters (none rendered) reset the selection to a clean slate. Deps read
+    // `settings.view` to dodge the temporal-dead-zone ordering issue above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- surfaced-content deps above
+  }, [tasks, settings.view, isDemo, dateFilter, subjectFilter, query, coverUp])
+
+  // ✨ Subtle scroll parallax — signature elements flagged `data-parallax`
+  // drift at their own rate while the page scrolls. Transform-only (no layout
+  // shift, compositor friendly) and fully skipped under reduced motion. Reads
+  // the flag straight off the DOM so any element can opt in without new APIs.
+  useEffect(() => {
+    const root = appShellRef.current
+    const els = root ? Array.from(root.querySelectorAll('[data-parallax]')) : []
+    if (!els.length) return undefined
+    const reduce =
+      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const apply = () => {
+      if (reduce) {
+        els.forEach((el) => {
+          el.style.transform = ''
+        })
+        return
+      }
+      const vh = window.innerHeight || 1
+      for (const el of els) {
+        const rect = el.getBoundingClientRect()
+        const center = rect.top + rect.height / 2 - vh / 2
+        el.style.transform = `translate3d(0, ${(center * -0.12).toFixed(2)}px, 0)`
+      }
+    }
+    apply()
+    window.addEventListener('scroll', apply, { passive: true })
+    window.addEventListener('resize', apply)
+    return () => {
+      window.removeEventListener('scroll', apply)
+      window.removeEventListener('resize', apply)
+    }
+    // `coverUp` re-runs the parallax sweep once the shell is mounted behind the cover.
+    // Deps read `settings.view` to dodge the temporal-dead-zone ordering issue above.
+  }, [tasks, settings.view, isDemo, dateFilter, subjectFilter, query, coverUp])
 
   // ⏱️ Focus timer: persist + tick the header display once a second.
   useEffect(() => {
@@ -1358,6 +1438,11 @@ export default function App() {
 
   const editingTask = tasks.find((t) => t.id === editingId) || null
 
+  // The chapter the scroll-spy settled on — the sticky story plate reads it.
+  const activeSectionDef = SECTION_DEFS.find((d) => d.key === activeZone) || null
+  const activeSectionNum = SECTION_DEFS.findIndex((d) => d.key === activeZone)
+  const activeSectionCount = activeZone ? sections[activeZone]?.length ?? 0 : 0
+
   const jumpSection = (key) =>
     document.getElementById(`radar-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
@@ -1573,7 +1658,10 @@ export default function App() {
             </span>
             <div>
               <p className="eyebrow">Field notes · {stats.total} on the radar</p>
-              <h1 className="app-title font-serif text-[2rem] leading-none font-semibold tracking-tight text-ink sm:text-[2.3rem]">
+              <h1
+                data-parallax="0.08"
+                className="app-title font-serif text-[2rem] leading-none font-semibold tracking-tight text-ink sm:text-[2.3rem]"
+              >
                 Deadline Radar<span className="text-late">.</span>
               </h1>
             </div>
@@ -2097,6 +2185,22 @@ export default function App() {
               zoneCounts={zoneCounts}
               onJump={jumpZone}
             />
+          )}
+          {/* 🧭 Sticky chapter plate — the story chapter the reader is currently
+              in, pinned under the desk bar on wide screens so the journey through
+              the radar stays one continuous read. Renders only for chapters that
+              actually exist (empty sections never mounted one), so it never
+              promises a blank chapter. */}
+          {view === 'list' && activeZone && activeSectionDef && (
+            <div className="chapter-plate" aria-hidden="true">
+              <span className="eyebrow">Chapter {activeSectionNum + 1}</span>
+              <span className="chapter-plate-title font-serif text-[18px] leading-none font-semibold text-ink">
+                {activeSectionDef.title}
+              </span>
+              <span className="count-chip">
+                {activeSectionCount} {activeSectionCount === 1 ? 'item' : 'items'}
+              </span>
+            </div>
           )}
           {tasks.length === 0 ? (
             <div className="empty-sheet overflow-hidden rounded-[5px] border border-dashed border-ink/30 bg-paper-2/70">

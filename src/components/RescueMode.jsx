@@ -45,7 +45,10 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
       className="rescue-card paper-card rise overflow-hidden"
       aria-label="Deadline Rescue Mode"
     >
-      <div className="rescue-head flex flex-wrap items-start justify-between gap-2 px-3.5 py-2.5">
+      <div
+        data-parallax="0.06"
+        className="rescue-head flex flex-wrap items-start justify-between gap-2 px-3.5 py-2.5"
+      >
         <div>
           <p className="flex items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.2em] text-paper-2 uppercase">
             <Icon name="alert" size={12} className="text-today-soft" />
@@ -113,7 +116,8 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
             return (
               <li
                 key={item.task.id}
-                className="rescue-row rounded-[3px] border border-line bg-paper px-2.5 py-2"
+                className={`rescue-row rounded-[3px] border border-line bg-paper px-2.5 py-2 reveal`}
+                style={{ '--reveal-delay': `${Math.min(index * 60, 300)}ms` }}
               >
                 <div className="flex items-start gap-2">
                   <span aria-hidden="true" className="rescue-rank mt-0.5 shrink-0">
