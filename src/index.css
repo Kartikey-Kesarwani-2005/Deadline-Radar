@@ -281,31 +281,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: var(--color-ink-2);
 }
 
-/* Letterpress title: a lit top edge, a weighted bottom edge. */
+/* Letterpress title: a lit top edge, a weighted bottom edge.
+   Spacing is owned by the layout (the mt-* classes on the masthead), so this
+   rule stays purely decorative — no margins here. */
 .app-title {
   letter-spacing: -0.022em;
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.7),
     0 -1px 0 rgba(29, 27, 22, 0.16);
-  line-height: 1.1 !important;
-  margin-top: 0 !important;
-  margin-bottom: 0.5rem !important;
 }
 
-/* Ensure eyebrow text never collides with the app title */
-header .eyebrow {
-  line-height: 1.1 !important;
-  margin-bottom: 0.25rem !important;
-  margin-top: 0 !important;
-}
-
-/* Header tagline — clean paragraph below the title, never on same line */
-header > div > p.mt-3 {
-  margin-top: 0.75rem !important;
-  line-height: 1.5 !important;
-}
-
-/* Tight masthead brand text — no leading gap between lines */
+/* Masthead brand text — no leading gap between lines */
 .masthead-brand {
   line-height: 1 !important;
 }

@@ -1677,43 +1677,36 @@ export default function App() {
       }`}
     >
       {/* Masthead strip — the newspaper dateline */}
-      <div className="mb-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 border-y border-ink/70 py-0.5 font-mono text-[8.5px] tracking-[0.16em] text-ink-3 uppercase">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-y border-ink/70 py-1 font-mono text-[8.5px] tracking-[0.16em] text-ink-3 uppercase">
         <button
           type="button"
           onClick={() => openHome()}
           title="Open the front page — H"
           aria-label="Open the Deadline Radar front page"
-          className="masthead-brand font-semibold text-ink-2 transition hover:text-ink min-w-0 leading-none"
+          className="masthead-brand min-w-0 font-semibold text-ink-2 transition hover:text-ink leading-none"
         >
           <span aria-hidden="true" className="masthead-dot" />
           Deadline Radar<span className="text-ink-3">·</span>Field Notes
         </button>
         <span className="hidden sm:inline">No Hands Challenge · Wispr Flow</span>
-        <span className="dateline-chip">{formatLongToday()}</span>
+        <span className="dateline-chip ml-auto shrink-0 whitespace-nowrap sm:ml-0">{formatLongToday()}</span>
       </div>
 
       {/* Header — the welcome block: identity, promise and the action cluster */}
       <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:flex-nowrap">
         <div className="min-w-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
+          <p className="eyebrow">Field notes · {stats.total} on the radar</p>
+          <div className="mt-1.5 flex items-center gap-3">
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2 sm:h-11 sm:w-11">
               <span
                 aria-hidden="true"
                 className="compass-needle absolute bottom-1/2 left-1/2 h-[15px] w-[2px] -translate-x-1/2 rounded-full bg-late"
               />
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-ink bg-paper" />
             </span>
-            <div className="min-w-0 flex flex-col gap-0.5">
-              <p className="eyebrow mb-0 leading-tight">
-                Field notes · {stats.total} on the radar
-              </p>
-              <h1
-                className="app-title font-serif text-[1.875rem] leading-[1.1] font-semibold tracking-tight text-ink sm:text-[2.25rem] min-w-0 break-words"
-                style={{ maxWidth: '100%', marginTop: '0', lineHeight: '1.1' }}
-              >
-                Deadline Radar<span className="text-late">.</span>
-              </h1>
-            </div>
+            <h1 className="app-title min-w-0 break-words font-serif text-[1.875rem] leading-[1.1] font-semibold tracking-tight text-ink sm:text-[2.25rem]">
+              Deadline Radar<span className="text-late">.</span>
+            </h1>
           </div>
           <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-ink-2 break-words">
             Assignments arrive in WhatsApp groups and notes — nothing stays in one place.
@@ -1722,7 +1715,7 @@ export default function App() {
             <span className="font-semibold text-late">late</span>.
           </p>
         </div>
-        <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:shrink-0">
           {focusTask && (
             <button
               type="button"
