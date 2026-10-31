@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-281%2F281%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-306%2F306%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -33,8 +33,8 @@ sample file — a permanent, shareable door to it.
   a crisp @2x PNG on Field-Notes paper — registration marks, rubber-stamped grade, the
   honest numbers, the credit line — native share sheet on phones, download elsewhere.
   No more blurry screenshots.
-- **🎬 The front page — a dossier cover, not a splash** — first visit opens on a real
-  front page: a stamped masthead, the **next deadline**, a **live table of contents**
+- **🎬 The front page — an editorial-tech dossier cover, not a splash** — first visit opens
+  on a real front page: a stamped masthead, the **next deadline**, a **live table of contents**
   (late / today / this week / later / no date / done, with marks riding on them) and the
   **week ahead** as seven printed cells. Each contents row is a door: press *Late* (or
   <kbd>1</kbd>–<kbd>6</kbd>) and the sheet lifts straight onto that section; press the
@@ -77,6 +77,14 @@ sample file — a permanent, shareable door to it.
   10 pm, with a 10-minute breath between rounds. Every block carries a ▶ button that
   starts a real focus session; work that cannot honestly fit reads as overflow — the
   timetable never fakes it. One tap copies it for the group.
+- **🚨 Deadline Rescue Mode — a finite, honest triage window** — when the week is on fire,
+  pick **30 min / 1 hour / 2 hours** and the radar commits a real plan, not a wishlist:
+  late work jumps the queue (×4), work due within two days ranks by marks-per-hour, and
+  later work is discounted by each day left. Every row says *why* it is first, the meter
+  stops exactly at the window, and anything that cannot fit is named as **overflow**
+  instead of quietly disappearing. **Start rescue** drops you into a focus session on the
+  first task — and the policy line is printed under the plan, so the ranking is never a
+  black box.
 - **🏅 Weekly report grade stamp** — the weekly report now ends like a real report card:
   a rubber-stamped **letter grade (A+…D) with an honest /100 score** — on-time rate
   carries 70%, the streak and a clean slate add up, and the week-over-week trend nudges
@@ -87,6 +95,10 @@ sample file — a permanent, shareable door to it.
   the radar sections** — controls live where the cards are now, and they stay on screen
   while the radar scrolls. Calendar view hides list-only controls instead of leaving dead
   buttons behind.
+- **🧭 Sticky chapter plate** — on wide screens a small plate under the DeskBar tracks the
+  urgency chapter you are actually reading — *Chapter 03 · This week · 4 items* — via a
+  native scroll-spy (no dependency). A long radar stays one continuous read; phones keep
+  the plain flow.
 - **🎯 Risk score dial (0–100)** — every pending card carries a small inked ring that
   folds the whole danger level into one glance: deadline proximity + marks + whether the
   learned effort even fits the days left + your own lateness history. Hover names every
@@ -168,7 +180,8 @@ sample file — a permanent, shareable door to it.
 - **Celebration confetti** — ticking a task done bursts colourful confetti right from the click.
 - **Premium feel** — a "Field Notes" design system: warm graph paper, editorial serif headlines,
   rubber-stamp chips and hard offset shadows. Cards glide in with a stagger and lift on hover;
-  every animation respects the OS reduced-motion setting.
+  section heads carry a quiet urgency wash, signature elements drift on a light scroll
+  parallax, and every animation respects the OS reduced-motion setting.
 - **Desktop & phone modes** — Auto picks by screen size (or force either in ⚙️ Settings):
   phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1536px),
   a sticky paper side rail that holds position while you scroll, and hover-reveal card actions.
@@ -234,6 +247,8 @@ sample file — a permanent, shareable door to it.
 - **Crash-safe** — an error boundary keeps the radar alive; a bad render shows a reload card,
   never a blank white page.
 - **PWA-ready** — favicon, web manifest and share preview (OG) tags; installable from the browser.
+  The service worker also re-checks for a fresh deploy whenever the tab wakes (and every 30
+  min), so a phone never sits on a stale build while judges are opening the demo.
 - **Daily check-in** — open the app, tick things off.
 - **Everything in localStorage** — no account, no backend, data never leaves your browser
   (except the optional AI call you configure yourself).
@@ -290,6 +305,9 @@ output = `dist`) or Netlify (same settings).
 - [x] 🗓️ Radar Almanac month view (day sheet, month summary, subject legend) + List/Almanac toggle
 - [x] 🖋️ Deterministic subject inks across cards, calendar dots, rail and report
 - [x] 🧭 Zone index with live counts · ⏱️ sticky focus dock vs. learned estimate · front page any time (`h`)
+- [x] 🚨 Deadline Rescue Mode — 30/60/120-minute honest triage, ranked and overflow-named
+- [x] 🧭 Sticky chapter plate scroll-spy · ✨ parallax + section-wash interaction polish
+- [x] 📱 Fresh-build service-worker checks (wake + every 30 min) so demo phones never go stale
 
 ## 📦 Submission checklist (by 31 Oct, 11:59 pm IST)
 
@@ -304,6 +322,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # parser + bulk + backup + voice + sort + countdown + risk/plan/heat/timetable/grade/marking-coach/almanac/inks (281 checks)
+npm test       # parser + bulk + backup + voice + sort + countdown + risk/plan/heat/timetable/grade/marking-coach/almanac/inks/rescue (306 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

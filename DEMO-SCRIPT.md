@@ -70,6 +70,11 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   lays the deadline out as **day-by-day study sessions** — what to do in each round,
   on which day, ~how long, ending in "submit" — press **Copy plan** and the checklist
   lands in the chat. **(8s)**
+- **The rescue moment (new):** under the do-now pick sits **🚨 Deadline Rescue Mode**. Tap
+  **30 min**, then **2 hours** — the plan redraws to exactly what fits, the meter fills, and
+  when the backlog is too big the overflow line names how many items roll to the next block.
+  Press **Start rescue** and the focus dock starts on row 01. **(+7s — or swap this for the
+  plan moment if the cut runs long)**
 - **Voice beats:** press **🔊 Briefing** — the radar *speaks* your whole day
   (late → today → tomorrow → on-time rate → "ab kya karun" pick). Then press
   **🎙️ Ask** and say *"ab kya karun?"* → the radar
@@ -82,8 +87,8 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 - **VO:** *"The dial is the whole picture at a glance — red means trouble, green centre is
   your on-time score. It counts marks at risk, learns my own rhythm from history — and it
   doesn't just warn me, it plans me: my whole day is time-blocked, one click gives any
-  deadline a short day-by-day checklist, and the weekly report is stamped with a real
-  grade, not vibes."*
+  deadline a short day-by-day checklist, a 30-minute rescue window spends only what fits,
+  and the weekly report is stamped with a real grade, not vibes."*
 - Tap a dial ring → it jumps to that section. Show the **On time** ring, the **📈 6-week arc**
   and Weekly report numbers — this is the "one real result".
 

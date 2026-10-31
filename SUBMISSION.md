@@ -106,6 +106,9 @@ guess a number. Keep the link, the tags and the hashtag.
 > ⏱️ **Focus dock** — a timer that stays parked while you scroll, measured against your own
 > learned estimate.
 > 🖨️ **One-key print** — `p` turns the radar into a clean paper wall-sheet.
+> 🚨 **Deadline Rescue Mode** — pick 30 min / 1 hour / 2 hours and get a finite triage
+> plan: late work first, marks-per-hour next, and the overflow named honestly instead of
+> hidden. One tap starts focus on the first rescue task.
 > 🎬 Dossier cover, exam-hall marking coach, weekly grade card, day timetable, risk dials,
 > voice briefing and spoken orders — all on Field-Notes paper.
 >
@@ -120,15 +123,16 @@ guess a number. Keep the link, the tags and the hashtag.
 
 > 📡 Deadline Radar — deadlines in, a plan out. Paste / speak / photo → today, this week,
 > what's late. New: **front page** with live contents, month **Almanac**, **subject inks**,
-> live **zone index**, sticky **focus dock**, one-key **print**. Built hands-free with Wispr
-> Flow · #NoHandsChallenge @WeMakeDevs @wisprflow
+> live **zone index**, sticky **focus dock**, **rescue windows** (30/60/120 min), one-key
+> **print**. Built hands-free with Wispr Flow · #NoHandsChallenge @WeMakeDevs @wisprflow
 > https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1
 
 **Weekly check-in variant (replace the "what's new" block):**
 
 > This week: 🎬 dossier front page with live contents + week strip · 🗓️ month almanac with
 > per-day marks + late stamps · 🖋️ subject inks across the desk · 🧭 zone index · ⏱️ sticky
-> focus dock · 🖨️ print stylesheet. Wispr usage: **[__] words** (card attached).
+> focus dock · 🚨 rescue windows (30/60/120 min) · 🖨️ print stylesheet. Wispr usage:
+> **[__] words** (card attached).
 
 ---
 
@@ -159,8 +163,10 @@ guess a number. Keep the link, the tags and the hashtag.
 > the urgency list and a month **Almanac** printed on Field-Notes paper, with marks on every
 > day, a deterministic ink per subject and a day sheet under the grid — plus a risk dial per
 > card, a learned pace model, a same-day pile-up detector, an exam-hall marking coach and a
-> weekly report stamped with a real grade. Colour, print and voice are part of the interface,
-> not decoration.
+> weekly report stamped with a real grade. When the week collapses, **Deadline Rescue Mode**
+> asks for a real window (30/60/120 minutes), ranks late and imminent work first, commits
+> only what honestly fits and names the overflow instead of hiding it. Colour, print and
+> voice are part of the interface, not decoration.
 
 Fill the `[__]`s — **31 Oct subah, 2 minute, every number from a real screenshot:**
 
@@ -176,6 +182,7 @@ Koi number guess mat karo — judges screenshot maang sakte hain.
 
 - [ ] Registered on the challenge site + Wispr Flow Pro active (trial is fine — month free)
 - [ ] Project link (working, judges can open without login) — plus `?demo=1` in notes
+- [ ] Fresh-build check on a phone/browser (service worker re-checks on wake, so the judge's reopen shows the latest push)
 - [ ] Demo video ≤ 2 minutes, voiceover dictated with Wispr
 - [ ] Wispr usage card screenshot (desktop app → Insights)
 - [ ] Write-up with real numbers filled in
