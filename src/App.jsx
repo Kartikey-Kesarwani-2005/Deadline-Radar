@@ -1691,7 +1691,7 @@ export default function App() {
                 className="app-title font-serif text-[2rem] leading-snug font-semibold tracking-tight text-ink sm:text-[2.3rem] min-w-0 break-words"
                 style={{ maxWidth: '100%' }}
               >
-                Deadline Radar <span className="text-late">.</span>
+                Deadline Radar<span className="text-late">.</span>
               </h1>
             </div>
           </div>
