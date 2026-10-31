@@ -134,10 +134,10 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
       />
 
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-serif text-[24px] leading-none font-semibold tabular-nums text-ink">
+        <span className="font-serif text-[20px] leading-[1.1] font-semibold tabular-nums text-ink">
           {pct === null ? '—' : `${pct}%`}
         </span>
-        <span className="mt-0.5 font-mono text-[6.5px] font-semibold tracking-[0.1em] text-done uppercase">
+        <span className="mt-1 font-mono text-[7px] font-semibold tracking-[0.12em] text-done uppercase leading-[1.2]">
           on time
         </span>
       </div>

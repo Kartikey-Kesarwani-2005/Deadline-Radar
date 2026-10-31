@@ -1685,13 +1685,13 @@ export default function App() {
               <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-ink bg-paper" />
             </span>
             <div className="min-w-0">
-              <p className="eyebrow">Field notes · {stats.total} on the radar</p>
+              <p className="eyebrow mt-0.5">Field notes · {stats.total} on the radar</p>
               <h1
                 data-parallax="0.08"
-                className="app-title font-serif text-[2rem] leading-none font-semibold tracking-tight text-ink sm:text-[2.3rem] min-w-0 break-words"
+                className="app-title font-serif text-[2rem] leading-snug font-semibold tracking-tight text-ink sm:text-[2.3rem] min-w-0 break-words"
                 style={{ maxWidth: '100%' }}
               >
-                Deadline Radar<span className="text-late">.</span>
+                Deadline Radar <span className="text-late">.</span>
               </h1>
             </div>
           </div>
