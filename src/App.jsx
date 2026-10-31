@@ -1708,7 +1708,6 @@ export default function App() {
                 Field notes · {stats.total} on the radar
               </p>
               <h1
-                data-parallax="0.08"
                 className="app-title font-serif text-[1.875rem] leading-[1.1] font-semibold tracking-tight text-ink sm:text-[2.25rem] min-w-0 break-words"
                 style={{ maxWidth: '100%', marginTop: '0', lineHeight: '1.1' }}
               >
