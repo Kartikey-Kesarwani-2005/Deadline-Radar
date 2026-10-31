@@ -3,7 +3,7 @@
  * - Hashed assets & static files: cache first (immutable by filename).
  * - Cross-origin calls (the AI API) are never touched here.
  */
-const CACHE = 'deadline-radar-v4'
+const CACHE = 'deadline-radar-v5'
 const PRECACHE = ['./', './index.html', './manifest.webmanifest', './favicon.svg']
 
 self.addEventListener('install', (event) => {
@@ -31,8 +31,12 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
 
   if (req.mode === 'navigate') {
+    // `cache: 'no-cache'` asks GitHub Pages for a fresh document every time —
+    // without it a phone's HTTP cache can keep serving an old index.html (and
+    // its old hashed bundle) long after a new deploy, which is exactly how the
+    // demo link ends up looking stale while localhost is already updated.
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-cache' })
         .then((res) => {
           const copy = res.clone()
           caches.open(CACHE).then((cache) => cache.put('./index.html', copy))
