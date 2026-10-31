@@ -29,6 +29,7 @@ import LiveRail from './components/LiveRail'
 import TaskCard from './components/TaskCard'
 import ConsistencyHeatmap from './components/ConsistencyHeatmap'
 import DayPlanner from './components/DayPlanner'
+import RescueMode from './components/RescueMode'
 import DeskBar from './components/DeskBar'
 import AlmanacView from './components/AlmanacView'
 import FocusDock from './components/FocusDock'
@@ -994,11 +995,36 @@ export default function App() {
     const ids = selectedIds
     if (!ids.size) return
     const now = Date.now()
-    setTasks((prev) =>
-      prev.map((t) =>
+    setTasks((prev) => {
+      let next = prev.map((t) =>
         ids.has(t.id) && !t.done ? { ...t, done: true, completedAt: t.completedAt || now } : t,
-      ),
-    )
+      )
+      // 🔁 Bulk-ticking a weekly deadline must roll its next occurrence exactly
+      // like a single tick does — otherwise the repeat chain stops silently.
+      for (const t of prev) {
+        if (!ids.has(t.id) || t.done || !t.repeat || !t.dueDate) continue
+        const coming = nextOccurrence(t.dueDate)
+        const waiting =
+          coming &&
+          next.some((x) => !x.done && x.rolledFrom === t.id && x.dueDate === coming)
+        if (coming && !waiting) {
+          next = [
+            ...next,
+            {
+              ...t,
+              id: uid(),
+              done: false,
+              completedAt: null,
+              dueDate: coming,
+              effortMin: null,
+              createdAt: now,
+              rolledFrom: t.id,
+            },
+          ]
+        }
+      }
+      return next
+    })
     const willClear = tasks.every((t) => t.done || ids.has(t.id))
     setFlash({
       msg: `✅ ${ids.size} marked done${willClear ? ' — radar clear 🎉' : ''}`,
@@ -2008,6 +2034,9 @@ export default function App() {
           {tasks.length > 0 && (
             <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
           )}
+          {tasks.length > 0 && view === 'list' && (
+            <RescueMode tasks={tasks} today={dayKey} onStart={startFocus} focusId={focus?.taskId} />
+          )}
           {tasks.length > 0 && plan && view === 'list' && (
             <DayPlanner tasks={tasks} onStart={startFocus} focusId={focus?.taskId} />
           )}
@@ -2206,6 +2235,7 @@ export default function App() {
 
       {editingTask && (
         <TaskEditModal
+          key={editingTask.id}
           task={editingTask}
           onClose={() => setEditingId(null)}
           onSave={(patch) => updateTask(editingTask.id, patch)}

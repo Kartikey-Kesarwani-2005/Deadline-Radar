@@ -291,13 +291,13 @@ output = `dist`) or Netlify (same settings).
 - [x] 🖋️ Deterministic subject inks across cards, calendar dots, rail and report
 - [x] 🧭 Zone index with live counts · ⏱️ sticky focus dock vs. learned estimate · front page any time (`h`)
 
-## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
+## 📦 Submission checklist (by 31 Oct, 11:59 pm IST)
 
 Everything prepped in this repo: **[SUBMISSION.md](./SUBMISSION.md)** (paste-ready write-up)
 and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 
 - [ ] Deployed link ✅ (GitHub Pages, auto-deploys on push)
-- [ ] Demo video (≤ 2 minutes)
+- [ ] Demo video (≤ 2 minutes) — upload, then paste the URL in SUBMISSION.md §2
 - [ ] Wispr usage card screenshot (desktop app → Insights)
 - [ ] Few lines: problem, who it's for, how Wispr was used (draft in SUBMISSION.md)
 

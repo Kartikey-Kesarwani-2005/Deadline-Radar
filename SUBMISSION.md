@@ -1,10 +1,10 @@
 # Submission pack — Deadline Radar
 
-Entry for **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow, 16–30 Oct) —
+Entry for **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow, 16–31 Oct) —
 **Track: Builders (for developers), solo entry.**
 
 Official flow: ① Register ② Build with Flow ③ Share every week ④ Submit by
-**Friday 30 October, 11:59 pm IST** on the challenge website. Everything below maps to that.
+**Saturday 31 October, 11:59 pm IST** on the challenge website. Everything below maps to that.
 
 ---
 
@@ -42,6 +42,11 @@ Repo: https://github.com/Kartikey-Kesarwani-2005/Deadline-Radar
 Full timed shot list + dictated voiceover lines: **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)**
 Record the voiceover **with Wispr Flow** and caption "Voiceover: Wispr Flow".
 
+Uploaded video URL (required by the submission form — paste it here, never guess one):
+**[paste the uploaded demo video URL here]**
+
+Spec for the form: demo video **≤ 2 minutes**.
+
 ---
 
 ## 3. Wispr usage card
@@ -69,7 +74,7 @@ live link. Upload the Wispr usage card. Paste-ready post template:
 Schedule:
 - **Mon 19 Oct** — week-1 check-in (if missed, post catch-up immediately, don't skip)
 - **Mon 26 Oct** — week-2 check-in with fresh usage card
-- **Fri 30 Oct** — submission day: submit in the MORNING, not at 11:59 pm
+- **Sat 31 Oct** — submission day: submit in the MORNING, not at 11:59 pm
 
 ### 4.1 Paste-ready captions (launch + final check-in)
 
@@ -157,7 +162,7 @@ guess a number. Keep the link, the tags and the hashtag.
 > weekly report stamped with a real grade. Colour, print and voice are part of the interface,
 > not decoration.
 
-Fill the `[__]`s — **30 Oct subah, 2 minute, every number from a real screenshot:**
+Fill the `[__]`s — **31 Oct subah, 2 minute, every number from a real screenshot:**
 
 1. **Wispr usage `[___]`** → Wispr desktop app → **Insights** → words dictated during the challenge
 2. **`[__]` days / `[__]` captured / `[__]` finished / `[__]` before deadline** → app kholo →
@@ -175,7 +180,7 @@ Koi number guess mat karo — judges screenshot maang sakte hain.
 - [ ] Wispr usage card screenshot (desktop app → Insights)
 - [ ] Write-up with real numbers filled in
 - [ ] Track: **Builders** · solo entry
-- [ ] Submit **30 Oct morning** (hard stop 11:59 pm IST — don't risk the last hour)
+- [ ] Submit **31 Oct morning** (hard stop 11:59 pm IST — don't risk the last hour)
 
 ## Bonus entries (official — don't skip)
 

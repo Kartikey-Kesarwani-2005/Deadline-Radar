@@ -109,4 +109,4 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 - **Length check:** hard stop at 1:59. If over, cut the voiceover story section first,
   never the capture demo.
 - **End frame:** link + "Built hands-free with Wispr Flow".
-- Export 1080p, upload before 30 Oct evening.
+- Export 1080p, upload before 31 Oct evening.

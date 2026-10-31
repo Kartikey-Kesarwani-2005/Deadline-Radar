@@ -13,6 +13,7 @@ import { dueTone, countdownTo, parseDateKey, dayDiff, todayKey } from '../src/li
 import { postponeDate, sortTasks } from '../src/lib/sort.js'
 import { riskScore, riskTone } from '../src/lib/risk.js'
 import { buildPlan, planCopyText, daySchedule, timetableCopyText } from '../src/lib/plan.js'
+import { buildRescuePlan, rankRescue, rescueDueLabel, RESCUE_MINUTES, RESCUE_POLICY } from '../src/lib/rescue.js'
 import { guessCoach, MARKING_PRESETS } from '../src/lib/marking.js'
 
 const today = new Date()
@@ -728,6 +729,81 @@ check('risk: score stays inside 0–100', (() => {
   // Hours that obviously don't fit still fit in a bounded plan — max 4 rounds.
   const huge = buildPlan({ title: 'Big assignment', dueDate: shift(2), marks: null }, [], todayKey())
   check('plan: never more rounds than the days left', huge.steps.length <= 3, true)
+}
+
+// --- 🚨 Deadline Rescue Mode — a finite, honest triage window ---
+{
+  const rescueTask = (id, dueOffset, marks = 10, extra = {}) => ({
+    id,
+    title: id,
+    subject: 'DBMS',
+    marks,
+    done: false,
+    dueDate: shift(dueOffset),
+    createdAt: Date.now() - 864e5,
+    ...extra,
+  })
+
+  const late = rescueTask('late', -2, 10)
+  const tomorrow = rescueTask('tomorrow', 1, 15)
+  const later = rescueTask('later', 7, 40)
+  const done = rescueTask('done', 1, 10, { done: true })
+  const undated = rescueTask('undated', 1, 10, { dueDate: null })
+
+  const ranked = rankRescue([late, tomorrow, later, done, undated], { today: todayKey() })
+  check('rescue: only pending dated work is considered', ranked.length, 3)
+  check('rescue: late work leads the queue', ranked[0].task.id, 'late')
+  check('rescue: due tomorrow beats a heavier far task', ranked[1].task.id, 'tomorrow')
+  check('rescue: every candidate explains its rank', ranked.every((item) => item.reasons.length >= 2), true)
+
+  check('rescue: offers exactly 30 / 60 / 120 minute windows', RESCUE_MINUTES, [30, 60, 120])
+  for (const level of RESCUE_MINUTES) {
+    const plan = buildRescuePlan([late, tomorrow, later], level)
+    check(`rescue: ${level}m window never over-spends`, plan.used <= level, true)
+    check(
+      `rescue: ${level}m rows stay inside the window`,
+      plan.items.every((item) => item.startMin >= 0 && item.endMin <= level),
+      true,
+    )
+  }
+
+  const tight = buildRescuePlan([late, tomorrow], 30)
+  check('rescue: an oversized top task gets a partial slice', tight.items[0].partial, true)
+  check(
+    'rescue: the partial slice uses exactly the window',
+    [tight.items[0].allocated, tight.used, tight.remaining],
+    [30, 30, 0],
+  )
+  check('rescue: excess workload is reported, not hidden', tight.overloaded, true)
+  check('rescue: waiting work is counted honestly', tight.deferredCount >= 1, true)
+  check('rescue: must-do work over the window raises the alarm', tight.urgentOverloaded, true)
+  check(
+    'rescue: reasons name the urgency tier',
+    tight.items[0].reasons[0],
+    '2d late — rescue first',
+  )
+  check('rescue: due labels stay human', rescueDueLabel(tight.items[0], todayKey()), '2d late')
+
+  const roomy = buildRescuePlan(
+    [rescueTask('small1', 2, 5), rescueTask('small2', 5, 5)],
+    120,
+  )
+  check(
+    'rescue: work that fits has no overflow',
+    [roomy.overloaded, roomy.deferredCount],
+    [false, 0],
+  )
+  check('rescue: spare window time is reported, not filled', roomy.remaining, 60)
+  check('rescue: fully funded tasks are not partial', roomy.items.every((item) => !item.partial), true)
+  check(
+    'rescue: the policy explains why this order is used',
+    RESCUE_POLICY.includes('late') && RESCUE_POLICY.includes('marks-per-hour'),
+    true,
+  )
+
+  check('rescue: an invalid window falls back to 60 minutes', buildRescuePlan([late], 45).budget, 60)
+  check('rescue: done work needs no rescue plan', buildRescuePlan([done], 30), null)
+  check('rescue: an empty radar needs no rescue plan', buildRescuePlan([], 30), null)
 }
 
 // --- 🔥 12-week consistency heat ---

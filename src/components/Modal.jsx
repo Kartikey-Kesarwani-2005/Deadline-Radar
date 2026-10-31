@@ -73,7 +73,7 @@ export default function Modal({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-center overflow-y-auto bg-ink/45 p-4 backdrop-blur-[2px] ${
+      className={`fixed inset-0 z-[70] flex justify-center overflow-y-auto bg-ink/45 p-4 backdrop-blur-[2px] ${
         align === 'top' ? 'items-start pt-[8vh] sm:pt-[12vh]' : 'items-center'
       }`}
       onMouseDown={(e) => {
