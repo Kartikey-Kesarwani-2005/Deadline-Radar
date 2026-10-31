@@ -1653,12 +1653,12 @@ export default function App() {
   return (
     <div
       ref={appShellRef}
-      className={`app-shell mx-auto w-full px-4 pb-16 pt-5 sm:pt-7 ${
+      className={`app-shell mx-auto w-full px-4 pb-16 pt-3 sm:pt-4 ${
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
       {/* Masthead strip — the newspaper dateline */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-y border-ink/70 py-1 font-mono text-[9px] tracking-[0.18em] text-ink-3 uppercase">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-y border-ink/70 py-1 font-mono text-[9px] tracking-[0.18em] text-ink-3 uppercase">
         <button
           type="button"
           onClick={() => openHome()}
@@ -1674,7 +1674,7 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <header className="mb-5 flex flex-wrap items-start justify-between gap-4">
+      <header className="mb-3 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3 min-w-0">
             <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2">
@@ -1695,7 +1695,7 @@ export default function App() {
               </h1>
             </div>
           </div>
-          <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-ink-2">
+          <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-ink-2">
             Assignments arrive in WhatsApp groups and notes — nothing stays in one place.
             <span className="font-medium text-ink"> Paste or speak them here</span>, and always know
             what is due <span className="font-semibold text-today">today</span> and what is getting{' '}
@@ -2040,7 +2040,7 @@ export default function App() {
           rail; from xl up a live countdown + subject-load rail fills the right
           edge so the middle column stops stretching into dead space. */}
       <div
-        className={`dashboard-grid mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-6 lg:items-start' : ''}`}
+        className={`dashboard-grid mt-3 grid gap-4 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-5 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div
