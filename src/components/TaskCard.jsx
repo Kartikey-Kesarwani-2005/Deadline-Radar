@@ -115,7 +115,7 @@ export default function TaskCard({
     <div
       title={task.source}
       style={style}
-      className={`rise task-card group ${
+      className={`task-card group reveal ${
         selected
           ? 'border-ink shadow-[2px_2px_0_rgba(29,27,22,0.35)]'
           : task.done

@@ -770,6 +770,10 @@ select.field {
   .task-card:hover {
     transform: translateY(-1px);
     box-shadow: 2px 2px 0 rgba(29, 27, 22, 0.16);
+    /* The scroll reveal owns the resting transition (opacity + transform); the
+       hover lift re-declares its own short transition so it never waits on the
+       reveal stagger delay. */
+    transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
   }
 }
 
@@ -911,6 +915,12 @@ select.field {
     border-color: var(--color-ink);
     transform: translateY(-1px);
     box-shadow: 2px 2px 0 rgba(29, 27, 22, 0.14);
+    /* Same as the task card — the reveal owns the resting transition; hover
+       re-declares its own short one so the lift never waits on the stagger. */
+    transition:
+      transform 0.14s ease,
+      box-shadow 0.14s ease,
+      border-color 0.14s ease;
   }
 }
 
@@ -1076,6 +1086,25 @@ select.field {
   animation: rise-in 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
 }
 
+/* Scroll-triggered reveal — the radar's entries fade in and slide upward as
+   they enter the viewport (the field-notes entry) instead of playing on a
+   timer. The scroll observer toggles `.is-visible`; the transition then plays
+   once, with `--reveal-delay` carrying the stagger. Transitions (not fill-
+   forwards keyframes) keep the resting state plain CSS, so hover lifts and
+   subsequent state changes are never frozen mid-flight by a finished animation. */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition-property: opacity, transform;
+  transition-duration: 0.45s;
+  transition-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 /* Slow compass needle — replaces the old neon radar sweep. */
 @keyframes needle-spin {
   to {
@@ -1135,6 +1164,13 @@ select.field {
   .animate-ping,
   .animate-pulse {
     animation: none !important;
+  }
+  /* A user who opts out of motion gets the resting state — the scroll reveal
+     simply never hides anything. */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
   html {
     scroll-behavior: auto;
@@ -2227,6 +2263,11 @@ select.field {
   }
   .dashboard-grid {
     display: block !important;
+  }
+  /* A printed page is final — never let an unplayed scroll reveal hide content. */
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
   }
   .alm-panel {
     border: 1px solid #000 !important;

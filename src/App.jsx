@@ -71,7 +71,7 @@ const SECTION_DEFS = [
 function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst, getPlan, getRisk, onToggle, onDelete, onEdit, onDateChange, onShare, onFocus, onPostpone, onCopyPlan, onSelectToggle, selecting, selectedIds, focusId }) {
   if (!tasks.length) return null
   return (
-    <section id={`radar-${sectionKey}`} className="mb-7 scroll-mt-4">
+    <section id={`radar-${sectionKey}`} className="reveal mb-7 scroll-mt-4">
       <div className="section-head mb-2.5">
         <span className="section-index" aria-hidden="true">
           {String(num).padStart(2, '0')}
@@ -93,7 +93,7 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
             estimate={getEst ? getEst(task) : null}
             plan={getPlan ? getPlan(task) : null}
             risk={getRisk ? getRisk(task) : null}
-            style={{ animationDelay: `${Math.min(index * 45, 320)}ms` }}
+            style={{ '--reveal-delay': `${Math.min(index * 45, 320)}ms` }}
             selecting={selecting}
             selected={selectedIds?.has(task.id) || false}
             onToggle={(e) => onToggle(task.id, e)}
@@ -370,6 +370,7 @@ export default function App() {
   const inputRef = useRef(null)
   const searchRef = useRef(null)
   const resizeRef = useRef(null)
+  const appShellRef = useRef(null)
   const [installEvt, setInstallEvt] = useState(null)
   // Connectivity + screen size drive the offline banner and desktop / phone modes.
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -394,6 +395,36 @@ export default function App() {
       clearTimeout(resizeRef.current)
     }
   }, [])
+
+  // Scroll-triggered reveal — the radar's major sections, the score dial, the
+  // stat tiles and the task cards fade in and slide upward as they enter the
+  // viewport. One native IntersectionObserver (no extra dependency): `.reveal`
+  // is the hidden state, `.is-visible` the played state. Re-runs when the
+  // surfaced content changes (tasks added / filtered / view swapped) so freshly
+  // mounted entries get observed, while already-played ones are skipped.
+  useEffect(() => {
+    const root = appShellRef.current
+    if (!root) return undefined
+    const pending = Array.from(root.querySelectorAll('.reveal:not(.is-visible)'))
+    if (typeof IntersectionObserver === 'undefined') {
+      // Engine without IO support: never strand content behind a hidden state.
+      pending.forEach((el) => el.classList.add('is-visible'))
+      return undefined
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            io.unobserve(entry.target)
+          }
+        }
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' },
+    )
+    pending.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [tasks, view, isDemo, dateFilter, subjectFilter, query])
 
   // ⏱️ Focus timer: persist + tick the header display once a second.
   useEffect(() => {
@@ -1508,6 +1539,7 @@ export default function App() {
 
   return (
     <div
+      ref={appShellRef}
       className={`app-shell mx-auto w-full px-4 pb-16 pt-5 sm:pt-7 ${
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
