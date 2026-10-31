@@ -143,7 +143,7 @@ export default function DeskBar({
       {/* 🧭 Zone jumps — the section index, with honest live counts. Works from
           either view: in the almanac it first opens the list, then scrolls. */}
       {zoneCounts && (
-        <div className="zone-nav mt-2 border-t border-dotted border-line pt-2">
+        <div className="zone-nav mt-2 border-t border-dotted border-line pt-2 flex flex-wrap gap-1">
           <span className="eyebrow shrink-0">Zones</span>
           {ZONES.map(({ key, label, dot }) => {
             const count = zoneCounts[key] || 0
