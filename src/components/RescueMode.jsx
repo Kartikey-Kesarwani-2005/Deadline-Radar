@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { buildRescuePlan, rescueDueLabel, RESCUE_LEVELS, RESCUE_POLICY } from '../lib/rescue'
 import { fmtHours } from '../lib/brain'
 import Icon from './Icon'
@@ -36,27 +36,6 @@ const TIER_KEYS = [
 export default function RescueMode({ tasks = [], today, onStart, focusId }) {
   const [budget, setBudget] = useState(60)
   const plan = useMemo(() => buildRescuePlan(tasks, budget, today), [tasks, budget, today])
-  const [stepsVisible, setStepsVisible] = useState(false)
-
-  // Trigger progressive reveal when plan changes or section enters viewport
-  useEffect(() => {
-    if (!plan) {
-      setStepsVisible(false)
-      return
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setStepsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.15, rootMargin: '0px 0px -50px 0px' }
-    )
-    const el = document.querySelector('.rescue-card')
-    if (el) observer.observe(el)
-    return () => observer.disconnect()
-  }, [plan?.items?.length, budget])
 
   if (!plan) return null
 
@@ -66,9 +45,8 @@ export default function RescueMode({ tasks = [], today, onStart, focusId }) {
 
   return (
     <section
-      className="rescue-card paper-card rise overflow-hidden section-reveal"
+      className="rescue-card paper-card overflow-hidden reveal section-reveal"
       aria-label="Deadline Rescue Mode"
-      ref={(el) => { if (el) el.classList.add('is-visible'); }}
     >
       <div
         data-parallax="0.04"

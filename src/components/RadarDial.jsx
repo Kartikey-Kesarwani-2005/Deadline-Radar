@@ -42,6 +42,7 @@ export default function RadarDial({ late, today, week, later, onTime, rated = 0 
       role="group"
       aria-label={`Deadline compass: ${late} late, ${today} due today, ${week} this week, ${later} later. ${pct ?? 0} percent finished on time.`}
       className="reveal radar-dial flicker relative h-[176px] w-[176px] shrink-0 self-center overflow-hidden rounded-full border-[1.5px] border-ink bg-paper-2 shadow-[3px_3px_0_rgba(29,27,22,0.18)]"
+      data-parallax="0.06"
     >
       <svg viewBox="0 0 220 220" className="absolute inset-0 h-full w-full">
         {TICKS.map((t, i) => (

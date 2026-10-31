@@ -1333,79 +1333,6 @@ select.field {
   [data-parallax] { transform: none !important; }
 }
 
-/* Subtle scroll parallax — anything flagged `data-parallax` drifts at its own
-   rate while the page scrolls. Transform-only, compositor-friendly, and skipped
-   entirely for reduced-motion users (the JS observer checks the flag too). */
-[data-parallax] {
-  will-change: transform;
-}
-
-/* Lamp-flicker — a barely-there heartbeat on the signature dial. Two soft steps
-   per beat, no strobing, tuned to read as warmth rather than a warning. */
-@keyframes flicker-in {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  46% {
-    opacity: 0.86;
-    transform: scale(0.995);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  84% {
-    opacity: 0.92;
-    transform: scale(1.002);
-  }
-}
-.flicker {
-  animation: flicker-in 6.5s linear infinite;
-}
-
-/* Sticky storytelling — the chapter plate that follows the section you are
-   reading. Pins under the desk bar on wide screens only (below `lg` the plate
-   simply reads in flow), so phones keep the plain reading flow. Reads as a quiet
-   chapter kicker in flow, and earns a pinned header treatment once it sticks. */
-.chapter-plate {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.15rem 0.5rem;
-  padding: 0.5rem 0.2rem 0.3rem;
-}
-@media (min-width: 1024px) {
-  .chapter-plate {
-    position: sticky;
-    top: 7.5rem;
-    z-index: 15;
-    padding: 0.5rem 0.2rem 0.35rem;
-    background-color: var(--color-paper);
-    border-bottom: 1px solid rgba(29, 27, 22, 0.5);
-    box-shadow: 0 2px 0 rgba(29, 27, 22, 0.1);
-  }
-}
-.chapter-plate-title {
-  margin: 0;
-}
-
-/* Slow compass needle — replaces the old neon radar sweep. */
-@keyframes needle-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.compass-needle {
-  animation: needle-spin 16s linear infinite;
-  transform-origin: bottom center;
-}
-.compass-rotor {
-  animation: needle-spin 22s linear infinite;
-  transform-origin: center;
-}
-
 /* Soft stamp-in for the toast. */
 @keyframes stamp-in {
   0% {
@@ -1438,39 +1365,6 @@ select.field {
 }
 .task-check.is-done > svg {
   animation: check-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rise,
-  .stamp-in,
-  .compass-needle,
-  .compass-rotor,
-  .live-dot::after,
-  .task-check.is-done > svg,
-  .animate-ping,
-  .animate-pulse,
-  .flicker {
-    animation: none !important;
-  }
-  /* A user who opts out of motion gets the resting state — the scroll reveal
-     simply never hides anything. */
-  .reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-  html {
-    scroll-behavior: auto;
-  }
-  .app-shell,
-  .addbar-shell:focus-within {
-    transform: none !important;
-  }
-  .task-card:hover,
-  .stat-tile:hover,
-  .btn:hover:not(:disabled) {
-    transform: none !important;
-  }
 }
 
 /* Touch devices have no hover — card actions become a tidy footer row so the

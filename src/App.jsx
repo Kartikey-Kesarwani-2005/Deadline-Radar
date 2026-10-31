@@ -410,7 +410,7 @@ export default function App() {
   useEffect(() => {
     const root = appShellRef.current
     if (!root) return undefined
-    const pending = Array.from(root.querySelectorAll('.reveal:not(.is-visible)'))
+    const pending = Array.from(root.querySelectorAll('.reveal:not(.is-visible), .section-reveal:not(.is-visible)'))
     if (typeof IntersectionObserver === 'undefined') {
       // Engine without IO support: never strand content behind a hidden state.
       pending.forEach((el) => el.classList.add('is-visible'))
@@ -507,6 +507,11 @@ export default function App() {
     // Deps read `settings.view` to dodge the temporal-dead-zone ordering issue above.
   }, [tasks, settings.view, isDemo, dateFilter, subjectFilter, query, coverUp])
 
+  const displayMode = settings.displayMode || 'auto'
+  const view = settings.view === 'calendar' ? 'calendar' : 'list'
+  const isPhone = displayMode === 'phone' || (displayMode === 'auto' && vw < 640)
+  const isWide = !isPhone && vw >= 1024
+
   // 📌 Chapter plate sticky tracker — on wide screens, the plate pins under the desk bar.
   // When it becomes stuck (position: sticky kicks in), we add .is-pinned to trigger
   // the subtle slide-down reveal. Uses a sentinel element to detect stickiness.
@@ -523,7 +528,7 @@ export default function App() {
         // When sentinel leaves viewport (sticks), plate is pinned
         plate.classList.toggle('is-pinned', !entry.isIntersecting)
       },
-      { threshold: 0, rootMargin: '-7.5rem 0px 0px 0px' }
+      { threshold: 0, rootMargin: '-120px 0px 0px 0px' }
     )
     io.observe(sentinel)
     return () => {
@@ -582,11 +587,7 @@ export default function App() {
     return () => clearTimeout(t)
   }, [])
 
-  const displayMode = settings.displayMode || 'auto'
   const sortBy = SORT_MODES.some((m) => m.value === settings.sortBy) ? settings.sortBy : 'smart'
-  const view = settings.view === 'calendar' ? 'calendar' : 'list'
-  const isPhone = displayMode === 'phone' || (displayMode === 'auto' && vw < 640)
-  const isWide = !isPhone && vw >= 1024
 
   const setSort = (value) =>
     setSettings((s) => {
