@@ -4,8 +4,10 @@
  */
 import { extractLocal, extractManyLocal, looksLikeDeadline, nextOccurrence, reconcile } from '../src/lib/extract.js'
 import { parseCommand } from '../src/lib/commands.js'
-import { parseBackup } from '../src/lib/store.js'
-import { answerQuery, briefingText, doNow, estimateEffort, heatGrid, marksAtRisk, onTimeStreak, paceRows, reportGrade, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
+import { defaultSettings, parseBackup } from '../src/lib/store.js'
+import { almanacGrid, dayItems, defaultDay, monthCursorOf, monthSummary, shiftMonth, undatedPending } from '../src/lib/almanac.js'
+import { SUBJECT_INK_NAMES, subjectInk, subjectKeys, subjectStyle } from '../src/lib/subjects.js'
+import { answerQuery, briefingText, doNow, estimateEffort, heatGrid, marksAtRisk, onTimeStreak, paceRows, pileUps, reportGrade, startAlerts, subjectLoad, weeklyTrend, weekShareText } from '../src/lib/brain.js'
 import { buildICS, googleCalendarUrl } from '../src/lib/calendar.js'
 import { dueTone, countdownTo, parseDateKey, dayDiff, todayKey } from '../src/lib/dates.js'
 import { postponeDate, sortTasks } from '../src/lib/sort.js'
@@ -904,6 +906,51 @@ check('risk: score stays inside 0–100', (() => {
   check('grade: under 3 finishes, refuse to grade (never fake it)', [shy.grade, typeof shy.note], [null, 'string'])
 }
 
+// --- 🚦 Same-day pile-ups — the deadline clash watch ---
+{
+  const mk = (id, title, dueDate, marks = 10, extra = {}) => ({
+    id,
+    title,
+    subject: 'DBMS',
+    marks,
+    done: false,
+    dueDate,
+    createdAt: Date.now() - 864e5,
+    ...extra,
+  })
+
+  check('pile-ups: an empty radar has no clash lanes', pileUps([]), [])
+  check('pile-ups: undated and done work never clashes', pileUps([mk('u', 'undated', null), mk('d', 'done todo', shift(2), 10, { done: true })]), [])
+
+  // Mon: OS lab (20) + DBMS viva (15) + a lone late report (excluded) — one
+  // clash day; Tue: a single task → no lane. Light task listed first on
+  // purpose: the lane must rank by marks, not paste order.
+  const ups = pileUps([
+    mk('b', 'DBMS viva', shift(2), 15),
+    mk('a', 'OS lab', shift(2), 20),
+    mk('c', 'alone tuesday', shift(3), 30),
+    mk('l', 'late report', shift(-4), 25),
+    mk('f', 'far future', shift(45), 10),
+  ])
+  check('pile-ups: one clash day for the double-booked date', ups.length, 1)
+  check('pile-ups: the clash day is task-day +2', ups[0]?.date, shift(2))
+  check('pile-ups: count and marks add the whole day', [ups[0]?.count, ups[0]?.marks], [2, 35])
+  check(
+    'pile-ups: heaviest first inside a lane',
+    ups[0]?.titles[0],
+    'OS lab',
+  )
+
+  // Two clash days → both printed, earliest first.
+  const two = pileUps([
+    mk('a', 'o1', shift(5), 10),
+    mk('b', 'o2', shift(5), 10),
+    mk('c', 't1', shift(9), 10),
+    mk('d', 't2', shift(9), 10),
+  ])
+  check('pile-ups: two clash days, chronological', two.map((u) => u.date), [shift(5), shift(9)])
+}
+
 // --- 🧮 "Guess karun ya chhodun?" — the negative-marking coach ---
 {
   // JEE-style +4/−1: half the guesses land → +1.5 EV per guess, clearly keep.
@@ -937,6 +984,63 @@ check('risk: score stays inside 0–100', (() => {
   check('coach: attempted < sure clamps without inventing marks', guessCoach({ attempted: 5, sure: 20, accuracyPct: 50, award: 4, penalty: 1 }).guesses, 0)
   check('coach: null float noise on empty input', guessCoach().guesses, 0)
   check('coach: presets carry the real schemes', MARKING_PRESETS.length >= 4, true)
+}
+
+// --- 🗓️ Radar Almanac — the month's pure data layer ---
+{
+  // October 2026 starts on a Thursday, so the Monday-first grid opens on
+  // 28 September and closes on 1 November (five complete weeks).
+  const oct = [
+    { id: 'a', title: 'DBMS assignment', subject: 'DBMS', dueDate: '2026-10-05', marks: 20, done: false },
+    { id: 'b', title: 'DBMS worksheet', subject: 'DBMS', dueDate: '2026-10-05', marks: 10, done: false },
+    { id: 'c', title: 'OS lab record', subject: 'OS', dueDate: '2026-10-08', marks: 15, done: false },
+    { id: 'd', title: 'DBMS quiz (finished)', subject: 'DBMS', dueDate: '2026-10-05', marks: 99, done: true, completedAt: Date.now() },
+    { id: 'e', title: 'September leftover', subject: 'SE', dueDate: '2026-09-30', marks: 5, done: false },
+    { id: 'f', title: 'Undated brief', subject: 'SE', dueDate: null, marks: 10, done: false },
+    { id: 'g', title: 'Impossible date', subject: 'SE', dueDate: '2026-02-31', marks: 10, done: false },
+  ]
+  const grid = almanacGrid(2026, 9, oct, '2026-10-07')
+  const cells = grid.weeks.flat()
+  const cell = (key) => cells.find((c) => c.key === key)
+
+  check('almanac: October 2026 is five complete weeks', grid.weeks.length, 5)
+  check('almanac: Monday-first grid opens on 28 Sep', cells[0].key, '2026-09-28')
+  check('almanac: full week rows are 7 cells', grid.weeks.every((w) => w.length === 7), true)
+  check('almanac: marks sum only pending work', [cell('2026-10-05').pending, cell('2026-10-05').marks, cell('2026-10-05').done], [2, 30, 1])
+  check('almanac: done work never becomes a subject dot', cell('2026-10-05').subjects, ['DBMS'])
+  check('almanac: out-of-month work stays out of the totals', grid.totals, { pending: 3, done: 1, marks: 45 })
+  check('almanac: a past pending day is stamped late', cell('2026-10-05').late, true)
+  check('almanac: a future day is not late', cell('2026-10-08').late, false)
+  check('almanac: today is found even on an empty cell', [cell('2026-10-07').isToday, cell('2026-10-07').pending], [true, 0])
+  check('almanac: malformed dates are ignored, never crash the grid', grid.totals.pending, 3)
+  check('almanac: month summary is honest prose', monthSummary(grid.totals).parts, ['3 due', '45 marks', '1 finished'])
+  check('almanac: empty months say so instead of printing zeros', monthSummary({ pending: 0, done: 0, marks: 0 }).line, 'Nothing in this month')
+  check('almanac: day sheet splits pending from done', [dayItems(oct, '2026-10-05').pending.length, dayItems(oct, '2026-10-05').done.length], [2, 1])
+  check('almanac: undated pending work is named', undatedPending(oct).map((t) => t.id), ['f'])
+  check('almanac: today wins as the default day', defaultDay(grid, oct), '2026-10-07')
+  check('almanac: an empty future month defaults to its 1st', defaultDay(almanacGrid(2026, 10, oct, '2026-10-07'), oct), '2026-11-01')
+  check('almanac: month shift crosses the year boundary', shiftMonth(2026, 11, 1), { year: 2027, month: 0 })
+  check('almanac: cursor follows a real key', monthCursorOf('2026-10-05'), { year: 2026, month: 9 })
+  check('almanac: the list view survives a settings restore', defaultSettings.view, 'list')
+}
+
+// --- 🖋️ Subject inks — one deterministic pen per subject ---
+{
+  check('inks: eight readable pens in the palette', SUBJECT_INK_NAMES.length, 8)
+  check('inks: same subject, same ink (case/space insensitive)', subjectInk('DBMS'), subjectInk('  dbms  '))
+  check('inks: different subjects get different pens', subjectInk('DBMS') === subjectInk('Operating Systems'), false)
+  check('inks: no subject means no ink', [subjectInk(''), subjectInk(null)], [null, null])
+  const style = subjectStyle('DBMS', { soft: true })
+  check('inks: chip style carries colour, border and wash', typeof style.color === 'string' && typeof style.borderColor === 'string' && typeof style.background === 'string', true)
+  check('inks: no subject returns no inline style', subjectStyle(''), undefined)
+  const keys = subjectKeys([
+    { id: '1', subject: 'DBMS' },
+    { id: '2', subject: 'OS' },
+    { id: '3', subject: 'dbms' },
+    { id: '4', subject: null },
+  ])
+  check('inks: subject key list dedupes in first-seen order', keys.map((k) => k.label), ['DBMS', 'OS'])
+  check('inks: every key gets its ink', keys.every((k) => typeof k.ink === 'string'), true)
 }
 
 console.log(`\n${pass} passed, ${fail} failed`)

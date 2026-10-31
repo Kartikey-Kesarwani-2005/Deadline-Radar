@@ -4,6 +4,7 @@ import Icon from './Icon'
 import { dayDiff, toDateKey, todayKey } from '../lib/dates'
 import { marksAtRisk, onTimeStreak, paceRows, reportGrade, subjectLoad, weeklyTrend } from '../lib/brain'
 import { gradeCardBlob, shareOrSaveGradeCard } from '../lib/cardImage'
+import { subjectInk } from '../lib/subjects'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -215,13 +216,24 @@ export default function WeeklyReport({ tasks, onClose }) {
                 {load.map((s) => {
                   const max = Math.max(1, load[0].marks)
                   const pct = Math.max(4, Math.round((s.marks / max) * 100))
+                  const ink = subjectInk(s.label) || 'var(--color-later)'
                   return (
                     <div key={s.label} className="flex items-center gap-2 text-[11px]">
                       <span className="w-24 shrink-0 truncate text-ink-2" title={s.label}>
-                        {s.label}
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            aria-hidden="true"
+                            className="h-1.5 w-1.5 shrink-0 rounded-full"
+                            style={{ background: ink }}
+                          />
+                          <span className="truncate">{s.label}</span>
+                        </span>
                       </span>
                       <div className="h-[6px] min-w-0 flex-1 overflow-hidden rounded-[1px] border border-line bg-paper">
-                        <div className="h-full bg-later/75" style={{ width: `${pct}%` }} />
+                        <div
+                          className="h-full"
+                          style={{ width: `${pct}%`, background: ink, opacity: 0.85 }}
+                        />
                       </div>
                       <span className="w-16 shrink-0 text-right font-mono text-[10px] tabular-nums text-ink-2">
                         {s.marks}m · {s.count}

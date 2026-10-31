@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { countdownTo, dayDiff, dueTone, formatDue, todayKey } from '../lib/dates'
 import { fmtHours } from '../lib/brain'
 import { googleCalendarUrl } from '../lib/calendar'
+import { subjectInk, subjectStyle } from '../lib/subjects'
 import PlanPanel from './PlanPanel'
 import Icon from './Icon'
 
@@ -135,6 +136,16 @@ export default function TaskCard({
           }`}
         />
       )}
+      {/* subject rail — the same ink as the almanac dots and load meters, used
+          only when urgency is not already shouting from the same edge */}
+      {!task.done && !selected && task.subject && !isLate && diff !== 0 && (
+        <span
+          aria-hidden="true"
+          title={`Subject ink: ${task.subject}`}
+          className="absolute inset-y-3 left-0 w-[3px] rounded-r-full opacity-80"
+          style={{ background: subjectInk(task.subject) }}
+        />
+      )}
 
       <button
         type="button"
@@ -179,7 +190,9 @@ export default function TaskCard({
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {!task.done && <RiskDial risk={risk} />}
           {task.subject && (
-            <span className="tag border-later/30 bg-paper text-later">{task.subject}</span>
+            <span className="tag bg-paper" style={subjectStyle(task.subject, { soft: true })}>
+              {task.subject}
+            </span>
           )}
           {task.marks != null && (
             <span className="tag border-line bg-paper text-ink-2">{task.marks} marks</span>

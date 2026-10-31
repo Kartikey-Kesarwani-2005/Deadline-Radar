@@ -265,6 +265,41 @@ export function weeklyTrend(tasks, now = Date.now()) {
 }
 
 /**
+ * 🚦 Same-day pile-ups — the deadline clash watch. A single 20-mark task is a
+ * to-do; two heavy submissions landing on the SAME day is the thing that
+ * actually sinks the week, and no radar anywhere names it a day early.
+ * Groups pending dated work (next `horizon` days) by due date and reports
+ * every day carrying two or more tasks, heaviest marks first. Pure + clock
+ * injectable.
+ */
+export function pileUps(tasks, today = todayKey(), horizon = 30) {
+  const byDay = new Map()
+  for (const t of tasks) {
+    if (t.done || !t.dueDate) continue
+    const d = dayDiff(today, t.dueDate)
+    if (d === null || d < 0 || d > horizon) continue
+    if (!byDay.has(t.dueDate)) byDay.set(t.dueDate, [])
+    byDay.get(t.dueDate).push(t)
+  }
+  return [...byDay.entries()]
+    .filter(([, list]) => list.length >= 2)
+    .map(([date, list]) => {
+      // Heaviest first, then by title for a stable order — the lane chip reads
+      // "what actually hurts most that day", not paste order.
+      const ranked = [...list].sort(
+        (a, b) => (b.marks || 0) - (a.marks || 0) || a.title.localeCompare(b.title),
+      )
+      return {
+        date,
+        count: ranked.length,
+        marks: ranked.reduce((a, t) => a + (t.marks || 0), 0),
+        titles: ranked.slice(0, 3).map((t) => t.title),
+      }
+    })
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+/**
  * 🏆 On-time streak — newest finished work walked backwards; stops at the
  * first late finish. The "N in a row" dopamine line for the weekly report.
  */

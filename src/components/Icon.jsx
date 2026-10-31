@@ -236,6 +236,31 @@ const PATHS = {
       <path d="M12 13v5M9.5 15.5h5" />
     </>
   ),
+  grid: (
+    <>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M3.5 11.5 12 4l8.5 7.5" />
+      <path d="M5.5 10.2V20h13v-9.8" />
+      <path d="M10 20v-5.2h4V20" />
+    </>
+  ),
+  chevronLeft: <path d="m15 5-7 7 7 7" />,
+  chevronRight: <path d="m9 5 7 7-7 7" />,
+  printer: (
+    <>
+      <path d="M7 8V3h10v5" />
+      <rect x="4" y="8" width="16" height="8" rx="1.5" />
+      <path d="M7 13h10v8H7z" />
+      <path d="M17 11h.01" />
+    </>
+  ),
 }
 
 export default function Icon({ name, size = 15, className = '', strokeWidth = 1.6, title }) {

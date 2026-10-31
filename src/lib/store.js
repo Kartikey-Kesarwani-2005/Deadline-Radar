@@ -36,6 +36,8 @@ export const defaultSettings = {
   clipDetect: true,
   sortBy: 'smart',
   displayMode: 'auto',
+  // Which reading room the radar opens in: the urgency list or the month almanac.
+  view: 'list',
 }
 
 /**
@@ -137,6 +139,7 @@ export function loadSettings() {
       displayMode: ['auto', 'desktop', 'phone'].includes(src.displayMode)
         ? src.displayMode
         : 'auto',
+      view: ['list', 'calendar'].includes(src.view) ? src.view : 'list',
     }
   } catch {
     return defaultSettings

@@ -17,10 +17,12 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
 
 ### 0:18–0:35 — Introduce the tool
 - Screen: clean Deadline Radar dashboard, slow scroll top → bottom.
-  *(First visit only: a **🎬 field-notes cover** rolls up like a notepad to reveal the
-  desk — 1.7s, tap to skip. Show it once; it never comes back on reloads.)*
+  *(First visit: the **🎬 dossier front page** — next deadline, a live table of contents,
+  the week ahead; click a contents row to lift the sheet straight onto that section, or
+  press **OPEN THE FILE**. It returns any time with **h** — `?home=1` is a permanent link.)*
 - **VO:** *"This is Deadline Radar. Paste, speak, or photograph any of it — it comes back
-  as one list that answers: what is due today, and what is getting late."*
+  as one desk: an urgency list, or a whole month on paper, answering what is due today and
+  what is getting late."*
 - Caption: **Deadline Radar — link in description**
 
 ### 0:35–1:10 — Capture demo (the core)
@@ -57,6 +59,13 @@ part of the story) and put "Voiceover: Wispr Flow" as a caption.
   PNG of that stamp to share or save. Then the rail's **🧮 Exam coach — "Guess karun ya
   chhodun?"**: set JEE (+4/−1), slide the accuracy, and the ledger prints expected marks
   with-guesses vs. blanks + the break-even 20% — a tool outside any tracker. **(+10s)**
+- **The month moment (new):** press **v** (or the **Almanac** switch on the DeskBar) — the
+  list flips to the **🗓️ Radar Almanac**: a printed month with marks on every day, subject-ink
+  dots, late stamps and today ringed. Tap a heavy day → its submission sheet opens under the
+  grid; tick one, start a **▶ focus** from there, then press **v** to return. **(9s)**
+- **The paper moment (new):** press **p** — the controls, docks and rails vanish and the
+  radar becomes a clean wall-sheet in the print preview. Close it and note the **⏱ focus
+  dock** still parked in the corner, its bar running against the learned estimate. **(6s)**
 - **The plan moment (new):** click the **📋 list button** on any card → **"Plan banao"**
   lays the deadline out as **day-by-day study sessions** — what to do in each round,
   on which day, ~how long, ending in "submit" — press **Copy plan** and the checklist

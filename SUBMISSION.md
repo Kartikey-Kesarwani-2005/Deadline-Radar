@@ -32,6 +32,7 @@ Official flow: ① Register ② Build with Flow ③ Share every week ④ Submit 
 https://kartikey-kesarwani-2005.github.io/Deadline-Radar/
 ```
 Judges' instant demo: `https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1`
+Front-page demo: `https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1&home=1`
 Repo: https://github.com/Kartikey-Kesarwani-2005/Deadline-Radar
 
 ---
@@ -70,6 +71,60 @@ Schedule:
 - **Mon 26 Oct** — week-2 check-in with fresh usage card
 - **Fri 30 Oct** — submission day: submit in the MORNING, not at 11:59 pm
 
+### 4.1 Paste-ready captions (launch + final check-in)
+
+Both are written to post as-is. Fill the one `[__]` from the real Wispr usage card — never
+guess a number. Keep the link, the tags and the hashtag.
+
+**Long caption (LinkedIn / X thread opener):**
+
+> 📡 **Deadline Radar — the desk that reads your deadlines back to you.**
+>
+> College deadlines don't arrive in a calendar. They arrive as WhatsApp forwards, screenshots
+> and "Friday tak dena hai" voice notes. So I built the thing I kept wishing existed — and
+> every word of it was dictated with **Wispr Flow** for the **#NoHandsChallenge**.
+>
+> Paste it, speak it, or photograph the notice. It pulls out the task, subject, date, marks
+> and portal link — then answers the only two questions that matter: *what's due today, and
+> what's getting late?*
+>
+> What's new in this build:
+> 🎬 **A real front page** — a dossier cover with the next deadline, a live table of
+> contents, the week ahead, and rows that lift the sheet straight onto that section.
+> `h` brings it back any time; `?home=1` is a permanent door.
+> 🗓️ **Radar Almanac** — the month as a printed planner: marks on every day, subject inks,
+> late stamps, and a day sheet right under the grid. `v` flips list ↔ month.
+> 🖋️ **Subject inks** — one deterministic pen per subject across cards, calendar dots and
+> the weekly report. Colour as a second index.
+> 🧭 **Zone index** — live counts for Late / Today / Week / Later / No date / Done, one tap
+> to jump.
+> ⏱️ **Focus dock** — a timer that stays parked while you scroll, measured against your own
+> learned estimate.
+> 🖨️ **One-key print** — `p` turns the radar into a clean paper wall-sheet.
+> 🎬 Dossier cover, exam-hall marking coach, weekly grade card, day timetable, risk dials,
+> voice briefing and spoken orders — all on Field-Notes paper.
+>
+> Built solo, hands-free: spec, code, docs, this post. Wispr usage: **[__] words, zero typing.**
+>
+> ▶️ Try it (samples preloaded): https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1
+> 💻 Code: https://github.com/Kartikey-Kesarwani-2005/Deadline-Radar
+>
+> @WeMakeDevs @wisprflow #NoHandsChallenge
+
+**Short caption (X / Instagram / WhatsApp status):**
+
+> 📡 Deadline Radar — deadlines in, a plan out. Paste / speak / photo → today, this week,
+> what's late. New: **front page** with live contents, month **Almanac**, **subject inks**,
+> live **zone index**, sticky **focus dock**, one-key **print**. Built hands-free with Wispr
+> Flow · #NoHandsChallenge @WeMakeDevs @wisprflow
+> https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1
+
+**Weekly check-in variant (replace the "what's new" block):**
+
+> This week: 🎬 dossier front page with live contents + week strip · 🗓️ month almanac with
+> per-day marks + late stamps · 🖋️ subject inks across the desk · 🧭 zone index · ⏱️ sticky
+> focus dock · 🖨️ print stylesheet. Wispr usage: **[__] words** (card attached).
+
 ---
 
 ## 5. "A few lines" — paste-ready write-up
@@ -94,6 +149,13 @@ Schedule:
 > **One real result.** In [__] days of real use: [__] deadlines captured, [__] finished, and
 > [__] of them finished **before** the deadline — the app measures this itself in its
 > "On time" counter (Weekly report card shows the numbers).
+>
+> **Why it's different.** It doesn't stop at a list. The same data has two reading rooms —
+> the urgency list and a month **Almanac** printed on Field-Notes paper, with marks on every
+> day, a deterministic ink per subject and a day sheet under the grid — plus a risk dial per
+> card, a learned pace model, a same-day pile-up detector, an exam-hall marking coach and a
+> weekly report stamped with a real grade. Colour, print and voice are part of the interface,
+> not decoration.
 
 Fill the `[__]`s — **30 Oct subah, 2 minute, every number from a real screenshot:**
 

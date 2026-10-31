@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractMany, looksLikeDeadline, nextOccurrence, reconcile } from './lib/extract'
-import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, heatGrid, marksAtRisk, onTimeStreak, paceModel, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
+import { adviceFor, answerQuery, briefingText, computeBrain, doNow, estimateEffort, forecastWeather, heatGrid, marksAtRisk, onTimeStreak, paceModel, pileUps, startAlerts, weeklyTrend, weekShareText } from './lib/brain'
 import { buildPlan, planCopyText } from './lib/plan'
 import { riskScore } from './lib/risk'
 import { downloadICS } from './lib/calendar'
@@ -30,12 +30,15 @@ import TaskCard from './components/TaskCard'
 import ConsistencyHeatmap from './components/ConsistencyHeatmap'
 import DayPlanner from './components/DayPlanner'
 import DeskBar from './components/DeskBar'
+import AlmanacView from './components/AlmanacView'
+import FocusDock from './components/FocusDock'
 import SettingsModal from './components/SettingsModal'
 import WeeklyReport from './components/WeeklyReport'
 import MarkCoach from './components/MarkCoach'
 import TaskEditModal from './components/TaskEditModal'
 import CommandPalette from './components/CommandPalette'
 import Cover from './components/Cover'
+import PileUps from './components/PileUps'
 import Modal from './components/Modal'
 import Icon from './components/Icon'
 import { SORT_MODES, postponeDate, sortTasks } from './lib/sort'
@@ -259,34 +262,92 @@ export default function App() {
   const [perm, setPerm] = useState(() => getPermission())
   const [reportOpen, setReportOpen] = useState(false)
   const [examOpen, setExamOpen] = useState(false)
-  // 🎬 The once-per-browser cover: shows exactly once (a flag, not a date), so
-  // a judge reloading mid-demo never sees it again.
+  // 🎬 The dossier front page. It opens once per browser *session* (a tab
+  // flag, not a date), waits for a press — never auto-lifts — so a judge
+  // reloading mid-demo never meets it again, but a fresh visit still gets the
+  // front page. It is also a permanent room: masthead, toolbar home button,
+  // Settings and `h` all open it; `?home=1` forces it.
   const COVER_KEY = 'deadline-radar.coverShown'
   const [coverUp, setCoverUp] = useState(() => {
     try {
-      return !localStorage.getItem(COVER_KEY)
+      if (new URLSearchParams(window.location.search).has('home')) return true
+      return !sessionStorage.getItem(COVER_KEY)
     } catch {
       return true
     }
   })
+  const [coverOpening, setCoverOpening] = useState(false)
+  const homeScrollRef = useRef(0)
+  // While the cover is up, the paper behind must not scroll.
   useEffect(() => {
     if (!coverUp) return undefined
-    const t = setTimeout(() => setCoverUp(false), 1750) // matches the CSS lift
-    return () => clearTimeout(t)
+    const body = document.body
+    const prev = body.style.overflow
+    body.style.overflow = 'hidden'
+    return () => {
+      body.style.overflow = prev
+    }
   }, [coverUp])
   const releaseCover = () => {
     if (!coverUp) return
     try {
-      localStorage.setItem(COVER_KEY, '1')
+      sessionStorage.setItem(COVER_KEY, '1')
     } catch {
-      /* storage blocked — the cover is 1.7s, it can play again */
+      /* storage blocked */
     }
     setCoverUp(false)
+  }
+  // Stamp (or a contents row) pressed → press animation (0.45s) → lift (0.9s)
+  // → unmount. A row hands its zone key over so the desk opens on that section.
+  const openCover = (dest = null) => {
+    if (coverOpening || !coverUp) return
+    setCoverOpening(true)
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    setTimeout(
+      () => {
+        releaseCover()
+        if (dest) {
+          // The contents counts are global, so a row must clear any list filter
+          // that could hide the section it points at.
+          setQuery('')
+          setSubjectFilter(null)
+          setDateFilter(null)
+          setView('list')
+          setTimeout(() => jumpSection(dest), 260)
+        } else {
+          setTimeout(
+            () => window.scrollTo({ top: homeScrollRef.current || 0, behavior: 'auto' }),
+            80,
+          )
+        }
+      },
+      reduce ? 60 : 1400,
+    )
+  }
+  // Re-open the front page from the desk any time. Keeps the tab flag intact,
+  // so returning to the radar does not make the next reload show it again.
+  const openHome = () => {
+    if (coverUp) return
+    homeScrollRef.current = window.scrollY
+    setCoverOpening(false)
+    setSettingsOpen(false)
+    setReportOpen(false)
+    setShortcutsOpen(false)
+    setPaletteOpen(false)
+    setExamOpen(false)
+    setCoverUp(true)
+    window.scrollTo({ top: 0, behavior: 'auto' })
   }
   const [editingId, setEditingId] = useState(null)
   const [query, setQuery] = useState('')
   const [subjectFilter, setSubjectFilter] = useState(null)
   const [dateFilter, setDateFilter] = useState(null)
+  // The almanac keeps its own picked day: opening a date sheet must not
+  // silently filter the whole radar. The list only narrows when the user
+  // explicitly asks for "open this day in the list".
+  const [almDay, setAlmDay] = useState(null)
   const [hintsClosed, setHintsClosed] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -384,6 +445,7 @@ export default function App() {
 
   const displayMode = settings.displayMode || 'auto'
   const sortBy = SORT_MODES.some((m) => m.value === settings.sortBy) ? settings.sortBy : 'smart'
+  const view = settings.view === 'calendar' ? 'calendar' : 'list'
   const isPhone = displayMode === 'phone' || (displayMode === 'auto' && vw < 640)
   const isWide = !isPhone && vw >= 1024
 
@@ -393,6 +455,28 @@ export default function App() {
       saveSettings(next)
       return next
     })
+
+  // 📖 The list and the almanac are two reading rooms on the same data — the
+  // chosen room survives reloads, and entering the almanac drops bulk-select
+  // mode (there are no list cards to tick there).
+  const setView = (next) => {
+    if (next === 'calendar') {
+      setSelectMode(false)
+      setSelectedIds(new Set())
+    }
+    setSettings((s) => {
+      if (s.view === next) return s
+      const updated = { ...s, view: next }
+      saveSettings(updated)
+      return updated
+    })
+  }
+
+  // 🖨️ "Print" is a real deliverable: the Field Notes stylesheet already hides
+  // the controls and keeps the evidence, so one tap produces a paper radar.
+  function printRadar() {
+    setTimeout(() => window.print(), 120)
+  }
 
   useEffect(() => saveTasks(tasks), [tasks])
 
@@ -428,6 +512,23 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on mount only
   }, [])
+
+  // The front page's "load a sample file" door — merge-safe, same rule as
+  // ?demo=1: never replaces what the visitor already captured.
+  const loadDemo = () => {
+    const have = new Set(tasks.map((t) => t.title.toLowerCase()))
+    const fresh = buildSampleTasks().filter((s) => !have.has(s.title.toLowerCase()))
+    setTasks((prev) => {
+      const seen = new Set(prev.map((t) => t.title.toLowerCase()))
+      const toAdd = fresh.filter((s) => !seen.has(s.title.toLowerCase()))
+      return toAdd.length ? [...toAdd, ...prev] : prev
+    })
+    setFlash({
+      msg: fresh.length
+        ? `Sample file ✓ ${fresh.length} example deadlines filed — your own tasks are untouched.`
+        : 'Sample file ✓ examples are already on the radar.',
+    })
+  }
 
   // Share Target (PWA): any app's share sheet → Deadline Radar lands here with
   // ?text=… and captures it automatically.
@@ -489,9 +590,13 @@ export default function App() {
   }, [flash])
 
   // Desktop-first keyboard shortcuts: / search · n new · b briefing · w report
-  // · ? help · Esc close. Never fires while typing in a field.
+  // · v list/almanac · p print · ? help · Esc close. Never fires while typing
+  // in a field or while the dossier cover is still closed.
   useEffect(() => {
     function onKey(e) {
+      // The cover owns the keyboard until it is opened (Enter/Esc are handled
+      // by the cover itself), so nothing behind it can be triggered unseen.
+      if (coverUp) return
       const modalOpen = Boolean(
         editingId || settingsOpen || reportOpen || shortcutsOpen || paletteOpen || examOpen,
       )
@@ -523,6 +628,13 @@ export default function App() {
         playBriefing()
       } else if (e.key === 'w') {
         setReportOpen(true)
+      } else if (e.key === 'v') {
+        setView(view === 'list' ? 'calendar' : 'list')
+      } else if (e.key === 'p') {
+        e.preventDefault()
+        printRadar()
+      } else if (e.key === 'h') {
+        openHome()
       } else if (e.key === '?') {
         setShortcutsOpen(true)
       } else if (e.key === 'Escape') {
@@ -534,7 +646,7 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm when tasks/busy change (briefing closure) and when modal layers change (Esc peeling)
-  }, [tasks, busy, editingId, settingsOpen, reportOpen, shortcutsOpen, paletteOpen, examOpen, askCard, clipSuggest])
+  }, [tasks, busy, editingId, settingsOpen, reportOpen, shortcutsOpen, paletteOpen, examOpen, askCard, clipSuggest, coverUp, view])
 
   // Chrome/Edge "install app" prompt (satisfied by the manifest + service worker).
   useEffect(() => {
@@ -992,6 +1104,28 @@ export default function App() {
     }
   }, [visible, sortBy, dayKey])
 
+  // The zone index above the list: one honest count per section, computed from
+  // the same filtered sections the cards render from.
+  const zoneCounts = {
+    late: sections.late.length,
+    today: sections.today.length,
+    week: sections.week.length,
+    later: sections.later.length,
+    noDate: sections.noDate.length,
+    done: sections.done.length,
+  }
+
+  // The almanac browses the month, so it ignores the day filter (a single-day
+  // filter would erase every other dot) but still honours search + subject.
+  const almanacTasks = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return tasks.filter((t) => {
+      if (subjectFilter && t.subject !== subjectFilter) return false
+      if (!q) return true
+      return `${t.title} ${t.subject || ''} ${t.source || ''}`.toLowerCase().includes(q)
+    })
+  }, [tasks, query, subjectFilter])
+
   // "Real result" metric: tasks finished before their deadline.
   const onTime = tasks.filter(
     (t) => t.done && t.dueDate && t.completedAt && toDateKey(new Date(t.completedAt)) <= t.dueDate,
@@ -1008,12 +1142,17 @@ export default function App() {
         !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) > 0 && dayDiff(todayKey(), t.dueDate) <= 7,
     ).length,
     later: tasks.filter((t) => !t.done && t.dueDate && dayDiff(todayKey(), t.dueDate) > 7).length,
+    noDate: tasks.filter((t) => !t.done && !t.dueDate).length,
     done: tasks.filter((t) => t.done).length,
     onTime,
     // Scoreable finishes: only dated + timestamped completions count toward
     // the on-time percentage (undated work has no deadline to miss).
     rated: tasks.filter((t) => t.done && t.dueDate && t.completedAt).length,
   }
+
+  // 🚦 Same-day pile-ups — printed above the desk so a clash day is chosen
+  // while it can still be staggered, not on submission morning.
+  const pileUpList = useMemo(() => pileUps(tasks, dayKey), [tasks, dayKey])
 
   // Radar Brain: personal rhythm from finished work + marks riding on pending work.
   // `dayKey` is in the deps so an app left open past midnight re-buckets.
@@ -1040,10 +1179,13 @@ export default function App() {
   }, [tasks, dayKey])
   // 🎯 Per-task risk scores — one shared pace/brain pair beats recomputing
   // the whole model inside every card.
-  const riskFor = useMemo(() => {
-    const brain = computeBrain(tasks)
-    return (t) => riskScore(t, { pace, brain, today: dayKey })
-  }, [tasks, pace, dayKey])
+  const riskFor = useMemo(
+    () => (t) => riskScore(t, { pace, brain, today: dayKey }),
+    [pace, brain, dayKey],
+  )
+  // The dock compares real focus minutes against the same learned estimate
+  // every card prints, so the bar means something instead of being decoration.
+  const focusEstimate = focusTask ? estimateEffort(focusTask, pace) : null
 
   // 🎙️ "Ask the radar" — one spoken question, spoken answer. Orders
   // ("mark DBMS done", "delete OS lab", "add viva Friday") execute instead.
@@ -1162,6 +1304,32 @@ export default function App() {
   const jumpSection = (key) =>
     document.getElementById(`radar-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
+  // Zone jumps work from either reading room: switch to the list first, then
+  // scroll once React has painted the sections back in.
+  const jumpZone = (key) => {
+    setView('list')
+    setTimeout(() => jumpSection(key), 160)
+  }
+
+  // "Open this day in the list" — the only path from the almanac that narrows
+  // the global date filter, because the user explicitly asked for it.
+  const openDayInList = (key) => {
+    if (key) setDateFilter(key)
+    setView('list')
+    setTimeout(
+      () => document.getElementById('radar-sections')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      160,
+    )
+  }
+
+  // Tapping inside the almanac takes ownership of the day selection; an older
+  // global date filter is cleared so the chip row can never disagree with the
+  // highlighted cell.
+  const pickAlmanacDay = (key) => {
+    setAlmDay(key)
+    if (dateFilter) setDateFilter(null)
+  }
+
   // ⌘K actions — each one is a real, already-supported capability, so the
   // palette is a faster door to the app rather than a separate feature set.
   const commands = [
@@ -1188,6 +1356,30 @@ export default function App() {
       hint: 'W',
       keywords: 'weekly report stats check-in',
       run: () => setReportOpen(true),
+    },
+    {
+      id: 'home',
+      icon: 'home',
+      label: 'Open the front page',
+      hint: 'H',
+      keywords: 'home cover front page dossier contents',
+      run: openHome,
+    },
+    {
+      id: 'view',
+      icon: view === 'calendar' ? 'list' : 'grid',
+      label: view === 'calendar' ? 'Switch to the urgency list' : 'Switch to the radar almanac',
+      hint: 'V',
+      keywords: 'view list calendar month almanac grid',
+      run: () => setView(view === 'calendar' ? 'list' : 'calendar'),
+    },
+    {
+      id: 'print',
+      icon: 'printer',
+      label: 'Print this radar',
+      hint: 'P',
+      keywords: 'print paper pdf printout',
+      run: printRadar,
     },
     {
       id: 'settings',
@@ -1265,19 +1457,47 @@ export default function App() {
     })),
   ]
 
+  // While the dossier cover is closed, render ONLY the cover. Previously the
+  // whole desk stayed mounted behind it — hidden inputs, tabbable controls and
+  // screen-reader content sitting under an aria-modal dialog.
+  if (coverUp) {
+    return (
+      <Cover
+        opening={coverOpening}
+        onOpen={openCover}
+        counts={{
+          late: stats.late,
+          today: stats.dueToday,
+          week: stats.week,
+          later: stats.later,
+          noDate: stats.noDate,
+          done: stats.done,
+        }}
+        tasks={tasks}
+        onDemo={loadDemo}
+        riskTotal={risk.total}
+      />
+    )
+  }
+
   return (
     <div
       className={`app-shell mx-auto w-full px-4 pb-16 pt-5 sm:pt-7 ${
         isPhone ? 'phone-mode max-w-full' : isWide ? 'desktop-mode max-w-6xl xl:max-w-7xl' : 'max-w-2xl'
       }`}
     >
-      {coverUp && <Cover onSkip={releaseCover} />}
       {/* Masthead strip — the newspaper dateline */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-y border-ink/70 py-1 font-mono text-[9px] tracking-[0.18em] text-ink-3 uppercase">
-        <span className="masthead-brand font-semibold text-ink-2">
+        <button
+          type="button"
+          onClick={() => openHome()}
+          title="Open the front page — H"
+          aria-label="Open the Deadline Radar front page"
+          className="masthead-brand font-semibold text-ink-2 transition hover:text-ink"
+        >
           <span aria-hidden="true" className="masthead-dot" />
           Deadline Radar · Field Notes
-        </span>
+        </button>
         <span className="hidden sm:inline">No Hands Challenge · Wispr Flow</span>
         <span className="dateline-chip">{formatLongToday()}</span>
       </div>
@@ -1330,6 +1550,15 @@ export default function App() {
           <div className="toolbar" role="group" aria-label="Quick actions">
             <button
               type="button"
+              onClick={() => openHome()}
+              title="Front page — H"
+              aria-label="Open the front page"
+              className="toolbar-btn"
+            >
+              <Icon name="home" size={16} />
+            </button>
+            <button
+              type="button"
               onClick={() => setPaletteOpen(true)}
               title="Command palette — Ctrl / ⌘ K"
               aria-label="Open command palette"
@@ -1375,6 +1604,15 @@ export default function App() {
               className={`toolbar-btn ${perm === 'granted' ? 'is-on' : ''}`}
             >
               <Icon name={perm === 'granted' ? 'bell' : 'bellOff'} size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={printRadar}
+              title="Print this radar — P · controls drop out, deadlines stay on paper"
+              aria-label="Print the radar"
+              className="toolbar-btn"
+            >
+              <Icon name="printer" size={16} />
             </button>
             <button
               type="button"
@@ -1542,6 +1780,9 @@ export default function App() {
                 ['n', 'Capture a new deadline'],
                 ['b', 'Briefing — Radar Samachaar'],
                 ['w', 'Weekly report'],
+                ['v', 'Switch list ↔ almanac'],
+                ['p', 'Print this radar'],
+                ['h', 'Front page'],
                 ['?', 'This card'],
                 ['Esc', 'Close anything'],
               ].map(([key, label]) => (
@@ -1624,7 +1865,7 @@ export default function App() {
           rail; from xl up a live countdown + subject-load rail fills the right
           edge so the middle column stops stretching into dead space. */}
       <div
-        className={`mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-6 lg:items-start' : ''}`}
+        className={`dashboard-grid mt-4 grid gap-5 ${isWide ? 'lg:grid-cols-[330px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_270px] 2xl:grid-cols-[340px_minmax(0,1fr)_290px] xl:gap-6 lg:items-start' : ''}`}
       >
         {/* Left rail: stats + search (stacked above the sections on phones) */}
         <div
@@ -1721,8 +1962,8 @@ export default function App() {
         </div>
 
         {/* Right column: the radar sections */}
-        <div className="flex min-w-0 flex-col gap-4">
-          {selectMode && (
+        <div id="radar-sections" className="flex min-w-0 scroll-mt-4 flex-col gap-4">
+          {selectMode && view === 'list' && (
             <div className="stamp-in flex flex-wrap items-center gap-2 rounded-[4px] border-2 border-ink bg-ink px-3 py-2 text-paper-2 shadow-[3px_3px_0_rgba(29,27,22,0.35)]">
               <span className="font-mono text-[10px] tracking-[0.12em] uppercase">
                 ☑️ {selectedIds.size} selected
@@ -1767,11 +2008,16 @@ export default function App() {
           {tasks.length > 0 && (
             <DoNowCard plan={plan} cleared={cleared} onStart={startFocus} focusId={focus?.taskId} />
           )}
-          {tasks.length > 0 && plan && (
+          {tasks.length > 0 && plan && view === 'list' && (
             <DayPlanner tasks={tasks} onStart={startFocus} focusId={focus?.taskId} />
+          )}
+          {tasks.length > 0 && view === 'list' && (
+            <PileUps ups={pileUpList} onPick={(key) => setDateFilter(key)} />
           )}
           {tasks.length > 0 && (
             <DeskBar
+              view={view}
+              onView={setView}
               query={query}
               onQuery={setQuery}
               sortBy={sortBy}
@@ -1787,6 +2033,8 @@ export default function App() {
               dateFilter={dateFilter}
               onDateFilter={setDateFilter}
               searchRef={searchRef}
+              zoneCounts={zoneCounts}
+              onJump={jumpZone}
             />
           )}
           {tasks.length === 0 ? (
@@ -1867,6 +2115,17 @@ export default function App() {
                 </div>
               </div>
             </div>
+          ) : view === 'calendar' ? (
+            <AlmanacView
+              tasks={almanacTasks}
+              activeDay={almDay || dateFilter}
+              onPickDay={pickAlmanacDay}
+              onToggle={toggleTask}
+              onEdit={setEditingId}
+              onStart={startFocus}
+              focusId={focus?.taskId}
+              onOpenList={openDayInList}
+            />
           ) : (
             <>
               {SECTION_DEFS.map(({ key, title, tone, hint }, sectionIndex) => (
@@ -1919,7 +2178,7 @@ export default function App() {
         {/* Right edge (xl and up): live countdown + subject load — keeps the
             middle column from stretching into empty space on big monitors */}
         {isWide && (
-          <div className="hidden xl:block">
+          <div className="no-print hidden xl:block">
             <LiveRail tasks={tasks} activeSubject={subjectFilter} onPickSubject={(s) => setSubjectFilter((cur) => (cur === s ? null : s))} />
           </div>
         )}
@@ -1932,6 +2191,18 @@ export default function App() {
           Set in Fraunces &amp; IBM Plex Mono · all data stays in this browser
         </p>
       </footer>
+
+      {/* The focus dock stays parked while the radar scrolls — the header chip
+          is gone by the time you reach the Done section. */}
+      {focusTask && focus && (
+        <FocusDock
+          task={focusTask}
+          elapsedMs={Date.now() - focus.startedAt}
+          estimateMin={focusEstimate?.minutes}
+          onStop={stopFocus}
+          onEdit={() => setEditingId(focusTask.id)}
+        />
+      )}
 
       {editingTask && (
         <TaskEditModal
@@ -1983,6 +2254,7 @@ export default function App() {
             setFlash({ msg: `Backup downloaded — ${tasks.length} task${tasks.length === 1 ? '' : 's'} inside.` })
           }}
           onImport={importBackup}
+          onOpenHome={openHome}
         />
       )}
     </div>

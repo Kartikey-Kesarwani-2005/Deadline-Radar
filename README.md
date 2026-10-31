@@ -5,7 +5,7 @@
 [![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
-[![Tests](https://img.shields.io/badge/tests-247%2F247%20pass-brightgreen)](./scripts/test-parser.mjs)
+[![Tests](https://img.shields.io/badge/tests-281%2F281%20pass-brightgreen)](./scripts/test-parser.mjs)
 
 > College assignments arrive as random WhatsApp messages, screenshots and voice notes — and
 > always risk getting missed. Deadline Radar turns any of them into one clean, date-sorted view:
@@ -19,7 +19,8 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 
 **Open it with data:** [live demo (samples preloaded)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1)
 — `?demo=1` adds the sample deadlines to the radar (merged with your own, deduped, never
-replacing anything you captured).
+replacing anything you captured). Add `&home=1` to open the dossier front page over the
+sample file — a permanent, shareable door to it.
 
 ## ✨ Features
 
@@ -32,12 +33,44 @@ replacing anything you captured).
   a crisp @2x PNG on Field-Notes paper — registration marks, rubber-stamped grade, the
   honest numbers, the credit line — native share sheet on phones, download elsewhere.
   No more blurry screenshots.
-- **🎬 A once-per-browser opening page** — a stamped Field-Notes cover presents itself on
-  first load ("FILE OPENED", the promise line), then the sheet lifts away like the top of
-  a notepad. ~1.7s, tap to skip, a flag — never shown again, so reloads during a demo
-  stay instant.
-- **🖨️ A print stylesheet** — Ctrl+P turns the radar into a clean wall-sheet: capture bar
-  and buttons drop out, the evidence stays.
+- **🎬 The front page — a dossier cover, not a splash** — first visit opens on a real
+  front page: a stamped masthead, the **next deadline**, a **live table of contents**
+  (late / today / this week / later / no date / done, with marks riding on them) and the
+  **week ahead** as seven printed cells. Each contents row is a door: press *Late* (or
+  <kbd>1</kbd>–<kbd>6</kbd>) and the sheet lifts straight onto that section; press the
+  **OPEN THE FILE** stamp to enter at the top. It opens once per browser *session* (so judge reloads stay instant), and comes back
+  any time from the masthead, the 🏠 toolbar button, Settings or <kbd>h</kbd>.
+  `?home=1` is a permanent, shareable front-page link.
+- **🗓️ Radar Almanac — the month as a printed planner** — one tap on **List / Almanac**
+  (or press <kbd>v</kbd>) flips the radar from the urgency list to a real month grid: every
+  day carries its pending marks, tiny subject-ink dots and a **late** stamp; today is ringed,
+  and a picked day opens its own submission sheet *under* the calendar — tick, edit or start
+  focus without leaving the month. The almanac keeps its own selected day, so browsing the
+  month never silently filters the whole list; **List** in the day sheet is the explicit
+  "open this day in the urgency list" path. The month summary says "Nothing in this month"
+  instead of printing fake zeros, and undated work is named at the bottom so it does not
+  vanish.
+- **🖋️ Subject inks — one pen per subject** — every subject deterministically gets one of
+  eight readable inks (hash of the name, so DBMS is always the same colour). The same ink
+  colours the card spine and tag, the almanac dots, the LiveRail load bars and the weekly
+  report table, with a printed legend for the month. Colour becomes a second index, not
+  decoration — and it survives reloads without storing anything extra.
+- **🧭 Zone index with live counts** — a chip row above the cards (Late · Today · Week ·
+  Later · No date · Done) shows exactly how many tasks sit in each zone and jumps straight
+  there; empty zones are visibly disabled instead of silently doing nothing. From the
+  almanac it flips to the list first, then scrolls.
+- **⏱️ Focus dock — the timer that stays put** — start a focus session and a small dock
+  parks in the corner: live clock, task name, stop button, and a progress bar against the
+  **learned** estimate from your own sessions (it says "≈12m left of 25m" or "4m over").
+  The header chip scrolls away; this never does.
+- **🚦 Pile-up watch — the clash detector** — one 20-mark task is a to-do; two heavy
+  submissions on the *same day* is what sinks the week. When dated pending work stacks
+  up, the desk prints a lane chip with the count and total marks (heaviest first) — tap
+  it to filter the radar to exactly that day and stagger the work early. No other radar
+  names the clash a day before it hits.
+- **🖨️ A print stylesheet** — Ctrl+P (or the 🖨️ header button, or <kbd>p</kbd>) turns the
+  radar into a clean wall-sheet: capture bar, controls, docks and rails drop out, the
+  evidence stays on paper.
 - **🕐 "Aaj ka timetable" — hour-by-hour day planner** — beyond the do-now pick, the radar
   prints an actual bell schedule for the day: pending work ranked by the do-now engine
   (late first, then marks-per-hour) laid into 25–90 min blocks from *this minute* until
@@ -49,10 +82,11 @@ replacing anything you captured).
   carries 70%, the streak and a clean slate add up, and the week-over-week trend nudges
   it. Under 3 rated finishes it refuses to print a grade. It travels inside the
   check-in post text too.
-- **🗄️ The DeskBar** — search, five-way sort, bulk select and the subject/day chips
-  moved out of the far stat rail into a sticky paper strip **directly above the radar
-  sections** — controls live where the cards are now, and they stay on screen while the
-  radar scrolls.
+- **🗄️ The DeskBar** — the **List / Almanac** switch, search, five-way sort, bulk select,
+  the live zone index and the subject/day chips on one sticky paper strip **directly above
+  the radar sections** — controls live where the cards are now, and they stay on screen
+  while the radar scrolls. Calendar view hides list-only controls instead of leaving dead
+  buttons behind.
 - **🎯 Risk score dial (0–100)** — every pending card carries a small inked ring that
   folds the whole danger level into one glance: deadline proximity + marks + whether the
   learned effort even fits the days left + your own lateness history. Hover names every
@@ -68,7 +102,7 @@ replacing anything you captured).
   ink density = tasks finished that day, an amber ring marks days that ran late, with the
   **best streak** ("best streak 5d") and the active one — the "am I actually showing up?"
   answer at a glance.
-- **☑️ Bulk select** — toggle **Bulk select** in the rail and the ticks become selection
+- **☑️ Bulk select** — toggle **Bulk select** in the DeskBar and the ticks become selection
   boxes: tick several cards, then one bar does it all — **Done ✓**, **+1 day** postpone,
   or **Delete** (with a group Undo). Spring cleaning without ten trips.
 - **📅 Google Calendar quick add** — every dated card shows a **GCal** chip: one tap opens
@@ -91,7 +125,7 @@ replacing anything you captured).
 - **⏭ Postpone in one tap** — the ⏭ button on any pending card pushes the deadline one day and
   offers **Undo** right in the toast; **⧉ Duplicate** in the edit sheet makes a pending copy for
   a re-submission or the next round. Nothing needs a full edit trip.
-- **A real first-run page** — the empty state explains the three capture routes, offers three
+- **An empty-desk page, not a dead end** — the empty state explains the three capture routes, offers three
   tappable sample messages (parsed live) and a full demo radar, instead of a dead end.
 - **Screenshot capture** — 📷 button → pick a photo of a notice/syllabus/message → the task is
   read out of the image (needs any OpenAI-compatible vision key: Groq or Gemini free tiers work;
@@ -139,8 +173,9 @@ replacing anything you captured).
   phone mode is compact and thumb-friendly; desktop mode gets a wider canvas (up to 1536px),
   a sticky paper side rail that holds position while you scroll, and hover-reveal card actions.
 - **⌨️ Desktop keyboard shortcuts** — `⌘K` / `Ctrl+K` command palette · `/` search · `n` new
-  deadline · `b` spoken briefing · `w` weekly report · `?` shortcuts card · `Esc` close. A ⌨️
-  chip in the header opens the card; shortcuts never fire while you're typing in a field.
+  deadline · `b` spoken briefing · `w` weekly report · `v` list ↔ almanac · `p` print ·
+  `h` front page · `?` shortcuts card · `Esc` close. A ⌨️ chip in the header opens the card;
+  shortcuts never fire while you're typing in a field (or while the front page is still shut).
 - **🎯 Marks at risk** — the radar counts *marks*, not just tasks: how many marks are already
   late and how many ride on this week's submissions. Shown in the rail, the weekly report and
   the voice answers.
@@ -250,7 +285,11 @@ output = `dist`) or Netlify (same settings).
 - [x] 🏅 Weekly report grade stamp (A+…D, refuses to fake a grade) + 📸 grade-card PNG share
 - [x] 🗄️ DeskBar restructure — controls moved onto the list they act on
 - [x] 🧮 Exam coach — negative-marking "guess ya chhod" ledger (JEE/GATE/sem schemes)
-- [x] 🎬 Once-per-browser field-notes cover · 🖨️ print stylesheet
+- [x] 🎬 Dossier front page — clickable live contents, next deadline, week strip, `h` to return
+- [x] 🚦 same-day pile-up watch · 🖨️ print stylesheet
+- [x] 🗓️ Radar Almanac month view (day sheet, month summary, subject legend) + List/Almanac toggle
+- [x] 🖋️ Deterministic subject inks across cards, calendar dots, rail and report
+- [x] 🧭 Zone index with live counts · ⏱️ sticky focus dock vs. learned estimate · front page any time (`h`)
 
 ## 📦 Submission checklist (by 30 Oct, 11:59 pm IST)
 
@@ -265,6 +304,6 @@ and **[DEMO-SCRIPT.md](./DEMO-SCRIPT.md)** (timed 2-minute shot list).
 ## 🧪 Tests
 
 ```bash
-npm test       # parser + bulk + backup + voice + sort + countdown + risk/plan/heat/timetable/grade/marking-coach (247 checks)
+npm test       # parser + bulk + backup + voice + sort + countdown + risk/plan/heat/timetable/grade/marking-coach/almanac/inks (281 checks)
 npm run test:ai # end-to-end AI paths (needs AI_KEY env)
 ```

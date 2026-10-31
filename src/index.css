@@ -1133,58 +1133,86 @@ select.field {
   }
 }
 
-/* 🎬 The once-per-browser opening page. It stamps itself, holds a beat, then
-   the whole sheet lifts like the top page of a notepad revealing the desk. */
+/* 🎬 The once-per-browser DOSSIER cover — a file's cover page, not a splash:
+   stamped masthead, a live table of contents (it reads the real radar behind
+   it), and the "open the file" stamp. Entries stagger in; the sheet only
+   lifts when OPEN is pressed, revealing the desk underneath. */
 #cover-page {
   position: fixed;
   inset: 0;
   z-index: 90;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  background:
-    var(--color-paper-2, #ece5d2);
+  padding: clamp(1rem, 4vh, 2.5rem) 1.25rem;
+  overflow-y: auto;
+  background-color: var(--color-paper-2, #ece5d2);
   background-image:
     radial-gradient(ellipse 120% 70% at 50% -10%, rgba(255, 255, 255, 0.5), transparent),
     var(--paper-grain, none);
-  cursor: pointer;
-  animation: cover-away 1.7s cubic-bezier(0.6, 0, 0.8, 0.2) forwards;
-  overflow: hidden;
 }
+/* The dossier frame — a printed cover page always carries one. */
+#cover-page::before {
+  content: '';
+  position: fixed;
+  inset: 12px;
+  border: 1.5px solid var(--color-ink);
+  border-radius: 2px;
+  opacity: 0.45;
+  pointer-events: none;
+  animation: cover-frame 0.7s ease-out both;
+}
+/* The lift border — hidden until the file is opened. */
 #cover-page::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-bottom: 3px solid var(--color-ink);
-  box-shadow: 0 0 24px rgba(29, 27, 22, 0.25);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--color-ink);
+  box-shadow: 0 0 26px rgba(29, 27, 22, 0.35);
   transform: translateY(100%);
-  animation: cover-lift 1.7s cubic-bezier(0.55, 0, 0.75, 0.25) forwards;
+  opacity: 0;
 }
-@media (prefers-reduced-motion: reduce) {
-  #cover-page,
-  #cover-page::after {
-    animation-duration: 0.01s;
+#cover-page.is-opening {
+  pointer-events: none;
+  animation: cover-away 0.9s 0.45s cubic-bezier(0.7, 0, 0.9, 0.2) forwards;
+}
+#cover-page.is-opening::after {
+  opacity: 1;
+  animation: cover-lift 0.9s 0.45s cubic-bezier(0.65, 0, 0.85, 0.3) forwards;
+}
+@keyframes cover-frame {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 0.45;
+    transform: scale(1);
   }
 }
 @keyframes cover-away {
-  0%,
-  62% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-105%);
-    opacity: 0.4;
+  to {
+    transform: translateY(-106%);
+    opacity: 0.3;
   }
 }
 @keyframes cover-lift {
-  0%,
-  55% {
+  from {
     transform: translateY(100%);
   }
-  100% {
-    transform: translateY(10vh);
+  to {
+    transform: translateY(7vh);
   }
+}
+.cover-inner {
+  position: relative;
+  max-width: 880px;
+  width: 100%;
+  margin: auto;
+  text-align: left;
 }
 .cover-eyebrow {
   font-family: var(--font-mono, monospace);
@@ -1192,55 +1220,907 @@ select.field {
   letter-spacing: 0.32em;
   color: var(--color-ink-3, #75705f);
   text-transform: uppercase;
-  animation: stamp-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+  animation: cover-rise 0.5s 0.08s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .cover-title {
   margin-top: 10px;
-  font-size: clamp(44px, 9vw, 76px);
-  line-height: 1;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(46px, 7.5vw, 78px);
+  line-height: 0.94;
   font-weight: 700;
   color: var(--color-ink, #1d1b16);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+  animation: cover-rise 0.55s 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .cover-title-accent {
   font-style: italic;
   color: var(--color-later);
 }
 .cover-rule {
-  width: min(240px, 40vw);
+  width: min(230px, 40vw);
   height: 2px;
-  margin: 18px auto 0;
+  margin: 16px 0 0;
   background: var(--color-ink);
+  animation: cover-draw 0.45s 0.42s ease-out both;
 }
-.cover-promise {
-  margin-top: 14px;
-  font-size: 15px;
-  color: var(--color-ink-2, #4d493e);
+@keyframes cover-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.cover-stamp-wrap {
-  margin-top: 34px;
+@keyframes cover-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+/* The live table of contents — cover pages list what's inside; this one
+   reads the actual radar behind it. */
+.cover-toc {
+  margin: 0;
+  width: 100%;
+  border: 1.5px solid var(--color-line);
+  background: var(--color-paper, #f3eee1);
+  box-shadow: 4px 4px 0 rgba(29, 27, 22, 0.12);
+  padding: 13px 16px 11px;
+  text-align: left;
+  animation: cover-rise 0.55s 0.58s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.cover-toc-title {
+  display: block;
+  text-align: center;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--color-line);
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  color: var(--color-ink-3, #75705f);
+  text-transform: uppercase;
+}
+.toc-row {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 6.5px 2px 5.5px;
+  font-size: 12.5px;
+  color: var(--color-ink-2, #4d493e);
+  border-bottom: 1px dotted var(--color-line);
+}
+.toc-row:last-of-type {
+  border-bottom: 0;
+}
+.toc-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+.toc-count {
+  flex: none;
+  min-width: 2ch;
+  text-align: right;
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink, #1d1b16);
+}
+.toc-note {
+  padding-top: 7px;
+  border-top: 1px solid var(--color-line);
+  text-align: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--color-ink-3, #75705f);
+}
+/* The stamp that opens the file — press it, don't wait for it. */
+.cover-stamp-wrap {
+  margin-top: 28px;
+  display: flex;
+  justify-content: flex-start;
+  animation: cover-rise 0.5s 0.82s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 .cover-stamp {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: 2.5px dashed var(--color-late, #b83a20);
+  gap: 10px;
+  padding: 13px 26px;
+  border: 2.5px dashed var(--color-ink);
   border-radius: 4px;
-  color: var(--color-late, #b83a20);
+  background: transparent;
+  color: var(--color-ink, #1d1b16);
   font-family: var(--font-mono, monospace);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  transform: rotate(-3deg);
-  animation: stamp-in 0.45s 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transform: rotate(-1.2deg);
+  box-shadow: 4px 4px 0 rgba(29, 27, 22, 0.25);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  animation: stamp-in 0.45s 0.95s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
 }
-.cover-hint {
-  margin-top: 26px;
-  font-size: 10px;
-  letter-spacing: 0.2em;
+.cover-stamp:hover {
+  background: var(--color-ink);
+  color: var(--color-paper-2, #ece5d2);
+  transform: rotate(-1.2deg) scale(1.04);
+  box-shadow: 5px 5px 0 rgba(29, 27, 22, 0.3);
+}
+.cover-stamp:active {
+  transform: rotate(-1.2deg) scale(0.97) translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(29, 27, 22, 0.25);
+}
+#cover-page.is-opening .cover-stamp {
+  animation: stamp-press 0.42s ease both;
+}
+@keyframes stamp-press {
+  30% {
+    transform: rotate(-1.2deg) scale(0.9);
+  }
+  60% {
+    transform: rotate(-1.2deg) scale(1.07);
+  }
+  100% {
+    transform: rotate(-1.2deg) scale(1.02);
+  }
+}
+.cover-foot {
+  margin-top: 24px;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
   color: var(--color-ink-3, #75705f);
   text-transform: uppercase;
+  animation: cover-rise 0.5s 1.15s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.cover-hint {
+  margin-top: 8px;
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--color-ink-3, #75705f);
+  opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------- *
+ * The front page proper: a two-leaf broadsheet instead of a splash.
+ * Topline file stamp · masthead + stamp · live contents · week strip.
+ * ---------------------------------------------------------------- */
+
+.cover-topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1.5px solid var(--color-ink);
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3, #75705f);
+  animation: cover-rise 0.4s 0.05s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.cover-file-no {
+  font-weight: 700;
+  color: var(--color-ink, #1d1b16);
+}
+.cover-topline-date {
+  margin-left: auto;
+}
+.cover-file-tag {
+  padding: 0.04rem 0.3rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--paper-radius-xs);
+  background: var(--color-paper, #f3eee1);
+  color: var(--color-ink-2, #4d493e);
+}
+
+.cover-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  align-items: start;
+  gap: clamp(1.1rem, 3vw, 2.4rem);
+  margin-top: clamp(1rem, 2.4vh, 1.6rem);
+}
+.cover-lead {
+  min-width: 0;
+}
+.cover-side {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.cover-blurb {
+  margin-top: 14px;
+  max-width: 42ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--color-ink-2, #4d493e);
+  animation: cover-rise 0.5s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.cover-blurb b {
+  color: var(--color-ink, #1d1b16);
+  font-weight: 600;
+}
+.cover-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 14px;
+  animation: cover-rise 0.5s 0.4s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.cover-chips span {
+  padding: 0.15rem 0.42rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--paper-radius-xs);
+  background: var(--color-paper, #f3eee1);
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-ink-2, #4d493e);
+}
+
+/* Next entry — the one thing the file wants you to see first. */
+.cover-next {
+  position: relative;
+  padding: 0.62rem 0.8rem 0.68rem 0.95rem;
+  border: 1px solid var(--color-line);
+  border-left: 3px solid var(--color-late);
+  background: var(--color-paper, #f3eee1);
+  box-shadow: 3px 3px 0 rgba(29, 27, 22, 0.1);
+  animation: cover-rise 0.5s 0.38s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.cover-next.is-empty {
+  border-left-color: var(--color-line-strong);
+  background: var(--color-paper-2, #ece5d2);
+}
+.cover-next-label {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-late);
+}
+.cover-next.is-empty .cover-next-label {
+  color: var(--color-ink-3, #75705f);
+}
+.cover-next-title {
+  display: -webkit-box;
+  margin-top: 3px;
+  overflow: hidden;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 16.5px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--color-ink, #1d1b16);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.cover-next-copy {
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--color-ink-2, #4d493e);
+}
+.cover-next-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.32rem 0.6rem;
+  margin-top: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  color: var(--color-ink-3, #75705f);
+}
+.cover-next-subject {
+  display: inline-flex;
+  padding: 0.04rem 0.3rem;
+  border: 1px solid;
+  border-radius: var(--paper-radius-xs);
+  font-size: 9px;
+  font-weight: 600;
+}
+.cover-demo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 8px;
+  padding: 0.3rem 0.55rem;
+  border: 1.5px dashed var(--color-ink);
+  border-radius: var(--paper-radius-xs);
+  background: transparent;
+  color: var(--color-ink, #1d1b16);
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.cover-demo:hover {
+  background: var(--color-ink);
+  color: var(--color-paper-2, #ece5d2);
+}
+
+/* Contents rows are doors: each one lifts the sheet onto its section. */
+.toc-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 5.5px 2px;
+  border: 0;
+  border-bottom: 1px dotted var(--color-line);
+  background: transparent;
+  color: var(--color-ink-2, #4d493e);
+  font: inherit;
+  text-align: left;
+  transition:
+    background-color 0.12s ease,
+    padding 0.12s ease;
+}
+.toc-row.is-link {
+  cursor: pointer;
+}
+.toc-row.is-link:hover {
+  padding-left: 6px;
+  padding-right: 4px;
+  background: var(--color-paper-3);
+}
+.toc-row.is-link:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: -2px;
+}
+.toc-row:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.toc-row.is-empty {
+  opacity: 0.42;
+}
+.toc-index {
+  flex: none;
+  width: 1.6ch;
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  color: var(--color-ink-3, #75705f);
+}
+.toc-label {
+  display: block;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--color-ink, #1d1b16);
+}
+.toc-sub {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-3, #75705f);
+}
+.toc-arrow {
+  flex: none;
+  color: var(--color-ink-3, #75705f);
+  transition:
+    transform 0.12s ease,
+    color 0.12s ease;
+}
+.toc-row.is-link:hover .toc-arrow {
+  transform: translateX(2px);
+  color: var(--color-ink, #1d1b16);
+}
+
+/* Week ahead strip — seven printed cells, today inked. */
+.cover-week {
+  animation: cover-rise 0.5s 0.78s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.cover-week-title {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-3, #75705f);
+}
+.cover-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.cover-day {
+  min-width: 0;
+  padding: 0.3rem 0.1rem 0.24rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--paper-radius-xs);
+  background: var(--color-paper-2, #ece5d2);
+  text-align: center;
+}
+.cover-day-name {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-3, #75705f);
+}
+.cover-day-num {
+  display: block;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 14px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--color-ink, #1d1b16);
+}
+.cover-day-mark {
+  display: block;
+  min-height: 1em;
+  font-family: var(--font-mono, monospace);
+  font-size: 7px;
+  color: var(--color-ink-3, #75705f);
+}
+.cover-day-mark.is-empty {
+  opacity: 0.45;
+}
+.cover-day.has-work {
+  border-color: var(--color-line-strong);
+}
+.cover-day.has-work .cover-day-mark {
+  color: var(--color-today);
+  font-weight: 700;
+}
+.cover-day.is-today {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+}
+.cover-day.is-today .cover-day-name {
+  color: rgba(251, 248, 239, 0.62);
+}
+.cover-day.is-today .cover-day-num,
+.cover-day.is-today .cover-day-mark {
+  color: var(--color-paper-2, #ece5d2);
+}
+
+@media (max-width: 760px) {
+  #cover-page {
+    padding: 1rem 0.8rem 2rem;
+  }
+  #cover-page::before {
+    inset: 7px;
+  }
+  .cover-grid {
+    grid-template-columns: 1fr;
+    gap: 1.15rem;
+  }
+  .cover-title {
+    font-size: clamp(42px, 12vw, 60px);
+  }
+  .cover-blurb {
+    font-size: 12.5px;
+  }
+  .cover-stamp-wrap {
+    margin-top: 20px;
+  }
+  .cover-foot {
+    margin-top: 18px;
+  }
+  .cover-toc {
+    padding: 11px 12px 9px;
+  }
+  .cover-week-grid {
+    gap: 2px;
+  }
+  .cover-day {
+    padding: 0.28rem 0.05rem 0.2rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .cover-file-tag {
+    display: none;
+  }
+  .cover-topline {
+    gap: 0.25rem 0.55rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+.cover-stamp:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  #cover-page,
+  #cover-page::before,
+  #cover-page::after,
+  #cover-page * {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* ==========================================================================
+   📖 The almanac, the zone index and the focus dock
+   ========================================================================== */
+
+/* List / Almanac — two reading rooms, one segmented stamp. */
+.view-toggle {
+  display: inline-flex;
+  flex: none;
+  overflow: hidden;
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--paper-radius-sm);
+  background: var(--color-paper-2);
+  box-shadow: var(--paper-shadow-stamp);
+}
+.view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.36rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.view-toggle button + button {
+  border-left: 1px solid var(--color-line);
+}
+.view-toggle button:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.view-toggle button.is-active {
+  background: var(--color-ink);
+  color: var(--color-paper-2);
+}
+
+/* 🧭 Zone index — section jumps with live counts. */
+.zone-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+.zone-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.13rem 0.38rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--paper-radius-xs);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    border-color 0.12s ease,
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.zone-chip:hover:not(:disabled) {
+  border-color: var(--color-ink);
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.zone-chip:disabled,
+.zone-chip.is-empty {
+  opacity: 0.4;
+  cursor: default;
+}
+.zone-count {
+  min-width: 1.05rem;
+  padding: 0 0.22rem;
+  border-radius: 999px;
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+  font-size: 7.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* 🗓️ The month grid. Complete weeks, Monday first, one printed cell per day. */
+.alm-head {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.alm-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.alm-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.alm-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 3.15rem;
+  padding: 0.22rem 0.28rem 0.2rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--paper-radius-xs);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  text-align: left;
+  transition:
+    border-color 0.12s ease,
+    background-color 0.12s ease,
+    transform 0.12s ease;
+}
+.alm-cell:hover {
+  border-color: var(--color-ink);
+  background: #fffdf6;
+  transform: translateY(-1px);
+}
+.alm-out {
+  opacity: 0.42;
+  border-style: dashed;
+  background: transparent;
+}
+.alm-today {
+  border-color: var(--color-today);
+  box-shadow: inset 0 0 0 1px var(--color-today);
+}
+.alm-late {
+  border-color: rgba(173, 54, 32, 0.55);
+  background-image: linear-gradient(180deg, rgba(247, 224, 215, 0.65), var(--color-paper-2));
+}
+.alm-selected {
+  z-index: 1;
+  outline: 2px solid var(--color-ink);
+  outline-offset: 1px;
+  background: var(--color-paper-3);
+}
+.alm-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.2rem;
+  line-height: 1;
+}
+.alm-day {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.alm-out .alm-day {
+  color: var(--color-ink-3);
+}
+.alm-marks {
+  padding: 0 0.12rem;
+  border: 1px solid rgba(141, 93, 8, 0.35);
+  border-radius: 2px;
+  background: var(--color-today-soft);
+  color: var(--color-today);
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.alm-marks.is-plain {
+  border-color: var(--color-line);
+  background: var(--color-paper);
+  color: var(--color-ink-3);
+}
+.alm-dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-height: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.22rem;
+}
+.alm-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 0.5px rgba(29, 27, 22, 0.12);
+}
+.alm-today-tag {
+  position: absolute;
+  bottom: 0.2rem;
+  left: 0.28rem;
+  color: var(--color-today);
+  font-family: var(--font-mono);
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.alm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.18rem 0.15rem;
+  border-bottom: 1px dotted var(--color-line);
+}
+.alm-row:last-child {
+  border-bottom: 0;
+}
+.alm-row.is-done {
+  opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+  .alm-cell {
+    min-height: 2.55rem;
+    padding: 0.14rem 0.2rem;
+  }
+  .alm-day {
+    font-size: 9.5px;
+  }
+  .alm-marks {
+    font-size: 6.5px;
+  }
+  .alm-today-tag {
+    display: none;
+  }
+  .alm-dot {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* ⏱️ The focus dock — parked in the corner while the radar scrolls. */
+.focus-dock {
+  position: fixed;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 60;
+  width: min(19rem, calc(100vw - 1.5rem));
+  padding: 0.55rem 0.65rem;
+  border: 1.5px solid var(--color-ink);
+  border-radius: var(--paper-radius);
+  background-color: var(--color-paper-2);
+  background-image:
+    var(--paper-grain),
+    linear-gradient(180deg, #fffdf7 0%, var(--color-paper-2) 100%);
+  background-size: 180px 180px, auto;
+  box-shadow:
+    4px 4px 0 var(--color-line-strong),
+    0 16px 30px -24px rgba(29, 27, 22, 0.8);
+  animation: focus-dock-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.focus-dock-pulse {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--color-done);
+  animation: focus-pulse 1.8s ease-out infinite;
+}
+.focus-dock-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid var(--color-done);
+  border-radius: var(--paper-radius-xs);
+  background: var(--color-done-soft);
+  color: var(--color-done);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.focus-dock-stop:hover {
+  background: var(--color-done);
+  color: var(--color-paper-2);
+}
+.focus-dock-bar {
+  height: 5px;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 1px;
+  background: var(--color-paper);
+}
+.focus-dock-bar span {
+  display: block;
+  height: 100%;
+  background: var(--color-done);
+  transition: width 0.5s linear;
+}
+.focus-dock-bar span.is-over {
+  background: var(--color-today);
+}
+@keyframes focus-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes focus-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(43, 103, 74, 0.42);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(43, 103, 74, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(43, 103, 74, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-dock,
+  .focus-dock-pulse {
+    animation: none;
+  }
+  .alm-cell,
+  .focus-dock-bar span {
+    transition: none;
+  }
+}
+
+/* Print: the almanac is already a paper artefact — keep it, drop the desk. */
+@media print {
+  .toolbar,
+  .desk-bar,
+  .view-toggle,
+  .zone-nav,
+  .focus-dock,
+  .rail,
+  .task-actions,
+  #cover-page,
+  footer {
+    display: none !important;
+  }
+  .dashboard-grid {
+    display: block !important;
+  }
+  .alm-panel {
+    border: 1px solid #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .alm-cell {
+    break-inside: avoid;
+    border-color: #999 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .alm-selected {
+    outline: 2px solid #000 !important;
+  }
 }

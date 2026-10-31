@@ -58,7 +58,7 @@ function guessProvider(key) {
   return PROVIDERS.find((p) => p.test.test(k)) || null
 }
 
-export default function SettingsModal({ settings, onSave, onClose, onClearAll, onExport, onImport }) {
+export default function SettingsModal({ settings, onSave, onClose, onClearAll, onExport, onImport, onOpenHome }) {
   const [draft, setDraft] = useState(settings)
   const [confirmClear, setConfirmClear] = useState(false)
   const [detected, setDetected] = useState(null)
@@ -268,6 +268,22 @@ export default function SettingsModal({ settings, onSave, onClose, onClearAll, o
                 />
               </label>
             </div>
+          </Card>
+
+          <Card>
+            <p className="flex items-center gap-1.5 font-serif text-sm font-semibold text-ink">
+              <Icon name="home" size={13} className="text-ink-3" />
+              Front page
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
+              The dossier cover is the radar's front page — live contents, the next deadline and
+              the week ahead. Open it any time for a fresh screenshot, a demo run, or to hand
+              someone the table of contents. You can also press <kbd>h</kbd> or tap the masthead.
+            </p>
+            <button type="button" onClick={onOpenHome} className="btn btn-quiet mt-2">
+              <Icon name="home" size={12} />
+              Open the front page
+            </button>
           </Card>
 
           <div className="rounded-[4px] border border-late/35 bg-late-soft/60 p-3">

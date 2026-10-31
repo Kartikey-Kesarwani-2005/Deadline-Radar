@@ -3,7 +3,7 @@
  * - Hashed assets & static files: cache first (immutable by filename).
  * - Cross-origin calls (the AI API) are never touched here.
  */
-const CACHE = 'deadline-radar-v2'
+const CACHE = 'deadline-radar-v4'
 const PRECACHE = ['./', './index.html', './manifest.webmanifest', './favicon.svg']
 
 self.addEventListener('install', (event) => {

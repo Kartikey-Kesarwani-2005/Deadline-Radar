@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { addDays, countdownTo, formatDue, toDateKey, todayKey } from '../lib/dates'
 import { onTimeStreak, subjectLoad } from '../lib/brain'
+import { subjectInk } from '../lib/subjects'
 import Icon from './Icon'
 
 /**
@@ -142,6 +143,7 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
             {load.slice(0, 6).map((s) => {
               const pct = Math.round(((s.marks || s.count) / maxMarks) * 100)
               const on = activeSubject === s.label
+              const ink = subjectInk(s.label) || 'var(--color-later)'
               return (
                 <li key={s.label}>
                   <button
@@ -151,8 +153,17 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
                     className="group block w-full text-left"
                   >
                     <div className="flex items-baseline justify-between gap-2 text-[10px]">
-                      <span className={`truncate font-medium ${on ? 'text-done' : 'text-ink-2'}`}>
-                        {s.label}
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ background: ink }}
+                        />
+                        <span
+                          className={`truncate font-medium ${on ? 'text-done' : 'text-ink-2'}`}
+                        >
+                          {s.label}
+                        </span>
                       </span>
                       <span className="shrink-0 font-mono text-[9px] tabular-nums text-ink-3">
                         {s.marks > 0 ? `${s.marks}m` : `${s.count} task${s.count === 1 ? '' : 's'}`}
@@ -160,10 +171,12 @@ export default function LiveRail({ tasks, onPickSubject, activeSubject }) {
                     </div>
                     <div className="mt-1 h-[5px] w-full overflow-hidden rounded-[1px] border border-line bg-paper">
                       <div
-                        className={`h-full transition-all duration-500 ${
-                          on ? 'bg-done' : 'bg-later/70 group-hover:bg-later'
-                        }`}
-                        style={{ width: `${Math.max(4, pct)}%` }}
+                        className="h-full transition-all duration-500 group-hover:opacity-100"
+                        style={{
+                          width: `${Math.max(4, pct)}%`,
+                          background: on ? 'var(--color-done)' : ink,
+                          opacity: on ? 1 : 0.82,
+                        }}
                       />
                     </div>
                   </button>
