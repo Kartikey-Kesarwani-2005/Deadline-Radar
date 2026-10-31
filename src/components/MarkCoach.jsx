@@ -33,7 +33,7 @@ export default function MarkCoach({ onClose }) {
     <Modal
       label="Negative-marking coach"
       onClose={onClose}
-      panelClassName="sheet max-h-[90vh] w-full max-w-md overflow-y-auto"
+      panelClassName="sheet max-h-[90dvh] w-full max-w-md overflow-y-auto"
     >
       <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
         <div>

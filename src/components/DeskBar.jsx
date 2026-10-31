@@ -76,7 +76,7 @@ export default function DeskBar({
 }) {
   const isList = view === 'list'
   return (
-    <div className="desk-bar paper-panel sticky top-2 z-20 rounded-[5px] p-2.5 shadow-[3px_3px_0_rgba(29,27,22,0.18)]">
+    <div className="desk-bar paper-panel sticky top-4 z-20 rounded-[5px] p-2.5 shadow-[3px_3px_0_rgba(29,27,22,0.18)]">
       <div className="flex flex-wrap items-center gap-2">
         <ViewToggle view={view} onView={onView} />
         <div className="search-wrap min-w-[42%] flex-1">

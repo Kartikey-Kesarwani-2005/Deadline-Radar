@@ -131,7 +131,7 @@ export default function WeeklyReport({ tasks, onClose }) {
     <Modal
       label="Weekly report"
       onClose={onClose}
-      panelClassName="sheet max-h-[90vh] w-full max-w-md overflow-y-auto sm:max-w-lg"
+      panelClassName="sheet max-h-[90dvh] w-full max-w-md overflow-y-auto sm:max-w-lg"
     >
         <div className="flex items-start justify-between gap-3 border-b-2 border-ink px-5 pt-4 pb-3">
           <div>

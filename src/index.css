@@ -56,11 +56,26 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  /* Native momentum scrolling is what touch devices do best. Opt out of the
+     global smooth-scroll behaviour — it makes the browser animate every scroll,
+     which reads as jittery on phones. Explicit programmatic jumps still pass
+     their own `behavior: 'smooth'` (zone jumps, cover release). */
+  scroll-behavior: auto;
+}
+
+/* Accidental sideways overflow must never become a scroll — clip at the shell
+   instead of letting content (wide rows, rotated stamps, long tags) push the
+   page into a horizontal scrollbar. `clip` does not create a scroll container,
+   so position: sticky keeps working. */
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
-  min-height: 100vh;
+  /* dvh tracks the dynamic viewport height, so mobile browser chrome collapsing
+     or expanding no longer resizes the page mid-scroll (content jump / jitter). */
+  min-height: 100dvh;
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
@@ -73,7 +88,9 @@ body {
     linear-gradient(rgba(29, 27, 22, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(29, 27, 22, 0.035) 1px, transparent 1px);
   background-size: 180px 180px, auto, auto, 26px 26px, 26px 26px;
-  background-attachment: fixed;
+  /* `local` keeps the wash scrolling with the content instead of pinning it to
+     the viewport — the fixed attachment made mobile scroll frames repaint. */
+  background-attachment: local;
 }
 
 /* Editorial headings balance their lines; body copy avoids orphans. */
@@ -1045,15 +1062,18 @@ select.field {
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(7px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
     transform: none;
   }
 }
+/* Subtle session reveal — content settles in with a whisper of motion instead
+   of a slide. `backwards` (not `both`) so the settled state lives in normal
+   flow afterwards; a forwards fill would keep overriding hover lifts. */
 .rise {
-  animation: rise-in 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  animation: rise-in 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
 }
 
 /* Slow compass needle — replaces the old neon radar sweep. */

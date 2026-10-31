@@ -1897,7 +1897,7 @@ export default function App() {
         <div
           className={`rail flex min-w-0 flex-col gap-4 ${
             isWide
-              ? 'paper-panel p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto'
+              ? 'paper-panel p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto'
               : ''
           }`}
         >
