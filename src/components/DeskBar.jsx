@@ -94,7 +94,7 @@ export default function DeskBar({
           </span>
         </div>
         {isList && (
-          <label htmlFor="sort-tasks" className="sort-row !min-h-0 flex-1 whitespace-nowrap">
+          <label htmlFor="sort-tasks" className="sort-row !min-h-0 flex-1 min-w-0">
             <span className="eyebrow shrink-0">Order</span>
             <select
               id="sort-tasks"

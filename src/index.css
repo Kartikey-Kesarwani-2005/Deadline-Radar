@@ -624,8 +624,8 @@ select.field {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 0.15rem 0.5rem;
-  padding-bottom: 0.4rem;
+  gap: 0.25rem 0.75rem;
+  padding-bottom: 0.6rem;
   border-bottom: 1px solid rgba(29, 27, 22, 0.5);
   box-shadow: 0 2px 0 rgba(29, 27, 22, 0.1);
 }

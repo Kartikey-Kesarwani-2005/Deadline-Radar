@@ -180,14 +180,14 @@ export default function TaskCard({
 
       <div className="min-w-0 flex-1">
         <p
-          className={`text-[13.5px] leading-[1.45] break-words ${
+          className={`text-[13.5px] leading-[1.45] break-words min-w-0 ${
             task.done ? 'text-ink-3 line-through' : 'font-medium text-ink'
           }`}
         >
           {task.title}
         </p>
 
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <div className="mt-2 flex flex-wrap items-start gap-1.5 min-w-0">
           {!task.done && <RiskDial risk={risk} />}
           {task.subject && (
             <span className="tag bg-paper" style={subjectStyle(task.subject, { soft: true })}>

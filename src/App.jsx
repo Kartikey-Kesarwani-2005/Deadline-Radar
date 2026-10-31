@@ -77,7 +77,7 @@ function Section({ num, sectionKey, title, tone, hint, tasks, getAdvice, getEst,
           {String(num).padStart(2, '0')}
         </span>
         <span className={`mb-1 h-2.5 w-2.5 shrink-0 rounded-full ${SECTION_TONES[tone]}`} />
-        <h2 className="font-serif text-[18px] leading-none font-semibold text-ink">{title}</h2>
+        <h2 className="font-serif text-[18px] leading-snug font-semibold text-ink min-w-0">{title}</h2>
         <span className="count-chip mb-0.5">
           {tasks.length} {tasks.length === 1 ? 'item' : 'items'}
         </span>
