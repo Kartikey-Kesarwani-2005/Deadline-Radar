@@ -2,7 +2,7 @@
 
 ![Deadline Radar](./public/og-cover.png)
 
-[![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/)
+[![Live demo](https://img.shields.io/badge/Live%20demo-GitHub%20Pages-10b981)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1)
 [![Built with Wispr Flow](https://img.shields.io/badge/Built%20with-Wispr%20Flow-10b981)](https://wisprflow.ai/)
 [![No Hands Challenge](https://img.shields.io/badge/Challenge-NoHands%20%2726-38bdf8)](https://wemakedevs.org/wispr)
 [![Tests](https://img.shields.io/badge/tests-306%2F306%20pass-brightgreen)](./scripts/test-parser.mjs)
@@ -20,7 +20,8 @@ Built for the **No Hands: The Wispr Challenge** (WeMakeDevs × Wispr Flow) — B
 **Open it with data:** [live demo (samples preloaded)](https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1)
 — `?demo=1` adds the sample deadlines to the radar (merged with your own, deduped, never
 replacing anything you captured). Add `&home=1` to open the dossier front page over the
-sample file — a permanent, shareable door to it.
+sample file — a permanent, shareable door to it. The plain link (no query) is the same
+app on a clean desk: `https://kartikey-kesarwani-2005.github.io/Deadline-Radar/`.
 
 ## ✨ Features
 
@@ -268,7 +269,9 @@ npm run preview  # test the production build locally
 ```
 
 **Auto-deploy:** every push to `main` builds and publishes this repo to **GitHub Pages** —
-the live demo link is `https://kartikey-kesarwani-2005.github.io/Deadline-Radar/`.
+the live demo link is `https://kartikey-kesarwani-2005.github.io/Deadline-Radar/` and the
+one-click demo (samples preloaded) is
+`https://kartikey-kesarwani-2005.github.io/Deadline-Radar/?demo=1`.
 
 Manual alternatives: Vercel (import repo, framework = **Vite**, build = `npm run build`,
 output = `dist`) or Netlify (same settings).
